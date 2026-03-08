@@ -1,0 +1,60 @@
+{
+  "pacientes": [
+    {
+      "id": "mmf0tj50fklx8irdjw5",
+      "nombre": "Alejandro Garcia",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "6/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmf1i4lj84s6z8uf5ev",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "5/3/2026",
+      "examenes": [
+        "dengue"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
+    }
+  ],
+  "examenes": [
+    {
+      "id": "mmf0tj51u5w4a3rrai",
+      "pacienteId": "mmf0tj50fklx8irdjw5",
+      "tipo": "dengue",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-06T14:59:51.972Z",
+      "fechaActualizacion": "2026-03-06T14:59:51.972Z"
+    },
+    {
+      "id": "mmf0tj51w1wn63p1kx",
+      "pacienteId": "mmf0tj50fklx8irdjw5",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-06T14:59:51.972Z",
+      "fechaActualizacion": "2026-03-06T14:59:51.972Z"
+    },
+    {
+      "id": "mmf1i4lkxyh6kadaqn",
+      "pacienteId": "mmf1i4lj84s6z8uf5ev",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-06T15:18:59.527Z",
+      "fechaActualizacion": "2026-03-06T16:11:16.693Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Negativo",
+        "observaciones": "Muy bien "
+      }
+    }
+  ]
+}

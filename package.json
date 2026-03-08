@@ -9,9 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2",
+    "sileo": "^0.1.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

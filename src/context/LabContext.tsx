@@ -14,6 +14,7 @@ interface LabContextType {
   getExamenesPorPaciente: (pacienteId: string) => Examen[];
   getPacientesUnicos: () => Map<string, { paciente: Paciente; examenes: Examen[] }>;
   getStats: () => { total: number; pendientes: number; enProceso: number; completos: number; enviados: number };
+  buscarPacientePorCedula: (cedula: string) => Paciente | undefined;
   enviarEmail: (examenId: string, email: string) => Promise<void>;
 }
 
@@ -140,8 +141,13 @@ export function LabProvider({ children }: { children: ReactNode }) {
   };
 
   const getStats = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayExamenes = examenes.filter(ex => ex.fechaCreacion.startsWith(today));
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const todayExamenes = examenes.filter(ex => {
+      const examDate = ex.fechaCreacion.split('T')[0];
+      return examDate === todayStr;
+    });
 
     return {
       total: todayExamenes.length,
@@ -156,6 +162,10 @@ export function LabProvider({ children }: { children: ReactNode }) {
     await enviarEmailMutation.mutateAsync({ id: examenId, email });
   };
 
+  const buscarPacientePorCedula = (cedula: string): Paciente | undefined => {
+    return pacientes.find(p => p.cedula === cedula);
+  };
+
   return (
     <LabContext.Provider value={{
       examenes,
@@ -167,6 +177,7 @@ export function LabProvider({ children }: { children: ReactNode }) {
       getExamenesPorPaciente,
       getPacientesUnicos,
       getStats,
+      buscarPacientePorCedula,
       enviarEmail
     }}>
       {children}

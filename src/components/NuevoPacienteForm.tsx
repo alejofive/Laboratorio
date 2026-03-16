@@ -62,7 +62,7 @@ interface FormValues {
 }
 
 export default function NuevoPacienteForm() {
-  const { crearPaciente } = useLab();
+  const { crearPaciente, buscarPacientePorCedula } = useLab();
 
   const {
     register,
@@ -84,6 +84,33 @@ export default function NuevoPacienteForm() {
 
   const examenesSeleccionados = watch('examenes');
   const [busqueda, setBusqueda] = useState('');
+  const cedulaValue = watch('cedula');
+
+  const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cedula = e.target.value;
+    setValue('cedula', cedula);
+    
+    if (cedula.length >= 3) {
+      const pacienteExistente = buscarPacientePorCedula(cedula);
+      if (pacienteExistente) {
+        setValue('nombre', pacienteExistente.nombre);
+        setValue('edad', pacienteExistente.edad.toString());
+        setValue('telefono', pacienteExistente.telefono);
+        setValue('direccion', pacienteExistente.direccion);
+        sileo.info({
+          title: 'Datos cargados',
+          description: `Se cargaron los datos de ${pacienteExistente.nombre}`,
+          duration: 2000,
+          fill: 'black',
+          styles: {
+            title: 'text-white!',
+            description: 'text-white/75!',
+            badge: 'bg-white/20!',
+          },
+        });
+      }
+    }
+  };
 
   const examenesFiltrados = examenesDisponibles.filter(examen =>
     examen.label.toLowerCase().includes(busqueda.toLowerCase())
@@ -132,7 +159,8 @@ export default function NuevoPacienteForm() {
               <input
                 type="text"
                 inputMode="numeric"
-                {...register('cedula', { required: 'La cédula es requerida' })}
+                value={cedulaValue}
+                onChange={handleCedulaChange}
                 className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder="12345678"
               />

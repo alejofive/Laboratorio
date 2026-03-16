@@ -60,7 +60,7 @@ import {
   ResultadosNuevoCompleto,
   EstadoExamen,
 } from '@/types';
-import { Save } from 'lucide-react';
+import { Save, Pencil } from 'lucide-react';
 import Loading from './loading';
 
 
@@ -70,6 +70,7 @@ export default function ExamenPage() {
   const router = useRouter();
   const { examenes, pacientes, actualizarExamen, cambiarEstado, getExamenesPorPaciente } = useLab();
   const [isFormValid, setIsFormValid] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
 
   const examen = examenes.find(e => e.id === params.id);
 
@@ -92,6 +93,7 @@ export default function ExamenPage() {
 
   const handleCompletar = () => {
     cambiarEstado(examen.id, 'completo');
+    setReadOnly(true);
   };
 
   const estados: EstadoExamen[] = ['pendiente', 'en_proceso', 'completo', 'enviado'];
@@ -107,9 +109,9 @@ export default function ExamenPage() {
       case 'heces':
         return <FormHeces resultados={examen.resultados as ResultadosHeces} onChange={handleResultadosChange} onValidChange={handleValidChange} />;
       case 'hematologia':
-        return <FormHematologia resultados={examen.resultados as ResultadosHematologia} onChange={handleResultadosChange} onValidChange={handleValidChange} />;
+        return <FormHematologia resultados={examen.resultados as ResultadosHematologia} onChange={handleResultadosChange} onValidChange={handleValidChange} readOnly={readOnly} />;
       case 'dengue':
-        return <FormDengue resultados={examen.resultados as ResultadosDengue} onChange={handleResultadosChange} onValidChange={handleValidChange} />;
+        return <FormDengue resultados={examen.resultados as ResultadosDengue} onChange={handleResultadosChange} onValidChange={handleValidChange} readOnly={readOnly} />;
       case 'quimica':
         return <FormQuimica resultados={examen.resultados as ResultadosQuimica} onChange={handleResultadosChange} />;
       case 'glicemia_pre_post':
@@ -174,7 +176,18 @@ export default function ExamenPage() {
           <p>Examen no encontrado</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm  print-area">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm  print-area ">
+
+          <div className="flex justify-between p-4 border-b border-gray-200">
+            <h1 className="text-2xl font-bold text-gray-900">Examen: {examen.tipo}</h1>
+            <button
+              onClick={() => setReadOnly(!readOnly)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center ${readOnly ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              <Pencil className="w-4 h-4" />
+              {readOnly ? 'Editar' : 'Solo lectura'}
+            </button>
+          </div>
           <ExamenTabs examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))} examenActualId={examen.id} />
 
           <div className="px-6 pb-6 mt-6">
@@ -184,7 +197,7 @@ export default function ExamenPage() {
             <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={handleCompletar}
-                disabled={!isFormValid}
+                disabled={!isFormValid || readOnly}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold rounded-md transition-colors flex gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save /> Guardar

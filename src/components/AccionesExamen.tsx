@@ -82,14 +82,29 @@ export default function AccionesExamen({ examen, paciente }: AccionesExamenProps
           >
             <ArrowLeft className="text-gray-700" />
           </button>
-          <p className="text-2xl text-gray-700 flex gap-2 items-center"><FlaskConical className="text-cyan-600" /><span className="font-bold text-gray-900">{examLabels[examen.tipo]}</span></p>
+
 
           {paciente && (
-            <div className="mt-2 text-sm text-gray-500 flex gap-4">
-              <span>Paciente: <strong className="text-gray-700">{paciente.nombre}</strong></span>
-              <span>Edad: <strong className="text-gray-700">{paciente.edad}</strong></span>
-              <span>Cedula: <strong className="text-gray-700">{paciente.cedula}</strong></span>
-              <span>Dirección: <strong className="text-gray-700">{paciente.direccion}</strong></span>
+            <div className="mt-2 text-sm text-gray-500 flex gap-4 flex-col">
+              <h1 className="text-2xl font-bold text-gray-900">{paciente.nombre}</h1>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Cédula</p>
+                  <p className="text-gray-900">{paciente.cedula}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Teléfono</p>
+                  <p className="text-gray-900">{paciente.telefono}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Edad</p>
+                  <p className="text-gray-900">{paciente.edad} años</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase">Dirección</p>
+                  <p className="text-gray-900">{paciente.direccion}</p>
+                </div>
+              </div>
             </div>
           )}
 

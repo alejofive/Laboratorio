@@ -24,6 +24,88 @@
       ],
       "cedula": "12490966",
       "direccion": "Barrio"
+    },
+    {
+      "id": "mmi1zop9x0dickg4s8d",
+      "nombre": "Alejandro Garcia",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "8/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmi2b4b2048j7od042ca",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "8/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmmtbd7i5mkl8dbww3d",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "11/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmmu2hlds1pv4d0wuwf",
+      "nombre": "Sidney",
+      "edad": 32,
+      "telefono": "0416-9793024",
+      "fecha": "11/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "23547583",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmmu5e9c24xmqlugf9n",
+      "nombre": "Alejandro Garcia",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "11/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia",
+        "helicobacter_pylori",
+        "hemoglobina_hematocritos",
+        "hematologia_serologia",
+        "hematologia_quimica"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mmtaydniuh7pgvgj39",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "16/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
     }
   ],
   "examenes": [
@@ -31,9 +113,14 @@
       "id": "mmf0tj51u5w4a3rrai",
       "pacienteId": "mmf0tj50fklx8irdjw5",
       "tipo": "dengue",
-      "estado": "pendiente",
+      "estado": "completo",
       "fechaCreacion": "2026-03-06T14:59:51.972Z",
-      "fechaActualizacion": "2026-03-06T14:59:51.972Z"
+      "fechaActualizacion": "2026-03-16T14:57:23.214Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Positivo",
+        "observaciones": "sdfsdf"
+      }
     },
     {
       "id": "mmf0tj51w1wn63p1kx",
@@ -55,6 +142,198 @@
         "IgM": "Negativo",
         "observaciones": "Muy bien "
       }
+    },
+    {
+      "id": "mmi1zor3hcbs24cxc5b",
+      "pacienteId": "mmi1zop9x0dickg4s8d",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-08T17:55:57.261Z",
+      "fechaActualizacion": "2026-03-08T19:16:27.824Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Positivo",
+        "observaciones": "si tienes dengue"
+      }
+    },
+    {
+      "id": "mmi1zor34xtg0gbvmi",
+      "pacienteId": "mmi1zop9x0dickg4s8d",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-08T17:55:57.261Z",
+      "fechaActualizacion": "2026-03-12T02:07:05.807Z",
+      "resultados": {
+        "leucocitos": "",
+        "hematies": "",
+        "hemoglobina": "",
+        "hematocrito": "",
+        "segmentados": "",
+        "linfocitos": "",
+        "eosinofilos": "",
+        "otros": "",
+        "sedimentacion_1h": "",
+        "sedimentacion_2h": "",
+        "plaquetas": "",
+        "t_protrombina": "",
+        "t_protrombina_control": "",
+        "inr": "",
+        "razon_pc": "",
+        "ptt": "",
+        "ptt_control": "",
+        "t_sangria": "",
+        "t_coagulacion": "",
+        "observaciones": "Mollit sed velit a "
+      }
+    },
+    {
+      "id": "mmi2b4b39zy4f5rn5sk",
+      "pacienteId": "mmi2b4b2048j7od042ca",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-08T18:04:50.702Z",
+      "fechaActualizacion": "2026-03-08T18:05:07.451Z",
+      "resultados": {
+        "IgG": "Negativo",
+        "IgM": "Negativo",
+        "observaciones": "Bien "
+      }
+    },
+    {
+      "id": "mmi2b4b3d71sewkzzqi",
+      "pacienteId": "mmi2b4b2048j7od042ca",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-08T18:04:50.702Z",
+      "fechaActualizacion": "2026-03-08T18:04:50.702Z"
+    },
+    {
+      "id": "mmmtbd98cpfzf20bxgf",
+      "pacienteId": "mmmtbd7i5mkl8dbww3d",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-12T01:51:56.574Z",
+      "fechaActualizacion": "2026-03-12T01:54:46.505Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Positivo",
+        "observaciones": "kgjgjhgftyf"
+      }
+    },
+    {
+      "id": "mmmtbd989rvs00rl365",
+      "pacienteId": "mmmtbd7i5mkl8dbww3d",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-12T01:51:56.574Z",
+      "fechaActualizacion": "2026-03-12T02:07:54.107Z",
+      "resultados": {
+        "leucocitos": "32",
+        "hematies": "65",
+        "hemoglobina": "54",
+        "hematocrito": "6",
+        "segmentados": "5",
+        "linfocitos": "5",
+        "eosinofilos": "5",
+        "otros": "5",
+        "sedimentacion_1h": "3",
+        "sedimentacion_2h": "3",
+        "plaquetas": "43",
+        "t_protrombina": "43",
+        "t_protrombina_control": "43",
+        "inr": "54",
+        "razon_pc": "43",
+        "ptt": "23",
+        "ptt_control": "3",
+        "t_sangria": "32",
+        "t_coagulacion": "32",
+        "observaciones": "ygjggjg"
+      }
+    },
+    {
+      "id": "mmmu2hle2r0qvmkcpok",
+      "pacienteId": "mmmu2hlds1pv4d0wuwf",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-12T02:13:01.969Z",
+      "fechaActualizacion": "2026-03-12T02:13:14.386Z",
+      "resultados": {
+        "IgG": "Negativo",
+        "IgM": "Negativo",
+        "observaciones": "jgh"
+      }
+    },
+    {
+      "id": "mmmu2hlegja0nt0o4s7",
+      "pacienteId": "mmmu2hlds1pv4d0wuwf",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:13:01.969Z",
+      "fechaActualizacion": "2026-03-12T02:13:01.969Z"
+    },
+    {
+      "id": "mmmu5e9cc90q358fdb",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "dengue",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmmu5e9cphz9meozb2",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmmu5e9ckbs1cnlsa6a",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "helicobacter_pylori",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmmu5e9dwo66lr3rcg",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "hemoglobina_hematocritos",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmmu5e9deczjioo4y9s",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "hematologia_serologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmmu5e9dd6zcgjtzex",
+      "pacienteId": "mmmu5e9c24xmqlugf9n",
+      "tipo": "hematologia_quimica",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-12T02:15:17.616Z",
+      "fechaActualizacion": "2026-03-12T02:15:17.616Z"
+    },
+    {
+      "id": "mmtaydpetz9u91os40s",
+      "pacienteId": "mmtaydniuh7pgvgj39",
+      "tipo": "dengue",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-16T14:52:20.766Z",
+      "fechaActualizacion": "2026-03-16T14:52:20.766Z"
+    },
+    {
+      "id": "mmtaydpewu2uggs2sp8",
+      "pacienteId": "mmtaydniuh7pgvgj39",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-16T14:52:20.766Z",
+      "fechaActualizacion": "2026-03-16T14:52:20.766Z"
     }
   ]
 }

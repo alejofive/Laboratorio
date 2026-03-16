@@ -56,7 +56,7 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
     .filter(paciente => {
       const fechaHoy = getFechaHoy();
       const esFechaAnterior = paciente.fecha !== fechaHoy;
-      
+
       if (!filtroPendientes) {
         return paciente.fecha === fechaHoy;
       }
@@ -92,39 +92,45 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
   }
 
   return (
-    <div>
-      <div className='flex items-center justify-end gap-5'>
+    <div className='mt-10'>
+      <div className='flex items-center justify-between gap-5'>
+        <h1 className="text-2xl font-bold text-gray-900">Tabla de Pacientes {filtroPendientes ? 'Anteriores' : 'de Hoy'}</h1>
 
-        <div className='relative'>
-          <Search className='text-gray-400 absolute top-1.5 right-3' />
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => {
-              setBusqueda(e.target.value);
-              setPaginaActual(1);
-            }}
-            className='border border-gray-300 bg-white rounded-lg h-9 w-80 pl-5 pr-10 text-gray-700 focus:outline-none focus:border-cyan-500'
-            placeholder='Buscar Nombre o Cédula...'
-          />
-        </div>
-
-        {anterior && (
-          <div className='flex items-center gap-2'>
-            <Switch.Root
-              checked={filtroPendientes}
-              onCheckedChange={(checked) => {
-                setFiltroPendientes(checked);
+        <div className='flex gap-4 items-center'>
+          <div className='relative'>
+            <Search className='text-gray-400 absolute top-1.5 right-3' />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => {
+                setBusqueda(e.target.value);
                 setPaginaActual(1);
               }}
-              className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-cyan-600 transition-colors outline-none cursor-pointer"
-            >
-              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[22px]" />
-            </Switch.Root>
-            <span className='text-sm text-gray-600'>Anterior</span>
+              className='border border-gray-300 bg-white rounded-lg h-9 w-80 pl-5 pr-10 text-gray-700 focus:outline-none focus:border-cyan-500'
+              placeholder='Buscar Nombre o Cédula...'
+            />
           </div>
-        )}
+
+          {anterior && (
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-600'>Hoy</span>
+              <Switch.Root
+                checked={filtroPendientes}
+                onCheckedChange={(checked) => {
+                  setFiltroPendientes(checked);
+                  setPaginaActual(1);
+                }}
+                className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-cyan-600 transition-colors outline-none cursor-pointer"
+              >
+                <Switch.Thumb className="block w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[22px]" />
+              </Switch.Root>
+              <span className='text-sm text-gray-600'>Anterior</span>
+            </div>
+          )}
+        </div>
       </div>
+
+
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm mt-5">
         <table className="w-full">

@@ -22,7 +22,8 @@ export default function StatsCards({ stats }: StatsCardsProps) {
 
   return (
     <div className='w-full'>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <h1 className="text-2xl font-bold text-gray-900">Resumen de Examenes</h1>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-6">
         {cards.map(card => (
           <div key={card.label} className={`bg-white rounded-lg p-4 border border-gray-200 border-b-4 ${card.color} shadow-sm`}>
             <p className="text-xs text-gray-500 uppercase tracking-wide">{card.label}</p>

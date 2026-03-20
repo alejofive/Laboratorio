@@ -16,23 +16,24 @@ const opciones = [
   { value: 'Positivo', label: 'Positivo' },
 ];
 
-const requiredFields: (keyof ResultadosDengue)[] = ['IgG', 'IgM'];
+const requiredFields: Array<'IgG' | 'IgM'> = ['IgG', 'IgM'];
+
+const defaultLabels = {
+  IgG: 'IgG',
+  IgM: 'IgM',
+} as const;
 
 function validateForm(data: ResultadosDengue): boolean {
   return requiredFields.every(field => data[field]?.trim() !== '');
 }
 
 interface CampoEditable {
-  key: string;
+  key: 'IgG' | 'IgM';
   label: string;
 }
 
 export default function FormDengue({ resultados, onChange, onValidChange, readOnly = false }: FormDengueProps) {
   const [isValid, setIsValid] = useState(false);
-  const [labels, setLabels] = useState<Record<string, string>>({
-    IgG: 'IgG',
-    IgM: 'IgM',
-  });
 
   const data = resultados || {
     IgG: '',
@@ -50,13 +51,9 @@ export default function FormDengue({ resultados, onChange, onValidChange, readOn
     onChange({ ...data, [key]: value });
   };
 
-  const handleLabelChange = (key: string, newLabel: string) => {
-    setLabels(prev => ({ ...prev, [key]: newLabel }));
-  };
-
   const campos: CampoEditable[] = [
-    { key: 'IgG', label: labels.IgG },
-    { key: 'IgM', label: labels.IgM },
+    { key: 'IgG', label: defaultLabels.IgG },
+    { key: 'IgM', label: defaultLabels.IgM },
   ];
 
   return (
@@ -70,7 +67,6 @@ export default function FormDengue({ resultados, onChange, onValidChange, readOn
             onChange={value => handleChange(campo.key as keyof ResultadosDengue, value)}
             options={opciones}
             readOnly={readOnly}
-            onLabelChange={!readOnly ? (newLabel) => handleLabelChange(campo.key, newLabel) : undefined}
           />
         ))}
       </div>
@@ -80,10 +76,10 @@ export default function FormDengue({ resultados, onChange, onValidChange, readOn
         <textarea
           value={data.observaciones}
           onChange={e => handleChange('observaciones', e.target.value)}
-          disabled={readOnly}
+          readOnly={readOnly}
           rows={3}
           placeholder="Observaciones adicionales..."
-          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent ${readOnly ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
         />
       </div>
     </div>

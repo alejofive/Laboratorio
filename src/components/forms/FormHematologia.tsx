@@ -11,12 +11,15 @@ interface FormHematologiaProps {
   readOnly?: boolean;
 }
 
+type CampoKey = Exclude<keyof ResultadosHematologia, 'observaciones'>;
+type EditableKey = keyof ResultadosHematologia;
+
 interface CampoEditable {
-  key: keyof ResultadosHematologia;
+  key: CampoKey;
   label: string;
 }
 
-const defaultLabels: Record<string, string> = {
+const defaultLabels: Record<CampoKey, string> = {
   leucocitos: 'Leucocitos (mm³)',
   hematies: 'Hematíes (mm³)',
   hemoglobina: 'Hemoglobina (grs%)',
@@ -38,7 +41,7 @@ const defaultLabels: Record<string, string> = {
   t_coagulacion: 'Tiempo de Coagulación (min)',
 };
 
-const requiredFields: (keyof ResultadosHematologia)[] = [
+const requiredFields: CampoKey[] = [
   'leucocitos', 'hematies', 'hemoglobina', 'hematocrito',
   'segmentados', 'linfocitos', 'eosinofilos', 'otros',
   'sedimentacion_1h', 'sedimentacion_2h', 'plaquetas',
@@ -52,7 +55,6 @@ function validateForm(data: ResultadosHematologia): boolean {
 
 export default function FormHematologia({ resultados, onChange, onValidChange, readOnly = false }: FormHematologiaProps) {
   const [isValid, setIsValid] = useState(false);
-  const [labels, setLabels] = useState<Record<string, string>>(defaultLabels);
 
   const data = resultados || {
     leucocitos: '',
@@ -83,42 +85,38 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
     onValidChange?.(valid);
   }, [data, onValidChange]);
 
-  const handleChange = (key: keyof ResultadosHematologia, value: string) => {
+  const handleChange = (key: EditableKey, value: string) => {
     onChange({ ...data, [key]: value });
   };
 
-  const handleLabelChange = (key: string, newLabel: string) => {
-    setLabels(prev => ({ ...prev, [key]: newLabel }));
-  };
-
   const campos: CampoEditable[] = [
-    { key: 'leucocitos', label: labels.leucocitos },
-    { key: 'hematies', label: labels.hematies },
-    { key: 'hemoglobina', label: labels.hemoglobina },
-    { key: 'hematocrito', label: labels.hematocrito },
+    { key: 'leucocitos', label: defaultLabels.leucocitos },
+    { key: 'hematies', label: defaultLabels.hematies },
+    { key: 'hemoglobina', label: defaultLabels.hemoglobina },
+    { key: 'hematocrito', label: defaultLabels.hematocrito },
   ];
 
   const formulaLeucocitaria: CampoEditable[] = [
-    { key: 'segmentados', label: labels.segmentados },
-    { key: 'linfocitos', label: labels.linfocitos },
-    { key: 'eosinofilos', label: labels.eosinofilos },
-    { key: 'otros', label: labels.otros },
+    { key: 'segmentados', label: defaultLabels.segmentados },
+    { key: 'linfocitos', label: defaultLabels.linfocitos },
+    { key: 'eosinofilos', label: defaultLabels.eosinofilos },
+    { key: 'otros', label: defaultLabels.otros },
   ];
 
   const sedimentacion: CampoEditable[] = [
-    { key: 'sedimentacion_1h', label: labels.sedimentacion_1h },
-    { key: 'sedimentacion_2h', label: labels.sedimentacion_2h },
+    { key: 'sedimentacion_1h', label: defaultLabels.sedimentacion_1h },
+    { key: 'sedimentacion_2h', label: defaultLabels.sedimentacion_2h },
   ];
 
   const coagulacion: CampoEditable[] = [
-    { key: 't_protrombina', label: labels.t_protrombina },
-    { key: 't_protrombina_control', label: labels.t_protrombina_control },
-    { key: 'inr', label: labels.inr },
-    { key: 'razon_pc', label: labels.razon_pc },
-    { key: 'ptt', label: labels.ptt },
-    { key: 'ptt_control', label: labels.ptt_control },
-    { key: 't_sangria', label: labels.t_sangria },
-    { key: 't_coagulacion', label: labels.t_coagulacion },
+    { key: 't_protrombina', label: defaultLabels.t_protrombina },
+    { key: 't_protrombina_control', label: defaultLabels.t_protrombina_control },
+    { key: 'inr', label: defaultLabels.inr },
+    { key: 'razon_pc', label: defaultLabels.razon_pc },
+    { key: 'ptt', label: defaultLabels.ptt },
+    { key: 'ptt_control', label: defaultLabels.ptt_control },
+    { key: 't_sangria', label: defaultLabels.t_sangria },
+    { key: 't_coagulacion', label: defaultLabels.t_coagulacion },
   ];
 
   return (
@@ -132,7 +130,6 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
             onChange={v => handleChange(campo.key, v)}
             placeholder=""
             readOnly={readOnly}
-            onLabelChange={!readOnly ? (newLabel) => handleLabelChange(campo.key, newLabel) : undefined}
           />
         ))}
       </div>
@@ -150,7 +147,6 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
               onChange={v => handleChange(campo.key, v)}
               placeholder=""
               readOnly={readOnly}
-              onLabelChange={!readOnly ? (newLabel) => handleLabelChange(campo.key, newLabel) : undefined}
             />
           ))}
         </div>
@@ -169,7 +165,6 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
               onChange={v => handleChange(campo.key, v)}
               placeholder=""
               readOnly={readOnly}
-              onLabelChange={!readOnly ? (newLabel) => handleLabelChange(campo.key, newLabel) : undefined}
             />
           ))}
         </div>
@@ -179,12 +174,11 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <InputNumber
-          label={labels.plaquetas}
+          label={defaultLabels.plaquetas}
           value={data.plaquetas}
           onChange={v => handleChange('plaquetas', v)}
           placeholder=""
           readOnly={readOnly}
-          onLabelChange={!readOnly ? (newLabel) => handleLabelChange('plaquetas', newLabel) : undefined}
         />
       </div>
 
@@ -201,7 +195,6 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
               onChange={v => handleChange(campo.key, v)}
               placeholder=""
               readOnly={readOnly}
-              onLabelChange={!readOnly ? (newLabel) => handleLabelChange(campo.key, newLabel) : undefined}
             />
           ))}
         </div>
@@ -214,10 +207,10 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
         <textarea
           value={data.observaciones}
           onChange={e => handleChange('observaciones', e.target.value)}
-          disabled={readOnly}
+          readOnly={readOnly}
           rows={3}
           placeholder="Observaciones adicionales..."
-          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent ${readOnly ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
         />
       </div>
     </div>

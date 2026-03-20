@@ -127,14 +127,38 @@ export function LabProvider({ children }: { children: ReactNode }) {
 
   const getPacientesUnicos = (): Map<string, { paciente: Paciente; examenes: Examen[] }> => {
     const pacientesMap = new Map<string, { paciente: Paciente; examenes: Examen[] }>();
+
+    const parseFechaPaciente = (fecha: string) => {
+      const [dia, mes, anio] = fecha.split('/').map(Number);
+      return new Date(anio, (mes || 1) - 1, dia || 1).getTime();
+    };
     
     pacientes.forEach(paciente => {
-      if (!pacientesMap.has(paciente.cedula)) {
-        pacientesMap.set(paciente.cedula, {
-          paciente,
-          examenes: getExamenesPorPaciente(paciente.id)
-        });
+      const examenesPaciente = getExamenesPorPaciente(paciente.id);
+      const existente = pacientesMap.get(paciente.cedula);
+
+      if (!existente) {
+        pacientesMap.set(paciente.cedula, { paciente, examenes: examenesPaciente });
+        return;
       }
+
+      const fechaPacienteActual = parseFechaPaciente(paciente.fecha);
+      const fechaPacienteExistente = parseFechaPaciente(existente.paciente.fecha);
+      const pacienteMasReciente = fechaPacienteActual >= fechaPacienteExistente ? paciente : existente.paciente;
+
+      pacientesMap.set(paciente.cedula, {
+        paciente: pacienteMasReciente,
+        examenes: [...existente.examenes, ...examenesPaciente],
+      });
+    });
+
+    pacientesMap.forEach((data, cedula) => {
+      pacientesMap.set(cedula, {
+        paciente: data.paciente,
+        examenes: [...data.examenes].sort(
+          (a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
+        ),
+      });
     });
     
     return pacientesMap;

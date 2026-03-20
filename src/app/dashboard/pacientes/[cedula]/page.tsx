@@ -3,7 +3,7 @@
 import { useLab } from '@/context/LabContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Plus, Check } from 'lucide-react';
 import EstadoBadge from '@/components/EstadoBadge';
 import { TipoExamen } from '@/types';
 
@@ -41,12 +41,21 @@ export default function PacienteHistorialPage() {
   const cedula = params.cedula as string;
   const { pacientes, examenes } = useLab();
 
-  const pacienteData = pacientes.find(p => p.cedula === cedula);
+  const parseFechaPaciente = (fecha: string) => {
+    const [dia, mes, anio] = fecha.split('/').map(Number);
+    return new Date(anio, (mes || 1) - 1, dia || 1).getTime();
+  };
+
+  const pacientesDelHistorial = pacientes
+    .filter(p => p.cedula === cedula)
+    .sort((a, b) => parseFechaPaciente(b.fecha) - parseFechaPaciente(a.fecha));
+
+  const pacienteData = pacientesDelHistorial[0];
 
   if (!pacienteData) {
     return (
       <div className="px-32 py-5 w-full min-h-screen">
-        <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1 text-cyan-600 hover:underline mb-4">
+        <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1hover:underline mb-4">
           <ArrowLeft className="w-4 h-4" />
           Volver
         </Link>
@@ -57,31 +66,22 @@ export default function PacienteHistorialPage() {
     );
   }
 
-  const examenesDelPaciente = examenes
-    .filter(e => e.pacienteId === pacienteData.id)
-    .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
+  const historialVisitas = pacientesDelHistorial.map((visita) => {
+    const examenesVisita = examenes
+      .filter(examen => examen.pacienteId === visita.id)
+      .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
 
-  const examenesAgrupados = examenesDelPaciente.reduce((acc, examen) => {
-    const fecha = examen.fechaCreacion.split('T')[0];
-    if (!acc[fecha]) {
-      acc[fecha] = [];
-    }
-    acc[fecha].push(examen);
-    return acc;
-  }, {} as Record<string, typeof examenesDelPaciente>);
-
-  const fechasOrdenadas = Object.keys(examenesAgrupados).sort((a, b) => 
-    new Date(b).getTime() - new Date(a).getTime()
-  );
+    return { visita, examenesVisita };
+  });
 
   return (
     <div className="px-32 py-5 w-full min-h-screen">
-      <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1 text-cyan-600 hover:underline mb-4">
-        <ArrowLeft className="w-4 h-4" />
-        Volver
-      </Link>
+
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-5">
+        <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1 hover:underline mb-4">
+          <ArrowLeft className="" />
+        </Link>
         <h1 className="text-2xl font-bold text-gray-900 mb-4">{pacienteData.nombre}</h1>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -103,49 +103,98 @@ export default function PacienteHistorialPage() {
         </div>
       </div>
 
+
+      <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-5">Historial de visitas</h1>
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Historial de Exámenes</h2>
-        </div>
-        
-        {fechasOrdenadas.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            No hay exámenes registrados.
-          </div>
-        ) : (
-          fechasOrdenadas.map(fecha => (
-            <div key={fecha} className="border-b border-gray-200 last:border-b-0">
-              <div className="px-6 py-3 bg-gray-50">
-                <p className="text-sm font-medium text-gray-700">
-                  {new Date(fecha).toLocaleDateString('es-ES')}
-                </p>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {examenesAgrupados[fecha].map(examen => {
-                  const estaCompleto = examen.estado === 'completo' || examen.estado === 'enviado';
-                  return (
-                    <div key={examen.id} className="px-6 py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                          estaCompleto ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {examLabels[examen.tipo]}
-                        </span>
-                        <EstadoBadge estado={examen.estado} />
+
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Paciente</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Exámenes</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {historialVisitas.map(({ visita, examenesVisita }) => {
+              const examenesVisibles = examenesVisita.slice(0, 2);
+              const examenesRestantes = examenesVisita.length - examenesVisibles.length;
+              const primerExamen = examenesVisita[0];
+              const todosCompletos =
+                examenesVisita.length > 0 &&
+                examenesVisita.every(examen => examen.estado === 'completo' || examen.estado === 'enviado');
+              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
+
+              return (
+                <tr key={visita.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-gray-900">{visita.nombre}</p>
+                    <p className="text-xs text-gray-500">{visita.cedula}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    {examenesVisita.length === 0 ? (
+                      <span className="text-xs text-gray-500">Sin exámenes asociados</span>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-1">
+                        {examenesVisibles.map((examen) => {
+                          const estaCompleto = examen.estado === 'completo' || examen.estado === 'enviado';
+
+                          return (
+                            <span
+                              key={examen.id}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${estaCompleto ? 'bg-green-100 text-green-500' : 'bg-orange-100 text-orange-700'
+                                }`}
+                            >
+                              {estaCompleto && <Check className="w-3 h-3" />}
+                              {examLabels[examen.tipo]}
+                            </span>
+                          );
+                        })}
+                        {examenesRestantes > 0 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-100 text-cyan-700">
+                            +{examenesRestantes} más
+                          </span>
+                        )}
                       </div>
-                      <Link
-                        href={`/dashboard/examen/${examen.id}?cedula=${cedula}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver Resultados
-                      </Link>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{visita.fecha}</td>
+                  <td className="px-4 py-3">
+                    {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {primerExamen ? (
+                      !todosCompletos ? (
+                        <Link
+                          href={`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Agregar Resultados
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Ver
+                        </Link>
+                      )
+                    ) : (
+                      <span className="text-xs text-gray-500">Sin acciones</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {historialVisitas.length === 0 && (
+          <div className="p-8 text-center text-gray-500">No hay exámenes registrados.</div>
         )}
       </div>
     </div>

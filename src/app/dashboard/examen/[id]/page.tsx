@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { useLab } from '@/context/LabContext';
 import ExamenTabs from '@/components/ExamenTabs';
@@ -58,7 +58,7 @@ import {
   ResultadosHematologiaQuimica,
   ResultadosHematologiaSerologia,
   ResultadosNuevoCompleto,
-  EstadoExamen,
+  ResultadosExamen,
 } from '@/types';
 import { Save, Pencil } from 'lucide-react';
 import Loading from './loading';
@@ -67,10 +67,9 @@ import Loading from './loading';
 
 export default function ExamenPage() {
   const params = useParams();
-  const router = useRouter();
   const { examenes, pacientes, actualizarExamen, cambiarEstado, getExamenesPorPaciente } = useLab();
   const [isFormValid, setIsFormValid] = useState(false);
-  const [readOnly, setReadOnly] = useState(false);
+  const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({});
 
   const examen = examenes.find(e => e.id === params.id);
 
@@ -86,17 +85,24 @@ export default function ExamenPage() {
 
   const paciente = pacientes.find(p => p.id === examen.pacienteId);
   const examenesPaciente = paciente ? getExamenesPorPaciente(paciente.id) : [];
+  const initialReadOnly = examen.estado === 'completo' || examen.estado === 'enviado';
+  const readOnly = readOnlyByExam[examen.id] ?? initialReadOnly;
 
-  const handleResultadosChange = (resultados: any) => {
+  const setCurrentReadOnly = (nextValue: boolean) => {
+    setReadOnlyByExam(prev => ({
+      ...prev,
+      [examen.id]: nextValue,
+    }));
+  };
+
+  const handleResultadosChange = (resultados: ResultadosExamen) => {
     actualizarExamen(examen.id, resultados);
   };
 
-  const handleCompletar = () => {
-    cambiarEstado(examen.id, 'completo');
-    setReadOnly(true);
+  const handleCompletar = async () => {
+    await cambiarEstado(examen.id, 'completo');
+    setCurrentReadOnly(true);
   };
-
-  const estados: EstadoExamen[] = ['pendiente', 'en_proceso', 'completo', 'enviado'];
 
   const handleValidChange = (isValid: boolean) => {
     setIsFormValid(isValid);
@@ -181,7 +187,7 @@ export default function ExamenPage() {
           <div className="flex justify-between p-4 border-b border-gray-200">
             <h1 className="text-2xl font-bold text-gray-900">Examen: {examen.tipo}</h1>
             <button
-              onClick={() => setReadOnly(!readOnly)}
+              onClick={() => setCurrentReadOnly(!readOnly)}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center ${readOnly ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
               <Pencil className="w-4 h-4" />
@@ -193,7 +199,12 @@ export default function ExamenPage() {
           <div className="px-6 pb-6 mt-6">
 
 
-            {renderForm()}
+            <fieldset
+              disabled={readOnly}
+              className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"
+            >
+              {renderForm()}
+            </fieldset>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={handleCompletar}

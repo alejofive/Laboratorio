@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useLab } from '@/context/LabContext';
 import EstadoBadge from './EstadoBadge';
 import { TipoExamen } from '@/types';
-import { Search, Plus, Eye, Printer, MoreHorizontal, Check } from 'lucide-react';
+import { Search, Plus, Eye, Check } from 'lucide-react';
 import * as Switch from '@radix-ui/react-switch';
 import { useState } from 'react';
 
@@ -37,9 +37,14 @@ const examLabels: Record<TipoExamen, string> = {
   vdrl_hepatitis: 'VDRL Hepatitis y demas',
 };
 
-export default function ExamTable({ anterior }: { anterior: boolean }) {
+interface ExamTableProps {
+  anterior: boolean;
+  mostrarAnteriores: boolean;
+  onToggleMostrarAnteriores: (checked: boolean) => void;
+}
+
+export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrarAnteriores }: ExamTableProps) {
   const { examenes, pacientes } = useLab();
-  const [filtroPendientes, setFiltroPendientes] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const PACIENTES_POR_PAGINA = 12;
@@ -57,7 +62,7 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
       const fechaHoy = getFechaHoy();
       const esFechaAnterior = paciente.fecha !== fechaHoy;
 
-      if (!filtroPendientes) {
+      if (!mostrarAnteriores) {
         return paciente.fecha === fechaHoy;
       }
       return esFechaAnterior;
@@ -94,7 +99,7 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
   return (
     <div className='mt-10'>
       <div className='flex items-center justify-between gap-5'>
-        <h1 className="text-2xl font-bold text-gray-900">Tabla de Pacientes {filtroPendientes ? 'Anteriores' : 'de Hoy'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Tabla de Pacientes {mostrarAnteriores ? 'Anteriores' : 'de Hoy'}</h1>
 
         <div className='flex gap-4 items-center'>
           <div className='relative'>
@@ -115,9 +120,9 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
             <div className='flex items-center gap-2'>
               <span className='text-sm text-gray-600'>Hoy</span>
               <Switch.Root
-                checked={filtroPendientes}
+                checked={mostrarAnteriores}
                 onCheckedChange={(checked) => {
-                  setFiltroPendientes(checked);
+                  onToggleMostrarAnteriores(checked);
                   setPaginaActual(1);
                 }}
                 className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-cyan-600 transition-colors outline-none cursor-pointer"
@@ -151,16 +156,7 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
               const primerExamen = examenesPaciente[0];
 
               const todosCompletos = examenesPaciente.every(e => e.estado === 'completo' || e.estado === 'enviado');
-              const algunosCompletos = examenesPaciente.some(e => e.estado === 'completo' || e.estado === 'enviado');
-
-              let estadoMostrado: 'pendiente' | 'en_proceso' | 'completo';
-              if (todosCompletos) {
-                estadoMostrado = 'completo';
-              } else if (algunosCompletos) {
-                estadoMostrado = 'en_proceso';
-              } else {
-                estadoMostrado = 'pendiente';
-              }
+              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
 
               return (
                 <tr key={paciente.id} className="hover:bg-gray-50">
@@ -173,8 +169,8 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
                       {examenesVisibles.map((examen, idx) => {
                         const estaCompleto = examen.estado === 'completo' || examen.estado === 'enviado';
                         return (
-                          <span key={idx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${estaCompleto ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-100 text-gray-700'
-                            }`}>
+                          <span key={idx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${estaCompleto ? 'bg-green-100 text-green-500' : 'bg-orange-100 text-orange-700'
+                             }`}>
                             {estaCompleto && <Check className="w-3 h-3" />}
                             {examLabels[examen.tipo]}
                           </span>
@@ -224,7 +220,7 @@ export default function ExamTable({ anterior }: { anterior: boolean }) {
 
       {sortedPacientes.length === 0 && (
         <div className="p-8 text-center text-gray-500">
-          {filtroPendientes
+          {mostrarAnteriores
             ? 'No hay pacientes de días anteriores.'
             : 'No hay pacientes de hoy.'}
         </div>

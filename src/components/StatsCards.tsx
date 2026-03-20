@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-
 interface StatsCardsProps {
   stats: {
     total: number;
@@ -10,9 +8,10 @@ interface StatsCardsProps {
     completos: number;
     enviados: number;
   };
+  mostrarAnteriores?: boolean;
 }
 
-export default function StatsCards({ stats }: StatsCardsProps) {
+export default function StatsCards({ stats, mostrarAnteriores = false }: StatsCardsProps) {
   const cards = [
     { label: 'Total', value: stats.total, color: 'border-b-gray-500' },
     { label: 'Pendientes', value: stats.pendientes, color: 'border-b-orange-500' },
@@ -22,7 +21,9 @@ export default function StatsCards({ stats }: StatsCardsProps) {
 
   return (
     <div className='w-full'>
-      <h1 className="text-2xl font-bold text-gray-900">Resumen de Examenes</h1>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Resumen de Examenes {mostrarAnteriores ? 'Anteriores' : 'de Hoy'}
+      </h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-6">
         {cards.map(card => (
           <div key={card.label} className={`bg-white rounded-lg p-4 border border-gray-200 border-b-4 ${card.color} shadow-sm`}>

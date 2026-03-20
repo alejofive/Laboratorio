@@ -26,6 +26,9 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
   const labelInputRef = useRef<HTMLInputElement>(null);
 
   const handleValueChange = (newValue: string) => {
+    if (readOnly) {
+      return;
+    }
     if (newValue === '__clear__') {
       onChange('');
     } else {
@@ -105,7 +108,7 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
       )}
       <SelectPrimitive.Root value={value || '__clear__'} onValueChange={handleValueChange} disabled={readOnly}>
         <SelectPrimitive.Trigger 
-          className={`flex items-center justify-between w-full px-3 py-2 text-sm border rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent data-[placeholder]:text-gray-400 ${readOnly ? 'bg-gray-100 opacity-60 cursor-not-allowed border-gray-200' : 'bg-gray-50 border-gray-300'}`}
+          className="flex items-center justify-between w-full px-3 py-2 text-sm border rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent data-[placeholder]:text-gray-400 bg-gray-50 border-gray-300 disabled:opacity-100 disabled:cursor-default"
         >
           <SelectPrimitive.Value placeholder={placeholder} />
           <SelectPrimitive.Icon>

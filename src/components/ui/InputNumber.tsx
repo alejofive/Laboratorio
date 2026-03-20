@@ -30,6 +30,9 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
   }, [isEditingLabel]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) {
+      return;
+    }
     setLocalValue(e.target.value);
     onChange(e.target.value);
   };
@@ -105,8 +108,8 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
         value={localValue}
         onChange={handleChange}
         placeholder={placeholder}
-        disabled={readOnly}
-        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent ${readOnly ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
+        readOnly={readOnly}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
       />
     </div>
   );

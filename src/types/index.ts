@@ -54,14 +54,37 @@ export interface ResultadosOrina {
 }
 
 export interface ResultadosHeces {
+  aspecto: string;
+  reaccion: string;
   color: string;
   consistencia: string;
-  mucus: string;
+  moco: string;
   sangre: string;
-  ph: string;
-  leucocitos: string;
-  parasitos: string;
+  microscopicoLeucocitos: string;
+  microscopicoEritrocitos: string;
+  microscopicoConidias: string;
+  microscopicoOtro: string;
+  noElementosParasitarios: boolean;
+  huevosAscarisLumbricoides: boolean;
+  huevosTricocefalos: boolean;
+  larvasAncylostomideos: boolean;
+  prequisteAmebaSp: boolean;
+  quistesAmebaColi: boolean;
+  quistesBlastocystisHominis: boolean;
+  quistesEndolimaxNana: boolean;
+  quistesEntamoebaHistolytica: boolean;
+  quistesGiardicaLamblia: boolean;
+  quistesIodamoebaBusthlli: boolean;
+  trofositosChilomastixMessmilli: boolean;
+  complementarioSangreOculta: string;
+  complementarioSangreOculta2: string;
+  complementarioAzucaresReductores: string;
+  complementarioOtro: string;
   observaciones: string;
+  ph?: string;
+  mucus?: string;
+  leucocitos?: string;
+  parasitos?: string;
 }
 
 export interface ResultadosHematologia {

@@ -62,6 +62,44 @@
       ],
       "cedula": "12490966",
       "direccion": "Barrio"
+    },
+    {
+      "id": "mmz9mu0b9d5ux39g10b",
+      "nombre": "Alejandro ",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "20/3/2026",
+      "examenes": [
+        "dengue",
+        "hematologia"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mn10omv6urkttmnl43h",
+      "nombre": "Alejandro ",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "21/3/2026",
+      "examenes": [
+        "hematologia",
+        "heces"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mn3fa5snhlkrvfvc4th",
+      "nombre": "Alejandro Garcia",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "23/3/2026",
+      "examenes": [
+        "dengue"
+      ],
+      "cedula": "23568290",
+      "direccion": "Barrio"
     }
   ],
   "examenes": [
@@ -298,6 +336,131 @@
         "complementarioOtro": "Negativo",
         "observaciones": "jhghg"
       }
+    },
+    {
+      "id": "mmz9mu21migt4oneqbg",
+      "pacienteId": "mmz9mu0b9d5ux39g10b",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-20T19:01:59.531Z",
+      "fechaActualizacion": "2026-03-20T21:11:06.613Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Negativo",
+        "observaciones": "ghfgh"
+      }
+    },
+    {
+      "id": "mmz9mu214sp2salvi2n",
+      "pacienteId": "mmz9mu0b9d5ux39g10b",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-20T19:01:59.531Z",
+      "fechaActualizacion": "2026-03-20T21:11:49.566Z",
+      "resultados": {
+        "leucocitos": "24",
+        "hematies": "54",
+        "hemoglobina": "64",
+        "hematocrito": "2",
+        "segmentados": "1",
+        "linfocitos": "3",
+        "eosinofilos": "5",
+        "otros": "3",
+        "sedimentacion_1h": "134",
+        "sedimentacion_2h": "134",
+        "plaquetas": "35",
+        "t_protrombina": "64",
+        "t_protrombina_control": "2",
+        "inr": "3",
+        "razon_pc": "43",
+        "ptt": "24",
+        "ptt_control": "54",
+        "t_sangria": "64",
+        "t_coagulacion": "45",
+        "observaciones": "ssfh"
+      }
+    },
+    {
+      "id": "mn10omxjdofsryxnewe",
+      "pacienteId": "mn10omv6urkttmnl43h",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-22T00:26:59.394Z",
+      "fechaActualizacion": "2026-03-23T16:43:02.832Z",
+      "resultados": {
+        "leucocitos": "1223",
+        "hematies": "2312",
+        "hemoglobina": "13",
+        "hematocrito": "24",
+        "segmentados": "12",
+        "linfocitos": "423",
+        "eosinofilos": "351",
+        "otros": "35",
+        "sedimentacion_1h": "1351",
+        "sedimentacion_2h": "123",
+        "plaquetas": "123",
+        "t_protrombina": "54",
+        "t_protrombina_control": "23",
+        "inr": "4",
+        "razon_pc": "2",
+        "ptt": "34",
+        "ptt_control": "34",
+        "t_sangria": "124",
+        "t_coagulacion": "34",
+        "observaciones": "buen"
+      },
+      "doctorOrdenante": "Alejo"
+    },
+    {
+      "id": "mn10omxj78ntq22gz8p",
+      "pacienteId": "mn10omv6urkttmnl43h",
+      "tipo": "heces",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-22T00:26:59.394Z",
+      "fechaActualizacion": "2026-03-23T16:50:39.204Z",
+      "resultados": {
+        "aspecto": "Homogeneo",
+        "sangre": "",
+        "consistencia": "Diarreica",
+        "reaccion": "Acida",
+        "color": "Negro",
+        "moco": "Ausente",
+        "microscopicoLeucocitos": "Escasas",
+        "microscopicoEritrocitos": "Escasas",
+        "microscopicoConidias": "Moderadas",
+        "microscopicoOtro": "Moderadas",
+        "noElementosParasitarios": true,
+        "huevosAscarisLumbricoides": false,
+        "huevosTricocefalos": false,
+        "larvasAncylostomideos": false,
+        "prequisteAmebaSp": false,
+        "quistesAmebaColi": false,
+        "quistesBlastocystisHominis": false,
+        "quistesEndolimaxNana": false,
+        "quistesEntamoebaHistolytica": false,
+        "quistesGiardicaLamblia": false,
+        "quistesIodamoebaBusthlli": false,
+        "trofositosChilomastixMessmilli": false,
+        "complementarioSangreOculta": "Ausente",
+        "complementarioSangreOculta2": "Negativo",
+        "complementarioAzucaresReductores": "Positivo (+)",
+        "complementarioOtro": "Negativo",
+        "observaciones": "kfjsdsdsfhsfxvvb"
+      }
+    },
+    {
+      "id": "mn3fa5ut2y5ulhjypdc",
+      "pacienteId": "mn3fa5snhlkrvfvc4th",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-03-23T16:51:10.679Z",
+      "fechaActualizacion": "2026-03-23T17:01:03.845Z",
+      "resultados": {
+        "IgG": "Negativo",
+        "IgM": "Negativo",
+        "observaciones": "sddgdfhsfh sssfh"
+      },
+      "doctorOrdenante": "no se"
     }
   ]
 }

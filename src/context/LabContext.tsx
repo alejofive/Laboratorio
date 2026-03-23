@@ -10,7 +10,7 @@ interface LabContextType {
   isLoading: boolean;
   crearPaciente: (paciente: Omit<Paciente, 'id' | 'fecha'>) => Promise<Examen[]>;
   actualizarExamen: (id: string, resultados: ResultadosExamen, estado?: EstadoExamen) => Promise<void>;
-  cambiarEstado: (id: string, estado: EstadoExamen) => Promise<void>;
+  cambiarEstado: (id: string, estado: EstadoExamen, doctorOrdenante?: string) => Promise<void>;
   getExamenesPorPaciente: (pacienteId: string) => Examen[];
   getPacientesUnicos: () => Map<string, { paciente: Paciente; examenes: Examen[] }>;
   getStats: () => { total: number; pendientes: number; enProceso: number; completos: number; enviados: number };
@@ -79,11 +79,11 @@ export function LabProvider({ children }: { children: ReactNode }) {
   });
 
   const cambiarEstadoMutation = useMutation({
-    mutationFn: async ({ id, estado }: { id: string; estado: EstadoExamen }) => {
+    mutationFn: async ({ id, estado, doctorOrdenante }: { id: string; estado: EstadoExamen; doctorOrdenante?: string }) => {
       const res = await fetch('/api/examenes', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, estado }),
+        body: JSON.stringify({ id, estado, doctorOrdenante }),
       });
       if (!res.ok) throw new Error('Error changing estado');
       return res.json();
@@ -117,8 +117,8 @@ export function LabProvider({ children }: { children: ReactNode }) {
     await actualizarExamenMutation.mutateAsync({ id, resultados, estado });
   };
 
-  const cambiarEstado = async (id: string, estado: EstadoExamen): Promise<void> => {
-    await cambiarEstadoMutation.mutateAsync({ id, estado });
+  const cambiarEstado = async (id: string, estado: EstadoExamen, doctorOrdenante?: string): Promise<void> => {
+    await cambiarEstadoMutation.mutateAsync({ id, estado, doctorOrdenante });
   };
 
   const getExamenesPorPaciente = (pacienteId: string): Examen[] => {

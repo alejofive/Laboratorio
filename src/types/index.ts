@@ -533,6 +533,7 @@ export interface Examen {
   tipo: TipoExamen;
   estado: EstadoExamen;
   resultados?: ResultadosExamen;
+  doctorOrdenante?: string;
   fechaCreacion: string;
   fechaActualizacion: string;
   emailEnviado?: string;

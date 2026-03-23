@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLab } from '@/context/LabContext';
 import ExamenTabs from '@/components/ExamenTabs';
 import AccionesExamen from '@/components/AccionesExamen';
@@ -60,7 +60,7 @@ import {
   ResultadosNuevoCompleto,
   ResultadosExamen,
 } from '@/types';
-import { Save, Pencil } from 'lucide-react';
+import { Save } from 'lucide-react';
 import Loading from './loading';
 
 
@@ -70,8 +70,79 @@ export default function ExamenPage() {
   const { examenes, pacientes, actualizarExamen, cambiarEstado, getExamenesPorPaciente } = useLab();
   const [isFormValid, setIsFormValid] = useState(false);
   const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({});
+  const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({});
+  const formContainerRef = useRef<HTMLDivElement | null>(null);
 
   const examen = examenes.find(e => e.id === params.id);
+  const initialReadOnly = examen?.estado === 'completo' || examen?.estado === 'enviado';
+  const readOnly = examen ? (readOnlyByExam[examen.id] ?? initialReadOnly) : false;
+
+  useEffect(() => {
+    const container = formContainerRef.current;
+
+    if (!container) return;
+
+    const resetReadOnlyRender = () => {
+      container.querySelectorAll<HTMLElement>('[data-readonly-generated="true"]').forEach(node => {
+        node.remove();
+      });
+
+      container.querySelectorAll<HTMLElement>('[data-readonly-hidden="true"]').forEach(node => {
+        node.style.removeProperty('display');
+        node.removeAttribute('data-readonly-hidden');
+      });
+
+      container.querySelectorAll<HTMLElement>('[data-readonly-normal-weight="true"]').forEach(node => {
+        node.style.removeProperty('font-weight');
+        node.removeAttribute('data-readonly-normal-weight');
+      });
+    };
+
+    resetReadOnlyRender();
+
+    if (!readOnly) return;
+
+    const controls = container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('input, select, textarea');
+
+    controls.forEach(control => {
+      if (control instanceof HTMLInputElement && control.type === 'hidden') {
+        return;
+      }
+
+      if (control instanceof HTMLInputElement && (control.type === 'radio' || control.type === 'checkbox')) {
+        const label = control.closest('label');
+
+        if (!control.checked) {
+          const target = label ?? control;
+          target.style.display = 'none';
+          target.setAttribute('data-readonly-hidden', 'true');
+          return;
+        }
+
+        if (label) {
+          label.style.fontWeight = '400';
+          label.setAttribute('data-readonly-normal-weight', 'true');
+        }
+
+        return;
+      }
+
+      const value = control instanceof HTMLSelectElement
+        ? (control.selectedOptions[0]?.textContent?.trim() || '-')
+        : (control.value.trim() || '-');
+
+      const readOnlyNode = document.createElement(control instanceof HTMLTextAreaElement ? 'div' : 'span');
+      readOnlyNode.textContent = value;
+      readOnlyNode.className = 'w-full py-2 text-sm text-gray-900 break-words block';
+      readOnlyNode.setAttribute('data-readonly-generated', 'true');
+
+      control.insertAdjacentElement('afterend', readOnlyNode);
+      control.style.display = 'none';
+      control.setAttribute('data-readonly-hidden', 'true');
+    });
+
+    return resetReadOnlyRender;
+  }, [readOnly, examen?.id]);
 
   if (!examen) {
     return (
@@ -85,8 +156,12 @@ export default function ExamenPage() {
 
   const paciente = pacientes.find(p => p.id === examen.pacienteId);
   const examenesPaciente = paciente ? getExamenesPorPaciente(paciente.id) : [];
-  const initialReadOnly = examen.estado === 'completo' || examen.estado === 'enviado';
-  const readOnly = readOnlyByExam[examen.id] ?? initialReadOnly;
+  const doctorOrdenanteHistorico = [...examenesPaciente]
+    .sort((a, b) => new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime())
+    .map(ex => ex.doctorOrdenante?.trim())
+    .find(Boolean) || '';
+  const doctorExamenActual = examen.doctorOrdenante?.trim() || '';
+  const doctorOrdenanteInput = doctorOrdenanteByExam[examen.id] ?? (doctorExamenActual || doctorOrdenanteHistorico);
 
   const setCurrentReadOnly = (nextValue: boolean) => {
     setReadOnlyByExam(prev => ({
@@ -100,7 +175,14 @@ export default function ExamenPage() {
   };
 
   const handleCompletar = async () => {
-    await cambiarEstado(examen.id, 'completo');
+    const doctorOrdenanteNormalizado = doctorOrdenanteInput.trim();
+
+    setDoctorOrdenanteByExam(prev => ({
+      ...prev,
+      [examen.id]: doctorOrdenanteNormalizado,
+    }));
+
+    await cambiarEstado(examen.id, 'completo', doctorOrdenanteNormalizado || undefined);
     setCurrentReadOnly(true);
   };
 
@@ -184,21 +266,23 @@ export default function ExamenPage() {
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm  print-area ">
 
-          <div className="flex justify-between p-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Examen: {examen.tipo}</h1>
-            <button
-              onClick={() => setCurrentReadOnly(!readOnly)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center ${readOnly ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <Pencil className="w-4 h-4" />
-              {readOnly ? 'Editar' : 'Solo lectura'}
-            </button>
-          </div>
-          <ExamenTabs examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))} examenActualId={examen.id} />
 
-          <div className="px-6 pb-6 mt-6">
+          <ExamenTabs
+            readOnly={readOnly}
+            setCurrentReadOnly={setCurrentReadOnly}
+            examen={examen}
+            examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
+            examenActualId={examen.id}
+            doctorOrdenante={doctorOrdenanteInput}
+            onDoctorOrdenanteChange={(value) => {
+              setDoctorOrdenanteByExam(prev => ({
+                ...prev,
+                [examen.id]: value,
+              }));
+            }}
+          />
 
-
+          <div ref={formContainerRef} className="px-6 pb-6 mt-6">
             <fieldset
               disabled={readOnly}
               className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"

@@ -57,6 +57,36 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
   const getExamenesDelPaciente = (pacienteId: string) =>
     examenes.filter(e => e.pacienteId === pacienteId);
 
+  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado';
+
+  const parseFechaToTimestamp = (fecha: string) => {
+    const [dia, mes, anio] = fecha.split('/').map(Number);
+
+    if (!dia || !mes || !anio) {
+      return 0;
+    }
+
+    return Date.UTC(anio, mes - 1, dia);
+  };
+
+  const estadoPacienteCache = new Map<string, 'pendiente' | 'completo'>();
+  const getEstadoPaciente = (pacienteId: string): 'pendiente' | 'completo' => {
+    const estadoCacheado = estadoPacienteCache.get(pacienteId);
+    if (estadoCacheado) return estadoCacheado;
+
+    const examenesPaciente = getExamenesDelPaciente(pacienteId);
+    const todosCompletos = examenesPaciente.every(e => isExamenCompleto(e.estado));
+    const estado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
+    estadoPacienteCache.set(pacienteId, estado);
+    return estado;
+  };
+
+  const compareByFechaDescThenNombreAsc = (a: (typeof pacientes)[number], b: (typeof pacientes)[number]) => {
+    const fechaDiff = parseFechaToTimestamp(b.fecha) - parseFechaToTimestamp(a.fecha);
+    if (fechaDiff !== 0) return fechaDiff;
+    return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
+  };
+
   const sortedPacientes = [...pacientes]
     .filter(paciente => {
       const fechaHoy = getFechaHoy();
@@ -75,9 +105,20 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
         paciente.cedula.toLowerCase().includes(texto)
       );
     })
-    .sort((a, b) =>
-      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-    );
+    .sort((a, b) => {
+      if (!mostrarAnteriores) {
+        return compareByFechaDescThenNombreAsc(a, b);
+      }
+
+      const estadoA = getEstadoPaciente(a.id);
+      const estadoB = getEstadoPaciente(b.id);
+
+      if (estadoA !== estadoB) {
+        return estadoA === 'pendiente' ? -1 : 1;
+      }
+
+      return compareByFechaDescThenNombreAsc(a, b);
+    });
 
   const totalPaginas = Math.ceil(sortedPacientes.length / PACIENTES_POR_PAGINA);
   const pacientesPaginados = sortedPacientes.slice(
@@ -154,9 +195,8 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
               const examenesVisibles = examenesPaciente.slice(0, 2);
               const examenesRestantes = examenesPaciente.length - examenesVisibles.length;
               const primerExamen = examenesPaciente[0];
-
-              const todosCompletos = examenesPaciente.every(e => e.estado === 'completo' || e.estado === 'enviado');
-              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
+              const estadoMostrado = getEstadoPaciente(paciente.id);
+              const todosCompletos = estadoMostrado === 'completo';
 
               return (
                 <tr key={paciente.id} className="hover:bg-gray-50">
@@ -167,10 +207,10 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-1">
                       {examenesVisibles.map((examen, idx) => {
-                        const estaCompleto = examen.estado === 'completo' || examen.estado === 'enviado';
+                        const estaCompleto = isExamenCompleto(examen.estado);
                         return (
                           <span key={idx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${estaCompleto ? 'bg-green-100 text-green-500' : 'bg-orange-100 text-orange-700'
-                             }`}>
+                            }`}>
                             {estaCompleto && <Check className="w-3 h-3" />}
                             {examLabels[examen.tipo]}
                           </span>

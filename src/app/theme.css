@@ -1,0 +1,23 @@
+@theme {
+  --font-sans: var(--sys-font-sans);
+
+  --color-canvas: var(--sys-color-canvas);
+  --color-page: var(--sys-color-page);
+  --color-surface: var(--sys-color-surface);
+  --color-surface-muted: var(--sys-color-surface-muted);
+
+  --color-primary: var(--sys-color-primary);
+  --color-secondary: var(--sys-color-secondary);
+  --color-tertiary: var(--sys-color-tertiary);
+
+  --color-border-default: var(--sys-color-border-default);
+  --color-border-input: var(--sys-color-border-input);
+
+  --color-brand-primary: var(--sys-color-brand-primary);
+  --color-brand-soft: var(--sys-color-brand-soft);
+  --color-brand-active: var(--sys-color-brand-active);
+  --color-brand-logo: var(--sys-color-brand-logo);
+
+  --color-success-soft: var(--sys-color-success-soft);
+  --color-success: var(--sys-color-success);
+}

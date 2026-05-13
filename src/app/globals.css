@@ -1,20 +1,15 @@
 @import "tailwindcss";
-
-@theme {
-  --color-primary: rgb(0, 187, 212);
-  --color-primary-opacity: rgb(0, 187, 212, 0.48);
-  --color-celeste-hielo: rgb(232 247 250);
-  --color-celeste-pastel: rgb(233 247 248);
-  --color-blanco-hueso: rgb(253 253 253);
-  --color-blanco-nieve: rgb(254 254 254);
-  --color-blanco-perla: rgb(252 252 252);
-  --color-blanco-algodon: rgb(251 251 251);
-  --color-gris-humo: rgb(249 249 249);
-  --color-gris-plata: rgb(242 242 242);
-  --color-gris-nube: rgb(233 233 233);
-}
+@import "./variables.css";
+@import "./theme.css";
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #f5f5f5;
+  font-family: var(--font-sans);
+  background-color: var(--color-canvas);
+  color: var(--color-primary);
+}
+
+.surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
 }

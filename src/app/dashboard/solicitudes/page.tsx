@@ -1,7 +1,8 @@
 'use client';
 
 import ExamTable from "@/components/ExamTable";
-import StatsCards from "@/components/StatsCards";
+import TopResumen from "@/components/TopResumen";
+
 import { useLab } from "@/context/LabContext";
 import { useMemo, useState } from "react";
 
@@ -34,10 +35,9 @@ export default function SolicitudPage() {
         };
     }, [examenes, pacientes, mostrarAnteriores]);
 
-    return (<div className="px-32 py-5 w-full min-h-screen">
+    return (<div className="p-9 w-full min-h-screen">
         <div className="">
-            <StatsCards stats={stats} mostrarAnteriores={mostrarAnteriores} />
-
+            <TopResumen />
             <ExamTable
                 anterior={true}
                 mostrarAnteriores={mostrarAnteriores}

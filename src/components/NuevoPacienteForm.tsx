@@ -4,7 +4,6 @@ import { useLab } from '@/context/LabContext';
 import { TipoExamen } from '@/types';
 import {
   UserCheck,
-  UserRoundPlus,
   Droplets,
   FlaskConical,
   Microscope,
@@ -14,42 +13,18 @@ import {
   Shield,
   Cross,
   FileText,
-  MicroscopeIcon,
-  TestTube2,
-  Search
+  MicroscopeIcon
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { sileo } from 'sileo';
+import DetallePaciente from './DetallePaciente';
+import TopResumen from './TopResumen';
+import SvgIcon from './ui/SvgIcon';
+import { Button } from './ui/Button';
+import { PillFilter } from './PillFilter';
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles';
-
-const gruposExamenes: { key: GrupoExamen; label: string }[] = [
-  { key: 'hematologia', label: 'Hematologia' },
-  { key: 'quimica', label: 'Quimica' },
-  { key: 'serologia', label: 'Serologia e infecciosos' },
-  { key: 'orina_heces', label: 'Orina y heces' },
-  { key: 'paneles', label: 'Paneles combinados' },
-  { key: 'perfiles', label: 'Perfiles completos' },
-];
-
-const colorClasses: Record<string, { border: string; bg: string; text: string }> = {
-  red: { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-700' },
-  amber: { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700' },
-  rose: { border: 'border-rose-500', bg: 'bg-rose-50', text: 'text-rose-700' },
-  purple: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-700' },
-  indigo: { border: 'border-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  violet: { border: 'border-violet-500', bg: 'bg-violet-50', text: 'text-violet-700' },
-  pink: { border: 'border-pink-500', bg: 'bg-pink-50', text: 'text-pink-700' },
-  cyan: { border: 'border-cyan-500', bg: 'bg-cyan-50', text: 'text-cyan-700' },
-  teal: { border: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-700' },
-  yellow: { border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-700' },
-  green: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700' },
-  lime: { border: 'border-lime-500', bg: 'bg-lime-50', text: 'text-lime-700' },
-  emerald: { border: 'border-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  blue: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700' },
-  sky: { border: 'border-sky-500', bg: 'bg-sky-50', text: 'text-sky-700' },
-};
 
 const examenesDisponibles: { value: TipoExamen; label: string; icon: React.ReactNode; color: string; group: GrupoExamen }[] = [
   { value: 'hematologia', label: 'Hematologia', icon: <Droplets className="w-5 h-5 text-rose-500" />, color: 'rose', group: 'hematologia' },
@@ -95,7 +70,7 @@ interface FormValues {
 }
 
 export default function NuevoPacienteForm() {
-  const { crearPaciente, buscarPacientePorCedula } = useLab();
+  const { crearPaciente, buscarPacientePorCedula, pacientes } = useLab();
 
   const {
     register,
@@ -116,8 +91,33 @@ export default function NuevoPacienteForm() {
   });
 
   const examenesSeleccionados = watch('examenes');
-  const [busqueda, setBusqueda] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchExam, setSearchExam] = useState('');
+  const [activeCategory, setActiveCategory] = useState<GrupoExamen>('hematologia');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const cedulaValue = watch('cedula');
+
+  const shouldShowResults = searchTerm.trim().length >= 2;
+  const isSearching = searchTerm.trim().length > 0;
+
+  const results = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return [];
+
+    return pacientes.filter((paciente) => {
+      return (
+        paciente.cedula.toLowerCase().includes(term) ||
+        paciente.nombre.toLowerCase().includes(term) ||
+        paciente.telefono.toLowerCase().includes(term)
+      );
+    });
+  }, [pacientes, searchTerm]);
+
+  const selectedPatient = useMemo(
+    () => pacientes.find((paciente) => paciente.id === selectedPatientId) ?? null,
+    [pacientes, selectedPatientId]
+  );
 
   const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cedula = e.target.value;
@@ -145,16 +145,79 @@ export default function NuevoPacienteForm() {
     }
   };
 
-  const examenesFiltrados = examenesDisponibles.filter(examen =>
-    examen.label.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const EXAM_CATEGORIES: { key: GrupoExamen; label: string; iconSrc: string }[] = [
+    { key: 'hematologia', label: 'Hematologia', iconSrc: '/svg/examenes/Hematología.svg' },
+    { key: 'quimica', label: 'Quimica', iconSrc: '/svg/examenes/Química.svg' },
+    { key: 'serologia', label: 'Serologia', iconSrc: '/svg/examenes/serologia.svg' },
+    { key: 'orina_heces', label: 'Orina y heces', iconSrc: '/svg/examenes/Muestras.svg' },
+    { key: 'paneles', label: 'Paneles', iconSrc: '/svg/examenes/Combinados.svg' },
+    { key: 'perfiles', label: 'Perfiles', iconSrc: '/svg/examenes/Perfil completo.svg' },
+  ];
 
-  const examenesAgrupados = gruposExamenes
-    .map(grupo => ({
-      ...grupo,
-      examenes: examenesFiltrados.filter(examen => examen.group === grupo.key),
-    }))
-    .filter(grupo => grupo.examenes.length > 0);
+  const examCountByCategory: Record<GrupoExamen, number> = {
+    hematologia: examenesDisponibles.filter((exam) => exam.group === 'hematologia').length,
+    quimica: examenesDisponibles.filter((exam) => exam.group === 'quimica').length,
+    serologia: examenesDisponibles.filter((exam) => exam.group === 'serologia').length,
+    orina_heces: examenesDisponibles.filter((exam) => exam.group === 'orina_heces').length,
+    paneles: examenesDisponibles.filter((exam) => exam.group === 'paneles').length,
+    perfiles: examenesDisponibles.filter((exam) => exam.group === 'perfiles').length,
+  };
+
+  const visibleExams = examenesDisponibles.filter((exam) => {
+    const byCategory = exam.group === activeCategory;
+    const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase());
+    return byCategory && byText;
+  });
+
+  const selectedExams = examenesSeleccionados || [];
+  const shouldShowSelected = selectedExams.length > 0;
+
+  const onSearchTermChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  const onSelectPatient = (paciente: (typeof pacientes)[number]) => {
+    setValue('cedula', paciente.cedula);
+    setValue('nombre', paciente.nombre);
+    setValue('edad', paciente.edad.toString());
+    setValue('telefono', paciente.telefono);
+    setValue('direccion', paciente.direccion);
+    setSelectedPatientId(paciente.id);
+    setShowCreateForm(false);
+    setSearchTerm('');
+
+    sileo.info({
+      title: 'Datos cargados',
+      description: `Se cargaron los datos de ${paciente.nombre}`,
+      duration: 2000,
+      fill: 'black',
+      styles: {
+        title: 'text-white!',
+        description: 'text-white/75!',
+        badge: 'bg-white/20!',
+      },
+    });
+  };
+
+  const onCreatePatient = () => {
+    reset({
+      nombre: '',
+      edad: '',
+      telefono: '',
+      cedula: '',
+      direccion: '',
+      examenes: [],
+    });
+    setSelectedPatientId(null);
+    setShowCreateForm(true);
+    setSearchTerm('');
+  };
+
+  const onClearPatient = () => {
+    setSelectedPatientId(null);
+    setShowCreateForm(false);
+    setSearchTerm('');
+  };
 
   const toggleExamen = (tipo: TipoExamen) => {
     const current = examenesSeleccionados || [];
@@ -187,149 +250,218 @@ export default function NuevoPacienteForm() {
     });
   };
 
+
   return (
-    <div className="w-lvh m-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex gap-2 items-center"><UserRoundPlus className='text-cyan-600' />Datos del Paciente</h2>
+    <div className="w-full">
+      <TopResumen />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Cedula *</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={cedulaValue}
-                onChange={handleCedulaChange}
-                className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="12345678"
-              />
-              {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula.message}</p>}
-            </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Nombre Completo *</label>
-              <input
-                type="text"
-                {...register('nombre', { required: 'El nombre es requerido' })}
-                className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Juan Pérez García"
-              />
-              {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
-            </div>
+      <section className="bg-surface border-border-default border rounded-3xl p-4 mt-5 mb-4">
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Edad *</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                {...register('edad', { required: 'La edad es requerida', min: { value: '1', message: 'Debe ser mayor a 0' } })}
-                className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.edad ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="35"
-              />
-              {errors.edad && <p className="text-red-500 text-xs mt-1">{errors.edad.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Teléfono *</label>
-              <input
-                type="tel"
-                {...register('telefono', { required: 'El teléfono es requerido' })}
-                className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="555-1234-5678"
-              />
-              {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono.message}</p>}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-1">Dirección *</label>
-              <input
-                type="text"
-                {...register('direccion', { required: 'La dirección es requerida' })}
-                className={`w-full px-3 py-2 border rounded-md focus:border-transparent placeholder:text-gray-500 ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Dr. Nombre del Médico"
-              />
-              {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion.message}</p>}
-            </div>
-          </div>
-        </div>
-
-        <div className={`bg-white rounded-lg border p-6 shadow-sm ${errors.examenes ? 'border-red-500' : 'border-gray-200'}`}>
-          <div className='flex items-center justify-between mb-4'>
-            <div className='flex items-center gap-5'>
-              <h2 className="text-lg font-medium text-gray-900  flex gap-2 items-center"><TestTube2 className='text-cyan-600' />Exámenes a Realizar *</h2>
-              <div className={`overflow-hidden transition-all duration-300 ease-out ${examenesSeleccionados?.length ? 'w-24 opacity-100' : 'w-0 opacity-0'}`}>
-                <p className='bg-cyan-100 text-xs rounded-full px-4 py-0.5 text-cyan-800 font-medium whitespace-nowrap'>Examenes: {examenesSeleccionados?.length || 0}</p>
+        {!showCreateForm ? (
+          <div className="flex flex-wrap items-center gap-4">
+            {selectedPatient ? (
+              <div className="w-full">
+                <DetallePaciente paciente={selectedPatient} onClearPatient={onClearPatient} />
               </div>
-            </div>
-            <div className='relative'>
-              <Search className='text-gray-400 absolute top-1.5 right-3' />
-              <input
-                type="text"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className='border border-gray-300 rounded-lg h-9 w-80 pl-5 pr-10 text-gray-700 focus:outline-none focus:border-cyan-500'
-                placeholder='Buscar examen...'
-              />
-            </div>
-          </div>
-          <input type="hidden" {...register('examenes', { validate: (value) => value.length > 0 || 'Selecciona al menos un examen' })} />
-
-          <div className="space-y-5">
-            {examenesAgrupados.map(grupo => (
-              <div key={grupo.key}>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{grupo.label}</p>
-                  <span className="text-xs text-gray-400">{grupo.examenes.length}</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {grupo.examenes.map(examen => {
-                    const isSelected = examenesSeleccionados?.includes(examen.value);
-                    const colors = colorClasses[examen.color] || colorClasses.cyan;
-
-                    return (
-                      <div
-                        key={examen.value}
-                        onClick={() => toggleExamen(examen.value)}
-                        className={`flex items-center gap-3 h-12 px-2 rounded-lg border cursor-pointer transition-colors ${isSelected
-                          ? `${colors.border} ${colors.bg}`
-                          : 'border-gray-200 hover:border-gray-300'
-                          }`}
+            ) : (
+              <div className='w-full'>
+                <h2 className="mb-3 text-xl font-semibold leading-none">Buscar un paciente o crear solicitud</h2>
+                <div className='flex items-center gap-3 justify-between'>
+                  <div className="border-border-input relative bg-surface min-w-72 flex-1 rounded-xl border px-5 py-3 leading-none">
+                    <input
+                      className="text-secondary w-full bg-transparent pr-8 outline-none"
+                      value={searchTerm}
+                      onChange={(event) => onSearchTermChange(event.target.value)}
+                      placeholder="Buscar por cédula, nombre o teléfono..."
+                    />
+                    {searchTerm ? (
+                      <button
+                        type="button"
+                        className="text-secondary absolute right-4 top-2 text-xl"
+                        onClick={() => onSearchTermChange('')}
                       >
-                        {examen.icon}
-                        <span className={`text-sm ${isSelected ? colors.text : 'text-gray-700'}`}>{examen.label}</span>
+                        ×
+                      </button>
+                    ) : null}
+
+                    {shouldShowResults ? (
+                      <div className="border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0 shadow-2xl">
+                        {results.length > 0 ? (
+                          results.map((result, index) => (
+                            <button
+                              key={result.id}
+                              type="button"
+                              onClick={() => onSelectPatient(result)}
+                              className={`flex w-full items-center hover:bg-gray-200 cursor-pointer z-0 justify-between px-4 py-3 text-left ${index > 0 ? 'border-t border-border-default' : ''}`}
+                            >
+                              <span className="text-tertiary text-base">
+                                {result.nombre} · {result.cedula} · {result.telefono} · {result.edad} años
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-secondary px-4 py-3 text-base">No se encontraron pacientes.</p>
+                        )}
                       </div>
-                    );
-                  })}
+                    ) : null}
+                  </div>
+
+                  <div
+                    className={`origin-right overflow-hidden transition-all duration-300 ease-out ${isSearching ? 'pointer-events-none max-w-0 scale-95 opacity-0' : 'max-w-xs scale-100 opacity-100'}`}
+                    aria-hidden={isSearching}
+                  >
+                    <Button className="cursor-pointer whitespace-nowrap" onClick={onCreatePatient}>
+                      <SvgIcon src='/svg/plus.svg' size={24} /> Crear paciente nuevo
+                    </Button>
+                  </div>
                 </div>
               </div>
-            ))}
-
-            {examenesAgrupados.length === 0 && (
-              <p className="text-sm text-gray-500">No se encontraron examenes para esa busqueda.</p>
             )}
           </div>
-          {errors.examenes && <p className="text-red-500 text-xs mt-2">{errors.examenes.message}</p>}
-        </div>
+        ) : null}
 
-        <div className="flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="cursor-pointer px-4 py-2.5 w-24 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="cursor-pointer bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-md transition-colors flex items-center gap-2"
-          >
-            Crear solicitud
-            <UserCheck />
-          </button>
+        {showCreateForm ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="">
+              <button className="text-tertiary mb-4 text-base flex items-center gap-2 cursor-pointer" onClick={onClearPatient}>
+                <SvgIcon src='/svg/arrow-back.svg' size={20} />
+                <span className="text-secondary text-base">Volver a buscar</span>
+              </button>
+              <h2 className="mb-3 text-xl font-semibold leading-none">Nuevo paciente</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Cedula</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={cedulaValue}
+                    onChange={handleCedulaChange}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="V-12345678"
+                  />
+                  {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Nombre Completo</label>
+                  <input
+                    type="text"
+                    {...register('nombre', { required: 'El nombre es requerido' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Nombre y apellido"
+                  />
+                  {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Edad</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    {...register('edad', { required: 'La edad es requerida', min: { value: '1', message: 'Debe ser mayor a 0' } })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.edad ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Ej. 34"
+                  />
+                  {errors.edad && <p className="text-red-500 text-xs mt-1">{errors.edad.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    {...register('telefono', { required: 'El teléfono es requerido' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="0414-0000000"
+                  />
+                  {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono.message}</p>}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-tertiary text-sm font-bold mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    {...register('direccion', { required: 'La dirección es requerida' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Av. / Urb / Calle"
+                  />
+                  {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion.message}</p>}
+                </div>
+              </div>
+            </div>
+          </form >
+        ) : null}
+
+
+      </section>
+
+
+      <section className="bg-surface border border-border-default rounded-3xl p-4 h-[358px]">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-semibold leading-none">Examenes a realizar</h3>
+            <p className="text-secondary text-base">Selecciona uno o varios examenes para esta solicitud.</p>
+          </div>
+          <input
+            className="text-secondary border-border-input rounded-xl border px-4 py-2 text-base"
+            placeholder="Buscar examen"
+            value={searchExam}
+            onChange={(event) => setSearchExam(event.target.value)}
+          />
         </div>
-      </form >
+        <div className="mb-4 flex flex-wrap gap-2">
+          {EXAM_CATEGORIES.map((category) => (
+            <PillFilter
+              key={category.key}
+              label={`${category.label} (${examCountByCategory[category.key]})`}
+              active={activeCategory === category.key}
+              onClick={() => setActiveCategory(category.key)}
+              iconSrc={category.iconSrc}
+              iconAlt={category.key}
+            />
+          ))}
+        </div>
+        <input type="hidden" {...register('examenes', { validate: (value) => value.length > 0 || '' })} />
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {visibleExams.map((exam) => {
+            const isChecked = selectedExams.includes(exam.value);
+
+            return (
+              <label
+                key={exam.value}
+                className={`text-tertiary flex min-h-16 items-center gap-2 rounded-xl border px-3 text-sm transition-colors duration-200 ${isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
+                  }`}
+              >
+                <input type="checkbox" className="size-4" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
+                <span>{exam.label}</span>
+              </label>
+            );
+          })}
+        </div>
+        {visibleExams.length === 0 ? <p className="text-secondary mt-3 text-sm">No hay examenes para esta busqueda.</p> : null}
+        {shouldShowSelected ? (
+          <div className="mt-6">
+            <h4 className="text-xl font-semibold">Examenes seleccionados: {selectedExams.length}</h4>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {selectedExams.map((exam) => {
+                const examLabel = examenesDisponibles.find((item) => item.value === exam)?.label ?? exam;
+                return <PillFilter selected key={exam} label={examLabel} onRemove={() => toggleExamen(exam)} />;
+              })}
+            </div>
+          </div>
+        ) : null}
+        {errors.examenes && <p className="text-red-500 text-xs mt-2">{errors.examenes.message}</p>}
+      </section>
+
+      <div className="flex items-center justify-end gap-4 mt-6">
+        <button
+          type="submit"
+          className="cursor-pointer bg-brand-primary hover:bg-brand-light text-white font-bold py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2"
+        >
+          Guardar y crear solicitud
+        </button>
+      </div>
     </div >
   );
 }

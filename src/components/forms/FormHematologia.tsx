@@ -41,6 +41,28 @@ const defaultLabels: Record<CampoKey, string> = {
   t_coagulacion: 'Tiempo de Coagulación (min)',
 };
 
+const placeholders: Record<CampoKey, string> = {
+  leucocitos: 'Ej: 7500',
+  hematies: 'Ej: 4.8',
+  hemoglobina: 'Ej: 13.5',
+  hematocrito: 'Ej: 40',
+  segmentados: 'Ej: 55',
+  linfocitos: 'Ej: 35',
+  eosinofilos: 'Ej: 3',
+  otros: 'Ej: 7',
+  sedimentacion_1h: 'Ej: 10',
+  sedimentacion_2h: 'Ej: 20',
+  plaquetas: 'Ej: 250000',
+  t_protrombina: 'Ej: 12',
+  t_protrombina_control: 'Ej: 12',
+  inr: 'Ej: 1.0',
+  razon_pc: 'Ej: 1.0',
+  ptt: 'Ej: 30',
+  ptt_control: 'Ej: 30',
+  t_sangria: 'Ej: 3',
+  t_coagulacion: 'Ej: 7',
+};
+
 const requiredFields: CampoKey[] = [
   'leucocitos', 'hematies', 'hemoglobina', 'hematocrito',
   'segmentados', 'linfocitos', 'eosinofilos', 'otros',
@@ -121,86 +143,83 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {campos.map(campo => (
-          <InputNumber
-            key={campo.key}
-            label={campo.label}
-            value={data[campo.key]}
-            onChange={v => handleChange(campo.key, v)}
-            placeholder=""
-            readOnly={readOnly}
-          />
-        ))}
+      <div className='border border-surface-muted  rounded-3xl '>
+        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Datos principales</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
+          {campos.map(campo => (
+            <InputNumber
+              key={campo.key}
+              label={campo.label}
+              value={data[campo.key]}
+              onChange={v => handleChange(campo.key, v)}
+              placeholder={placeholders[campo.key]}
+              readOnly={readOnly}
+            />
+          ))}
+        </div>
       </div>
 
-      <hr className="border-gray-200" />
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Fórmula Leucocitaria (%)</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className='border border-surface-muted  rounded-3xl '>
+        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Fórmula Leucocitaria (%)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
           {formulaLeucocitaria.map(campo => (
             <InputNumber
               key={campo.key}
               label={campo.label}
               value={data[campo.key]}
               onChange={v => handleChange(campo.key, v)}
-              placeholder=""
+              placeholder={placeholders[campo.key]}
               readOnly={readOnly}
             />
           ))}
         </div>
       </div>
 
-      <hr className="border-gray-200" />
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Sedimentación</h3>
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+      <div className='border border-surface-muted  rounded-3xl '>
+        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Sedimentación</h3>
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 p-6">
           {sedimentacion.map(campo => (
             <InputNumber
               key={campo.key}
               label={campo.label}
               value={data[campo.key]}
               onChange={v => handleChange(campo.key, v)}
-              placeholder=""
+              placeholder={placeholders[campo.key]}
               readOnly={readOnly}
             />
           ))}
         </div>
       </div>
 
-      <hr className="border-gray-200" />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <InputNumber
-          label={defaultLabels.plaquetas}
-          value={data.plaquetas}
-          onChange={v => handleChange('plaquetas', v)}
-          placeholder=""
-          readOnly={readOnly}
-        />
+      <div className='border border-surface-muted  rounded-3xl '>
+        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Plaquetas</h3>
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 p-6">
+          <InputNumber
+            label={defaultLabels.plaquetas}
+            value={data.plaquetas}
+            onChange={v => handleChange('plaquetas', v)}
+            placeholder={placeholders.plaquetas}
+            readOnly={readOnly}
+          />
+        </div>
       </div>
 
-      <hr className="border-gray-200" />
-
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Coagulación</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className='border border-surface-muted  rounded-3xl '>
+        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Coagulación</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-6">
           {coagulacion.map(campo => (
             <InputNumber
               key={campo.key}
               label={campo.label}
               value={data[campo.key]}
               onChange={v => handleChange(campo.key, v)}
-              placeholder=""
+              placeholder={placeholders[campo.key]}
               readOnly={readOnly}
             />
           ))}
         </div>
       </div>
 
-      <hr className="border-gray-200" />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>

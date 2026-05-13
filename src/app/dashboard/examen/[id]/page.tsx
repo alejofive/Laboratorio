@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useLab } from '@/context/LabContext';
@@ -59,15 +60,17 @@ import {
   ResultadosHematologiaSerologia,
   ResultadosNuevoCompleto,
   ResultadosExamen,
+  TipoExamen,
 } from '@/types';
 import { Save } from 'lucide-react';
 import Loading from './loading';
+import { Button } from '@/components/ui/Button';
 
 
 
 export default function ExamenPage() {
   const params = useParams();
-  const { examenes, pacientes, actualizarExamen, cambiarEstado, getExamenesPorPaciente } = useLab();
+  const { examenes, pacientes, actualizarExamen, cambiarEstado, getExamenesPorPaciente, enviarEmail } = useLab();
   const [isFormValid, setIsFormValid] = useState(false);
   const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({});
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({});
@@ -146,7 +149,7 @@ export default function ExamenPage() {
 
   if (!examen) {
     return (
-      <div className='max-w-4xl mx-auto h-full flex flex-col justify-center gap-6'>
+      <div className=''>
         <div className=''>
           <Loading />
         </div>
@@ -188,6 +191,52 @@ export default function ExamenPage() {
 
   const handleValidChange = (isValid: boolean) => {
     setIsFormValid(isValid);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleSendEmail = async () => {
+    const defaultEmail = examen.emailEnviado || '';
+    const email = window.prompt('Ingresa el correo de destino', defaultEmail);
+
+    if (!email) return;
+
+    const emailNormalizado = email.trim();
+    if (!emailNormalizado) return;
+
+    await enviarEmail(examen.id, emailNormalizado);
+    alert('Email enviado');
+  };
+
+  const examLabels: Record<TipoExamen, string> = {
+    dengue: 'Dengue',
+    frotis_sangre: 'Frotis de sangre periferica',
+    glicemia_pre_post: 'Glicemia pre post',
+    heces: 'Heces',
+    hematologia: 'Hematología',
+    helicobacter_pylori: 'Helicobacter Pylori',
+    hematologia_quimica: 'Hematología y Química',
+    hematologia_serologia: 'Hematología y Serología',
+    hemoglobina_hematocritos: 'Hemoglobina Hematocritos',
+    hemoparasitos: 'Hemoparasitos',
+    nuevo_completo: 'Nuevo Completo',
+    orina_heces: 'Orina y Heces',
+    orina: 'Orina',
+    prueba_embarazo: 'Prueba de embarazo',
+    quimica_colinesterasa: 'Química Colinesterasa',
+    quimica_corta: 'Quimica sanguinea mas corta',
+    quimica_heces: 'Química y Heces',
+    quimica_orina: 'Química y Orina',
+    quimica_serologia: 'Química y Serología',
+    quimica: 'Química',
+    serologia_asto_psa_pylori: 'Serologia ASTO PSA Pylori',
+    serologia_heces: 'Serología y Heces',
+    serologia_orina: 'Serología y Orina',
+    serologia: 'Serología',
+    tipo_sangre: 'Tipo de sangre',
+    vdrl_hepatitis: 'VDRL Hepatitis y demas',
   };
 
   const renderForm = () => {
@@ -250,11 +299,11 @@ export default function ExamenPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto h-full flex flex-col justify-center gap-6">
+    <div className="h-full flex p-8 flex-col">
 
 
       {paciente && (
-        <div className="no-print mt-6">
+        <div className="no-print ">
           <AccionesExamen examen={examen} paciente={paciente} />
         </div>
       )}
@@ -264,42 +313,71 @@ export default function ExamenPage() {
           <p>Examen no encontrado</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm  print-area ">
+        <>
+          {examenesPaciente.length > 1 && (
+            <nav className="flex flex-col gap-4 mb-5">
+              <span className='text-xl text-secondary'>Exámenes</span>
+              <div className='flex gap-4'>
+                {examenesPaciente.map(ex => (
+                  <Link
+                    key={ex.id}
+                    href={`/dashboard/examen/${ex.id}`}
+                    scroll={false}
+                    className={`py-2 px-2.5 font-medium text-base transition-colors rounded-4xl ${ex.id === examen.id
+                      ? 'border-primary text-white bg-primary '
+                      : 'bg-primary/10 text-tertiary '
+                      }`}
+                  >
+                    {examLabels[ex.tipo]}
+
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          )}
+          <div className="bg-white rounded-3xl border border-border-default shadow-sm  print-area ">
 
 
-          <ExamenTabs
-            readOnly={readOnly}
-            setCurrentReadOnly={setCurrentReadOnly}
-            examen={examen}
-            examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
-            examenActualId={examen.id}
-            doctorOrdenante={doctorOrdenanteInput}
-            onDoctorOrdenanteChange={(value) => {
-              setDoctorOrdenanteByExam(prev => ({
-                ...prev,
-                [examen.id]: value,
-              }));
-            }}
-          />
+            <ExamenTabs
+              readOnly={readOnly}
+              setCurrentReadOnly={setCurrentReadOnly}
+              examen={examen}
+              examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
+              examenActualId={examen.id}
+              onPrint={handlePrint}
+              onSendEmail={handleSendEmail}
+              doctorOrdenante={doctorOrdenanteInput}
+              onDoctorOrdenanteChange={(value) => {
+                setDoctorOrdenanteByExam(prev => ({
+                  ...prev,
+                  [examen.id]: value,
+                }));
+              }}
+            />
 
-          <div ref={formContainerRef} className="px-6 pb-6 mt-6">
-            <fieldset
-              disabled={readOnly}
-              className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"
-            >
-              {renderForm()}
-            </fieldset>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                onClick={handleCompletar}
-                disabled={!isFormValid || readOnly}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold rounded-md transition-colors flex gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            <div ref={formContainerRef} className="px-6 pb-6">
+              <fieldset
+                disabled={readOnly}
+                className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"
               >
-                <Save /> Guardar
-              </button>
+                {renderForm()}
+              </fieldset>
+
             </div>
           </div>
-        </div>
+
+          <div className="mt-6 flex justify-end gap-2">
+            <Button
+              onClick={handleCompletar}
+              disabled={!isFormValid || readOnly}
+              variant='primary'
+              size='md'
+              className='cursor-pointer text-base'
+            >
+              Guardar resultado
+            </Button>
+          </div>
+        </>
       )}
 
       <div className="mt-4 text-center text-xs text-gray-400 print-area">

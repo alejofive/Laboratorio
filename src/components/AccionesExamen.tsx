@@ -6,10 +6,12 @@ import { Examen, EstadoExamen, Paciente } from '@/types';
 import { useLab } from '@/context/LabContext';
 import EstadoBadge from './EstadoBadge';
 import { ArrowLeft, FileText, FlaskConical, Mail } from 'lucide-react';
+import { Button } from './ui/Button';
 
 interface AccionesExamenProps {
   examen: Examen;
   paciente: Paciente;
+  mostrarAccionesResultado?: boolean;
 }
 
 const examLabels: Record<string, string> = {
@@ -41,13 +43,19 @@ const examLabels: Record<string, string> = {
   vdrl_hepatitis: 'VDRL Hepatitis y demas',
 };
 
-export default function AccionesExamen({ examen, paciente }: AccionesExamenProps) {
+export default function AccionesExamen({ examen, paciente, mostrarAccionesResultado = true }: AccionesExamenProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cedulaParam = searchParams.get('cedula');
-  const { enviarEmail } = useLab();
+  const { enviarEmail, getExamenesPorPaciente } = useLab();
   const [email, setEmail] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
+
+  const examenesPaciente = getExamenesPorPaciente(paciente.id);
+  const completados = examenesPaciente.filter((ex) => ex.estado === 'completo' || ex.estado === 'enviado').length;
+  const total = examenesPaciente.length;
+  const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+  const porcentajeSeguro = Math.min(100, Math.max(0, porcentaje));
 
   const handleVolver = () => {
     if (cedulaParam) {
@@ -71,97 +79,116 @@ export default function AccionesExamen({ examen, paciente }: AccionesExamenProps
     }
   };
 
+  const formatDateToDayOfYear = (isoDate: string) => {
+    const date = new Date(isoDate);
+    const year = date.getFullYear();
+
+    // Calcular el día del año
+    const startOfYear = new Date(year, 0, 1);
+    const diff = date.getTime() - startOfYear.getTime();
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+
+    // Formatear con ceros a la izquierda (3 dígitos)
+    const dayFormatted = String(dayOfYear).padStart(3, '0');
+
+    return `${year}-${dayFormatted}`;
+  }
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-
-        <div>
-          <button
-            onClick={handleVolver}
-            className="cursor-pointer"
-          >
-            <ArrowLeft className="text-gray-700" />
-          </button>
-
-
-          {paciente && (
-            <div className="mt-2 text-sm text-gray-500 flex gap-4 flex-col">
-              <h1 className="text-2xl font-bold text-gray-900">{paciente.nombre}</h1>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Cédula</p>
-                  <p className="text-gray-900">{paciente.cedula}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Teléfono</p>
-                  <p className="text-gray-900">{paciente.telefono}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Edad</p>
-                  <p className="text-gray-900">{paciente.edad} años</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Dirección</p>
-                  <p className="text-gray-900">{paciente.direccion}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
+    <div className="mb-6">
+      <div className='flex items-center mb-4 gap-4'>
+        <button
+          onClick={handleVolver}
+          className="cursor-pointer"
+        >
+          <ArrowLeft className="text-gray-700" />
+        </button>
+        <p className='text-primary text-2xl'><strong># Solicitud: </strong>{formatDateToDayOfYear(examen.fechaCreacion)}</p>
         <EstadoBadge estado={examen.estado} />
       </div>
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className='bg-white rounded-3xl border border-border-default p-6'>
+        <div className=" md:items-center md:justify-between gap-4 ">
 
-        {(examen.estado === 'completo') && (
-          <div className='flex items-center gap-3'>
-            <button
-              onClick={handleImprimir}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold rounded-md transition-colors flex gap-2 items-center"
-            >
-              <FileText /> Imprimir PDF
-            </button>
-            <button
-              onClick={() => setShowEmailModal(true)}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold rounded-md transition-colors flex gap-2 items-center"
-            >
-              <Mail /> Enviar Email
-            </button>
-          </div>
-        )}
-      </div>
-
-      {
-        showEmailModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Enviar por Email</h3>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 "
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleEnviarEmail}
-                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
-                >
-                  Enviar
-                </button>
-                <button
-                  onClick={() => setShowEmailModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md"
-                >
-                  Cancelar
-                </button>
+          <div className='flex justify-between mb-4'>
+            <span className='text-xl text-secondary'>Paciente</span>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-36 overflow-hidden rounded-full bg-gray-200">
+                <div className="h-full rounded-full bg-brand-primary transition-all" style={{ width: `${porcentajeSeguro}%` }} />
               </div>
+              <span className="text-xs text-secondary">{`${completados}/${total}`}</span>
             </div>
           </div>
-        )
-      }
+
+          <div className='flex justify-between items-end'>
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-xl font-semibold">{paciente.nombre}</p>
+              </div>
+              <p className="text-secondary text-base  flex items-center gap-3 mt-4">
+                <span className="flex items-center gap-2"><img src="/svg/paciente/cedula.svg" alt="" /> {paciente.cedula}</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/phone.svg" alt="" /> {paciente.telefono}</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/calendar.svg" alt="" /> {paciente.edad} años</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/location.svg" alt="" /> {paciente.direccion}</span>
+              </p>
+            </div>
+
+            {mostrarAccionesResultado && (
+              <div className="flex flex-wrap justify-between gap-2">
+                <div className='flex items-center gap-3'>
+                  <Button
+                    onClick={() => setShowEmailModal(true)}
+                    variant='outline'
+                    size="md"
+                    className="flex gap-2 text-sm items-center cursor-pointer"
+                  >
+                    <Mail size={24} /> Enviar Email
+                  </Button>
+                  <Button
+                    onClick={handleImprimir}
+                    variant='primary'
+                    size="md"
+                    className="flex gap-2 text-sm items-center cursor-pointer"
+                  >
+                    <FileText size={24} /> Imprimir todo
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {
+          mostrarAccionesResultado && showEmailModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Enviar por Email</h3>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 "
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleEnviarEmail}
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
+                  >
+                    Enviar
+                  </button>
+                  <button
+                    onClick={() => setShowEmailModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      </div>
     </div >
   );
 }

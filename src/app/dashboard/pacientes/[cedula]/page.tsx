@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, Eye, Plus, Check } from 'lucide-react';
 import EstadoBadge from '@/components/EstadoBadge';
 import { TipoExamen } from '@/types';
+import { useRouter } from 'next/navigation';
 
 const examLabels: Record<TipoExamen, string> = {
   dengue: 'Dengue',
@@ -37,6 +38,7 @@ const examLabels: Record<TipoExamen, string> = {
 };
 
 export default function PacienteHistorialPage() {
+  const router = useRouter();
   const params = useParams();
   const cedula = params.cedula as string;
   const { pacientes, examenes } = useLab();
@@ -54,7 +56,7 @@ export default function PacienteHistorialPage() {
 
   if (!pacienteData) {
     return (
-      <div className="px-32 py-5 w-full min-h-screen">
+      <div className="px-8 py-5 w-full min-h-screen">
         <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1hover:underline mb-4">
           <ArrowLeft className="w-4 h-4" />
           Volver
@@ -66,6 +68,8 @@ export default function PacienteHistorialPage() {
     );
   }
 
+  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado';
+
   const historialVisitas = pacientesDelHistorial.map((visita) => {
     const examenesVisita = examenes
       .filter(examen => examen.pacienteId === visita.id)
@@ -74,31 +78,60 @@ export default function PacienteHistorialPage() {
     return { visita, examenesVisita };
   });
 
-  return (
-    <div className="px-32 py-5 w-full min-h-screen">
+  const handleVolver = () => {
+    router.push(`/dashboard/pacientes`);
+  };
 
+  const formatDateToDayOfYear = (isoDate: string) => {
+    const date = new Date(isoDate);
+    const year = date.getFullYear();
+
+    // Calcular el día del año
+    const startOfYear = new Date(year, 0, 1);
+    const diff = date.getTime() - startOfYear.getTime();
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+
+    // Formatear con ceros a la izquierda (3 dígitos)
+    const dayFormatted = String(dayOfYear).padStart(3, '0');
+
+    return `${year}-${dayFormatted}`;
+  }
+
+  return (
+    <div className="px-8 py-5 w-full min-h-screen">
+
+      <div className='flex items-center mb-4 gap-4'>
+        <button
+          onClick={handleVolver}
+          className="cursor-pointer"
+        >
+          <ArrowLeft className="text-gray-700" />
+        </button>
+        <p className='text-primary text-2xl font-semibold'>Paciente</p>
+      </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-5">
-        <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1 hover:underline mb-4">
-          <ArrowLeft className="" />
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{pacienteData.nombre}</h1>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs text-gray-500 uppercase">Cédula</p>
-            <p className="text-gray-900">{pacienteData.cedula}</p>
+        <div className=" md:items-center md:justify-between gap-4 ">
+          <div className='flex justify-between mb-4'>
+            <span className='text-xl text-secondary'>Paciente</span>
+            <div className="flex items-center gap-2">
+
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase">Teléfono</p>
-            <p className="text-gray-900">{pacienteData.telefono}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase">Edad</p>
-            <p className="text-gray-900">{pacienteData.edad} años</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase">Dirección</p>
-            <p className="text-gray-900">{pacienteData.direccion}</p>
+
+          <div className='flex justify-between items-end'>
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-xl font-semibold">{pacienteData.nombre}</p>
+              </div>
+              <p className="text-secondary text-base  flex items-center gap-3 mt-4">
+                <span className="flex items-center gap-2"><img src="/svg/paciente/cedula.svg" alt="" /> {pacienteData.cedula}</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/phone.svg" alt="" /> {pacienteData.telefono}</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/calendar.svg" alt="" /> {pacienteData.edad} años</span>
+                <span className="flex items-center gap-2"><img src="/svg/paciente/location.svg" alt="" /> {pacienteData.direccion}</span>
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
@@ -110,11 +143,10 @@ export default function PacienteHistorialPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Paciente</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Exámenes</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fecha</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider"># Solicitud</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Fecha</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Exámenes</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Estado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -122,70 +154,45 @@ export default function PacienteHistorialPage() {
               const examenesVisibles = examenesVisita.slice(0, 2);
               const examenesRestantes = examenesVisita.length - examenesVisibles.length;
               const primerExamen = examenesVisita[0];
+              const completados = examenesVisita.filter((examen) => isExamenCompleto(examen.estado)).length;
+              const total = examenesVisita.length;
+              const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
               const todosCompletos =
                 examenesVisita.length > 0 &&
                 examenesVisita.every(examen => examen.estado === 'completo' || examen.estado === 'enviado');
               const estadoMostrado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
 
               return (
-                <tr key={visita.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{visita.nombre}</p>
-                    <p className="text-xs text-gray-500">{visita.cedula}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    {examenesVisita.length === 0 ? (
-                      <span className="text-xs text-gray-500">Sin exámenes asociados</span>
-                    ) : (
-                      <div className="flex flex-wrap items-center gap-1">
-                        {examenesVisibles.map((examen) => {
-                          const estaCompleto = examen.estado === 'completo' || examen.estado === 'enviado';
-
-                          return (
-                            <span
-                              key={examen.id}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${estaCompleto ? 'bg-green-100 text-green-500' : 'bg-orange-100 text-orange-700'
-                                }`}
-                            >
-                              {estaCompleto && <Check className="w-3 h-3" />}
-                              {examLabels[examen.tipo]}
-                            </span>
-                          );
-                        })}
-                        {examenesRestantes > 0 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-100 text-cyan-700">
-                            +{examenesRestantes} más
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                <tr
+                  key={visita.id}
+                  onClick={() => {
+                    if (primerExamen) {
+                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (!primerExamen) return;
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`);
+                    }
+                  }}
+                  tabIndex={primerExamen ? 0 : -1}
+                  className={`hover:bg-gray-50 ${primerExamen ? 'cursor-pointer' : ''}`}
+                >
+                  <td className="px-4 py-3 text-sm text-gray-700">{formatDateToDayOfYear(primerExamen?.fechaCreacion)}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">{visita.fecha}</td>
                   <td className="px-4 py-3">
-                    {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-200">
+                        <div className="h-full rounded-full bg-brand-primary transition-all" style={{ width: `${porcentaje}%` }} />
+                      </div>
+                      <span className="text-xs text-secondary">{`${completados}/${total}`}</span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {primerExamen ? (
-                      !todosCompletos ? (
-                        <Link
-                          href={`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Agregar Resultados
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Ver
-                        </Link>
-                      )
-                    ) : (
-                      <span className="text-xs text-gray-500">Sin acciones</span>
-                    )}
+
+                  <td className="px-4 py-3">
+                    {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
                   </td>
                 </tr>
               );

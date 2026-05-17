@@ -27,20 +27,20 @@ import { PillFilter } from './PillFilter';
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles';
 
 const examenesDisponibles: { value: TipoExamen; label: string; icon: React.ReactNode; color: string; group: GrupoExamen }[] = [
-  { value: 'hematologia', label: 'Hematologia', icon: <Droplets className="w-5 h-5 text-rose-500" />, color: 'rose', group: 'hematologia' },
-  { value: 'hemoglobina_hematocritos', label: 'Hemoglobina Hematocritos', icon: <Droplets className="w-5 h-5 text-pink-500" />, color: 'pink', group: 'hematologia' },
-  { value: 'frotis_sangre', label: 'Frotis de sangre periferica', icon: <Microscope className="w-5 h-5 text-red-600" />, color: 'red', group: 'hematologia' },
-  { value: 'hemoparasitos', label: 'Hemoparasitos', icon: <Microscope className="w-5 h-5 text-red-700" />, color: 'red', group: 'hematologia' },
+  { value: 'hematologia', label: 'Hematología', icon: <Droplets className="w-5 h-5 text-rose-500" />, color: 'rose', group: 'hematologia' },
+  { value: 'hemoglobina_hematocritos', label: 'Hemoglobina y hematocritos', icon: <Droplets className="w-5 h-5 text-pink-500" />, color: 'pink', group: 'hematologia' },
+  { value: 'frotis_sangre', label: 'Frotis de sangre periférica', icon: <Microscope className="w-5 h-5 text-red-600" />, color: 'red', group: 'hematologia' },
+  { value: 'hemoparasitos', label: 'Hemoparásitos', icon: <Microscope className="w-5 h-5 text-red-700" />, color: 'red', group: 'hematologia' },
   { value: 'tipo_sangre', label: 'Tipo de sangre', icon: <Droplets className="w-5 h-5 text-red-400" />, color: 'red', group: 'hematologia' },
 
-  { value: 'quimica', label: 'Quimica', icon: <FlaskConical className="w-5 h-5 text-green-600" />, color: 'green', group: 'quimica' },
-  { value: 'quimica_corta', label: 'Quimica sanguinea mas corta', icon: <FlaskConical className="w-5 h-5 text-lime-500" />, color: 'lime', group: 'quimica' },
-  { value: 'quimica_colinesterasa', label: 'Quimica Colinesterasa', icon: <FlaskConical className="w-5 h-5 text-green-500" />, color: 'green', group: 'quimica' },
-  { value: 'glicemia_pre_post', label: 'Glicemia pre post', icon: <FlaskConical className="w-5 h-5 text-amber-500" />, color: 'amber', group: 'quimica' },
+  { value: 'quimica', label: 'Química', icon: <FlaskConical className="w-5 h-5 text-green-600" />, color: 'green', group: 'quimica' },
+  { value: 'quimica_corta', label: 'Química sanguínea más corta', icon: <FlaskConical className="w-5 h-5 text-lime-500" />, color: 'lime', group: 'quimica' },
+  { value: 'quimica_colinesterasa', label: 'Química colinesterasa', icon: <FlaskConical className="w-5 h-5 text-green-500" />, color: 'green', group: 'quimica' },
+  { value: 'glicemia_pre_post', label: 'Glicemia pre y post', icon: <FlaskConical className="w-5 h-5 text-amber-500" />, color: 'amber', group: 'quimica' },
 
-  { value: 'serologia', label: 'Serologia', icon: <Shield className="w-5 h-5 text-blue-700" />, color: 'blue', group: 'serologia' },
-  { value: 'vdrl_hepatitis', label: 'VDRL Hepatitis y demas', icon: <Cross className="w-5 h-5 text-rose-600" />, color: 'rose', group: 'serologia' },
-  { value: 'serologia_asto_psa_pylori', label: 'Serologia ASTO PSA Pylori', icon: <Activity className="w-5 h-5 text-blue-600" />, color: 'blue', group: 'serologia' },
+  { value: 'serologia', label: 'Serología', icon: <Shield className="w-5 h-5 text-blue-700" />, color: 'blue', group: 'serologia' },
+  { value: 'vdrl_hepatitis', label: 'VDRL, hepatitis y demás', icon: <Cross className="w-5 h-5 text-rose-600" />, color: 'rose', group: 'serologia' },
+  { value: 'serologia_asto_psa_pylori', label: 'Serología ASTO, PSA y Pylori', icon: <Activity className="w-5 h-5 text-blue-600" />, color: 'blue', group: 'serologia' },
   { value: 'helicobacter_pylori', label: 'Helicobacter Pylori', icon: <MicroscopeIcon className="w-5 h-5 text-purple-500" />, color: 'purple', group: 'serologia' },
   { value: 'dengue', label: 'Dengue', icon: <Droplets className="w-5 h-5 text-red-500" />, color: 'red', group: 'serologia' },
 
@@ -48,13 +48,13 @@ const examenesDisponibles: { value: TipoExamen; label: string; icon: React.React
   { value: 'heces', label: 'Heces', icon: <FileText className="w-5 h-5 text-amber-700" />, color: 'amber', group: 'orina_heces' },
   { value: 'prueba_embarazo', label: 'Prueba de embarazo', icon: <Baby className="w-5 h-5 text-pink-400" />, color: 'pink', group: 'orina_heces' },
 
-  { value: 'hematologia_quimica', label: 'Hematologia y Quimica', icon: <FlaskConical className="w-5 h-5 text-indigo-500" />, color: 'indigo', group: 'paneles' },
-  { value: 'hematologia_serologia', label: 'Hematologia y Serologia', icon: <Shield className="w-5 h-5 text-violet-500" />, color: 'violet', group: 'paneles' },
-  { value: 'quimica_heces', label: 'Quimica y Heces', icon: <FlaskConical className="w-5 h-5 text-emerald-500" />, color: 'emerald', group: 'paneles' },
-  { value: 'quimica_orina', label: 'Quimica y Orina', icon: <FlaskConical className="w-5 h-5 text-teal-600" />, color: 'teal', group: 'paneles' },
-  { value: 'quimica_serologia', label: 'Quimica y Serologia', icon: <Shield className="w-5 h-5 text-blue-500" />, color: 'blue', group: 'paneles' },
-  { value: 'serologia_heces', label: 'Serologia y Heces', icon: <Shield className="w-5 h-5 text-indigo-600" />, color: 'indigo', group: 'paneles' },
-  { value: 'serologia_orina', label: 'Serologia y Orina', icon: <Shield className="w-5 h-5 text-sky-500" />, color: 'sky', group: 'paneles' },
+  { value: 'hematologia_quimica', label: 'Hematología y Química', icon: <FlaskConical className="w-5 h-5 text-indigo-500" />, color: 'indigo', group: 'paneles' },
+  { value: 'hematologia_serologia', label: 'Hematología y Serología', icon: <Shield className="w-5 h-5 text-violet-500" />, color: 'violet', group: 'paneles' },
+  { value: 'quimica_heces', label: 'Química y heces', icon: <FlaskConical className="w-5 h-5 text-emerald-500" />, color: 'emerald', group: 'paneles' },
+  { value: 'quimica_orina', label: 'Química y orina', icon: <FlaskConical className="w-5 h-5 text-teal-600" />, color: 'teal', group: 'paneles' },
+  { value: 'quimica_serologia', label: 'Química y serología', icon: <Shield className="w-5 h-5 text-blue-500" />, color: 'blue', group: 'paneles' },
+  { value: 'serologia_heces', label: 'Serología y heces', icon: <Shield className="w-5 h-5 text-indigo-600" />, color: 'indigo', group: 'paneles' },
+  { value: 'serologia_orina', label: 'Serología y orina', icon: <Shield className="w-5 h-5 text-sky-500" />, color: 'sky', group: 'paneles' },
   { value: 'orina_heces', label: 'Orina y Heces', icon: <FlaskConical className="w-5 h-5 text-teal-500" />, color: 'teal', group: 'paneles' },
 
   { value: 'nuevo_completo', label: 'Nuevo Completo', icon: <TestTube className="w-5 h-5 text-cyan-500" />, color: 'cyan', group: 'perfiles' },
@@ -78,8 +78,9 @@ export default function NuevoPacienteForm() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormValues>({
+    mode: 'onChange',
     defaultValues: {
       nombre: '',
       edad: '',
@@ -146,12 +147,12 @@ export default function NuevoPacienteForm() {
   };
 
   const EXAM_CATEGORIES: { key: GrupoExamen; label: string; iconSrc: string }[] = [
-    { key: 'hematologia', label: 'Hematologia', iconSrc: '/svg/examenes/Hematología.svg' },
-    { key: 'quimica', label: 'Quimica', iconSrc: '/svg/examenes/Química.svg' },
-    { key: 'serologia', label: 'Serologia', iconSrc: '/svg/examenes/serologia.svg' },
+    { key: 'hematologia', label: 'Hematología', iconSrc: '/svg/examenes/Hematología.svg' },
+    { key: 'quimica', label: 'Química', iconSrc: '/svg/examenes/Química.svg' },
+    { key: 'serologia', label: 'Serología e Infecciosos', iconSrc: '/svg/examenes/serologia.svg' },
     { key: 'orina_heces', label: 'Orina y heces', iconSrc: '/svg/examenes/Muestras.svg' },
-    { key: 'paneles', label: 'Paneles', iconSrc: '/svg/examenes/Combinados.svg' },
-    { key: 'perfiles', label: 'Perfiles', iconSrc: '/svg/examenes/Perfil completo.svg' },
+    { key: 'paneles', label: 'Paneles Combinados ', iconSrc: '/svg/examenes/Combinados.svg' },
+    { key: 'perfiles', label: 'Perfiles Completos', iconSrc: '/svg/examenes/Perfil completo.svg' },
   ];
 
   const examCountByCategory: Record<GrupoExamen, number> = {
@@ -171,6 +172,9 @@ export default function NuevoPacienteForm() {
 
   const selectedExams = examenesSeleccionados || [];
   const shouldShowSelected = selectedExams.length > 0;
+  const canCreateFromSearch = Boolean(selectedPatient);
+  const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0;
+  const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm);
 
   const onSearchTermChange = (value: string) => {
     setSearchTerm(value);
@@ -236,10 +240,10 @@ export default function NuevoPacienteForm() {
       direccion: data.direccion,
       examenes: data.examenes,
     });
-
+    onClearPatient();
     reset();
     sileo.success({
-      title: 'Paciente guardado exitosamente',
+      title: 'Solicitud creada exitosamente',
       duration: 3000,
       fill: 'black',
       styles: {
@@ -256,7 +260,7 @@ export default function NuevoPacienteForm() {
       <TopResumen />
 
 
-      <section className="bg-surface border-border-default border rounded-3xl p-4 mt-5 mb-4">
+      <section className="bg-surface border-border-default border rounded-3xl p-4 mt-6 mb-4">
 
         {!showCreateForm ? (
           <div className="flex flex-wrap items-center gap-4">
@@ -311,7 +315,7 @@ export default function NuevoPacienteForm() {
                     className={`origin-right overflow-hidden transition-all duration-300 ease-out ${isSearching ? 'pointer-events-none max-w-0 scale-95 opacity-0' : 'max-w-xs scale-100 opacity-100'}`}
                     aria-hidden={isSearching}
                   >
-                    <Button className="cursor-pointer whitespace-nowrap" onClick={onCreatePatient}>
+                    <Button className="cursor-pointer whitespace-nowrap rounded-2xl" onClick={onCreatePatient}>
                       <SvgIcon src='/svg/plus.svg' size={24} /> Crear paciente nuevo
                     </Button>
                   </div>
@@ -332,24 +336,24 @@ export default function NuevoPacienteForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Cedula</label>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Cédula</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     value={cedulaValue}
                     onChange={handleCedulaChange}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="V-12345678"
                   />
                   {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula.message}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Nombre Completo</label>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Nombre completo</label>
                   <input
                     type="text"
                     {...register('nombre', { required: 'El nombre es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Nombre y apellido"
                   />
                   {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
@@ -361,7 +365,7 @@ export default function NuevoPacienteForm() {
                     type="text"
                     inputMode="numeric"
                     {...register('edad', { required: 'La edad es requerida', min: { value: '1', message: 'Debe ser mayor a 0' } })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.edad ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.edad ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Ej. 34"
                   />
                   {errors.edad && <p className="text-red-500 text-xs mt-1">{errors.edad.message}</p>}
@@ -372,7 +376,7 @@ export default function NuevoPacienteForm() {
                   <input
                     type="tel"
                     {...register('telefono', { required: 'El teléfono es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="0414-0000000"
                   />
                   {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono.message}</p>}
@@ -383,7 +387,7 @@ export default function NuevoPacienteForm() {
                   <input
                     type="text"
                     {...register('direccion', { required: 'La dirección es requerida' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-gray-500 ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Av. / Urb / Calle"
                   />
                   {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion.message}</p>}
@@ -400,8 +404,8 @@ export default function NuevoPacienteForm() {
       <section className="bg-surface border border-border-default rounded-3xl p-4 h-[358px]">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-xl font-semibold leading-none">Examenes a realizar</h3>
-            <p className="text-secondary text-base">Selecciona uno o varios examenes para esta solicitud.</p>
+            <h3 className="text-xl font-semibold leading-none">Exámenes a realizar</h3>
+            <p className="text-secondary text-base mt-2">Selecciona uno o varios exámenes para esta solicitud.</p>
           </div>
           <input
             className="text-secondary border-border-input rounded-xl border px-4 py-2 text-base"
@@ -430,19 +434,19 @@ export default function NuevoPacienteForm() {
             return (
               <label
                 key={exam.value}
-                className={`text-tertiary flex min-h-16 items-center gap-2 rounded-xl border px-3 text-sm transition-colors duration-200 ${isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
+                className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
                   }`}
               >
-                <input type="checkbox" className="size-4" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
+                <input type="checkbox" className="size-5 cursor-pointer" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
                 <span>{exam.label}</span>
               </label>
             );
           })}
         </div>
-        {visibleExams.length === 0 ? <p className="text-secondary mt-3 text-sm">No hay examenes para esta busqueda.</p> : null}
+        {visibleExams.length === 0 ? <p className="text-secondary mt-3 text-sm">No hay exámenes para esta búsqueda.</p> : null}
         {shouldShowSelected ? (
           <div className="mt-6">
-            <h4 className="text-xl font-semibold">Examenes seleccionados: {selectedExams.length}</h4>
+            <h4 className="text-xl font-semibold">Exámenes seleccionados: {selectedExams.length}</h4>
             <div className="mt-3 flex flex-wrap gap-3">
               {selectedExams.map((exam) => {
                 const examLabel = examenesDisponibles.find((item) => item.value === exam)?.label ?? exam;
@@ -455,12 +459,14 @@ export default function NuevoPacienteForm() {
       </section>
 
       <div className="flex items-center justify-end gap-4 mt-6">
-        <button
-          type="submit"
-          className="cursor-pointer bg-brand-primary hover:bg-brand-light text-white font-bold py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2"
+        <Button
+          type="button"
+          onClick={handleSubmit(onSubmit)}
+          disabled={isSubmitDisabled}
+          className="cursor-pointer whitespace-nowrap rounded-2xl disabled:cursor-not-allowed disabled:opacity-60"
         >
           Guardar y crear solicitud
-        </button>
+        </Button>
       </div>
     </div >
   );

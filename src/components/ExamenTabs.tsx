@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Examen, TipoExamen } from '@/types';
-import { ChevronDown } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface ExamenTabsProps {
   examenes: { id: string; tipo: TipoExamen }[];
@@ -12,6 +12,7 @@ interface ExamenTabsProps {
   setCurrentReadOnly: (nextValue: boolean) => void;
   doctorOrdenante: string;
   onDoctorOrdenanteChange: (value: string) => void;
+  onCancelEdit: () => void;
   onPrint: () => void;
   onSendEmail: () => void;
 }
@@ -53,11 +54,13 @@ export default function ExamenTabs({
   setCurrentReadOnly,
   doctorOrdenante,
   onDoctorOrdenanteChange,
+  onCancelEdit,
   onPrint,
   onSendEmail,
 }: ExamenTabsProps) {
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   const formularioGuardado = examen.estado === 'completo' || examen.estado === 'enviado';
+  const doctorOrdenanteMostrado = doctorOrdenante.trim() || 'Sin orden médica';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -79,28 +82,47 @@ export default function ExamenTabs({
 
       <div className="flex p-6 justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Examen: {capitalize(examen.tipo)}</h1>
-        <div className="flex gap-3 items-center">
-          <label className="flex text-base gap-2 items-center font-medium text-tertiary">
-            Ordenado por:
-            <input
-              type="text"
-              value={doctorOrdenante}
-              onChange={(event) => onDoctorOrdenanteChange(event.target.value)}
-              readOnly={readOnly}
-              className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 w-48"
-              placeholder="Nombre del doctor"
-            />
-          </label>
+        <div className="flex gap-6 items-center">
+          <div className="flex text-base gap-2 items-center font-medium text-tertiary">
+            <p>Ordenado por:</p>
+            {readOnly ? (
+              <span className="text-lg text-primary">
+                {doctorOrdenanteMostrado}
+              </span>
+            ) : (
+              <input
+                type="text"
+                value={doctorOrdenante}
+                onChange={(event) => onDoctorOrdenanteChange(event.target.value)}
+                readOnly={readOnly}
+                className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 w-48"
+                placeholder="Nombre del doctor"
+              />
+            )}
+          </div>
           {formularioGuardado && (
-            <div className="relative" ref={menuRef}>
+            <div ref={menuRef}>
               <button
-                onClick={() => setIsMenuOpen(prev => !prev)}
-                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center h-9 justify-center bg-white shadow-md border border-gray-200"
+                onClick={() => {
+                  if (readOnly) {
+                    setIsMenuOpen(prev => !prev);
+                    return;
+                  }
+
+                  onCancelEdit();
+                  setCurrentReadOnly(true);
+                  setIsMenuOpen(false);
+                }}
+                className=""
               >
-                <img src="/svg/menu.svg" alt="Menu" className="text-secondary" />
+                {readOnly ? (
+                  <img src="/svg/menu.svg" alt="Menu" className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center h-9 justify-center bg-white shadow-sm border border-gray-200 text-secondary" />
+                ) : (
+                  <img src="/svg/xicon.svg" alt="Cerrar" className="text-secondary px-3 py-1.5 " />
+                )}
               </button>
 
-              {isMenuOpen && (
+              {readOnly && isMenuOpen && (
                 <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-lg z-20 py-1">
                   <button
                     onClick={() => {

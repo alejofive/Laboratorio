@@ -100,6 +100,55 @@
       ],
       "cedula": "23568290",
       "direccion": "Barrio"
+    },
+    {
+      "id": "mp9uykwnu8ves9rrl6r",
+      "nombre": "Sidney",
+      "edad": 32,
+      "telefono": "0426-2420788",
+      "fecha": "17/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "23548265",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mp9wjnhtfcbx1ifgv6q",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "17/5/2026",
+      "examenes": [
+        "hematologia",
+        "dengue"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mp9x1crossr6m2w8im",
+      "nombre": "Alejandro ",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "17/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "31568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mp9x71yk4x4pqnyzj7",
+      "nombre": "Cenaid Rujano",
+      "edad": 53,
+      "telefono": "0416-9793024",
+      "fecha": "17/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "12490966",
+      "direccion": "Barrio"
     }
   ],
   "examenes": [
@@ -239,7 +288,7 @@
       "tipo": "hematologia",
       "estado": "completo",
       "fechaCreacion": "2026-03-19T15:35:22.186Z",
-      "fechaActualizacion": "2026-03-19T15:36:00.860Z",
+      "fechaActualizacion": "2026-05-14T16:18:46.777Z",
       "resultados": {
         "leucocitos": "12",
         "hematies": "2",
@@ -461,6 +510,98 @@
         "observaciones": "sddgdfhsfh sssfh"
       },
       "doctorOrdenante": "no se"
+    },
+    {
+      "id": "mp9uykzttgp1mlswdd",
+      "pacienteId": "mp9uykwnu8ves9rrl6r",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-17T14:16:05.975Z",
+      "fechaActualizacion": "2026-05-17T14:59:48.342Z",
+      "resultados": {
+        "leucocitos": "32",
+        "hematies": "12",
+        "hemoglobina": "34",
+        "hematocrito": "53",
+        "segmentados": "13",
+        "linfocitos": "53",
+        "eosinofilos": "135",
+        "otros": "35",
+        "sedimentacion_1h": "13",
+        "sedimentacion_2h": "53",
+        "plaquetas": "35",
+        "t_protrombina": "135",
+        "t_protrombina_control": "134",
+        "inr": "34",
+        "razon_pc": "134",
+        "ptt": "34",
+        "ptt_control": "35",
+        "t_sangria": "35",
+        "t_coagulacion": "35",
+        "observaciones": "dfdsdgsdffgdgdfgdfgdfldjdjfdgkgdgdggjgg"
+      },
+      "doctorOrdenante": "hola"
+    },
+    {
+      "id": "mp9wjnis0l75xj83c9t",
+      "pacienteId": "mp9wjnhtfcbx1ifgv6q",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-17T15:00:28.721Z",
+      "fechaActualizacion": "2026-05-17T15:05:03.494Z",
+      "resultados": {
+        "leucocitos": "34",
+        "hematies": "31",
+        "hemoglobina": "35",
+        "hematocrito": "13",
+        "segmentados": "35",
+        "linfocitos": "135",
+        "eosinofilos": "345",
+        "otros": "34",
+        "sedimentacion_1h": "435",
+        "sedimentacion_2h": "345",
+        "plaquetas": "345",
+        "t_protrombina": "34",
+        "t_protrombina_control": "34",
+        "inr": "345",
+        "razon_pc": "56",
+        "ptt": "223",
+        "ptt_control": "23",
+        "t_sangria": "23",
+        "t_coagulacion": "43",
+        "observaciones": "sdfsdf"
+      },
+      "doctorOrdenante": "doctor"
+    },
+    {
+      "id": "mp9wjnis0i7xpsuja38k",
+      "pacienteId": "mp9wjnhtfcbx1ifgv6q",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-17T15:00:28.721Z",
+      "fechaActualizacion": "2026-05-17T15:07:19.283Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Positivo",
+        "observaciones": "tggjgj"
+      },
+      "doctorOrdenante": "Sin orden médica"
+    },
+    {
+      "id": "mp9x1csayaesf54v0zg",
+      "pacienteId": "mp9x1crossr6m2w8im",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-05-17T15:14:14.628Z",
+      "fechaActualizacion": "2026-05-17T15:14:14.628Z"
+    },
+    {
+      "id": "mp9x71yld40cuy87916",
+      "pacienteId": "mp9x71yk4x4pqnyzj7",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-05-17T15:18:40.556Z",
+      "fechaActualizacion": "2026-05-17T15:18:40.556Z"
     }
   ]
 }

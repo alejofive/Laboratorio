@@ -136,7 +136,7 @@ export default function ExamenPage() {
 
       const readOnlyNode = document.createElement(control instanceof HTMLTextAreaElement ? 'div' : 'span');
       readOnlyNode.textContent = value;
-      readOnlyNode.className = 'w-full py-2 text-sm text-gray-900 break-words block';
+      readOnlyNode.className = 'w-full py-2 text-lg text-primary  break-words block';
       readOnlyNode.setAttribute('data-readonly-generated', 'true');
 
       control.insertAdjacentElement('afterend', readOnlyNode);
@@ -179,14 +179,23 @@ export default function ExamenPage() {
 
   const handleCompletar = async () => {
     const doctorOrdenanteNormalizado = doctorOrdenanteInput.trim();
+    const doctorOrdenanteFinal = doctorOrdenanteNormalizado || 'Sin orden médica';
 
     setDoctorOrdenanteByExam(prev => ({
       ...prev,
-      [examen.id]: doctorOrdenanteNormalizado,
+      [examen.id]: doctorOrdenanteFinal,
     }));
 
-    await cambiarEstado(examen.id, 'completo', doctorOrdenanteNormalizado || undefined);
+    await cambiarEstado(examen.id, 'completo', doctorOrdenanteFinal);
     setCurrentReadOnly(true);
+  };
+
+  const handleCancelEdit = () => {
+    setDoctorOrdenanteByExam(prev => {
+      const next = { ...prev };
+      delete next[examen.id];
+      return next;
+    });
   };
 
   const handleValidChange = (isValid: boolean) => {
@@ -335,7 +344,7 @@ export default function ExamenPage() {
               </div>
             </nav>
           )}
-          <div className="bg-white rounded-3xl border border-border-default shadow-sm  print-area ">
+          <div className="bg-white rounded-3xl  border border-border-default shadow-sm  print-area ">
 
 
             <ExamenTabs
@@ -353,6 +362,7 @@ export default function ExamenPage() {
                   [examen.id]: value,
                 }));
               }}
+              onCancelEdit={handleCancelEdit}
             />
 
             <div ref={formContainerRef} className="px-6 pb-6">

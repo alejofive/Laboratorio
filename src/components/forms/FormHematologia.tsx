@@ -144,7 +144,7 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
   return (
     <div className="space-y-6">
       <div className='border border-surface-muted  rounded-3xl '>
-        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Datos principales</h3>
+        <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">Datos principales</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
           {campos.map(campo => (
             <InputNumber
@@ -160,7 +160,7 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
       </div>
 
       <div className='border border-surface-muted  rounded-3xl '>
-        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Fórmula Leucocitaria (%)</h3>
+        <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">Fórmula Leucocitaria (%)</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
           {formulaLeucocitaria.map(campo => (
             <InputNumber
@@ -176,7 +176,7 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
       </div>
 
       <div className='border border-surface-muted  rounded-3xl '>
-        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Sedimentación</h3>
+        <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">Sedimentación</h3>
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4 p-6">
           {sedimentacion.map(campo => (
             <InputNumber
@@ -192,7 +192,7 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
       </div>
 
       <div className='border border-surface-muted  rounded-3xl '>
-        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Plaquetas</h3>
+        <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">Plaquetas</h3>
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4 p-6">
           <InputNumber
             label={defaultLabels.plaquetas}
@@ -205,7 +205,7 @@ export default function FormHematologia({ resultados, onChange, onValidChange, r
       </div>
 
       <div className='border border-surface-muted  rounded-3xl '>
-        <h3 className="text-base font-bold text-primary mb-3 bg-surface-muted py-2 px-5 rounded-t-3xl">Coagulación</h3>
+        <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">Coagulación</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-6">
           {coagulacion.map(campo => (
             <InputNumber

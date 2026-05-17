@@ -77,7 +77,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
                 onChange={e => setLabelEditValue(e.target.value)}
                 onKeyDown={handleLabelKeyDown}
                 onBlur={handleLabelSave}
-                className="text-sm font-medium text-gray-700 border border-cyan-500 rounded px-1 py-0.5 w-full"
+                className="text-sm font-medium text-gray-tertiary border border-cyan-500 rounded px-1 py-0.5 w-full"
               />
               <button type="button" onClick={handleLabelSave} className="text-green-600 hover:text-green-700">
                 <Check className="w-3 h-3" />
@@ -88,8 +88,8 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
             </div>
           ) : (
             <div className="flex items-center gap-1 flex-1">
-              <label 
-                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-cyan-600' : 'text-gray-700'}`}
+              <label
+                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-cyan-600' : 'text-tertiary'}`}
                 onClick={handleLabelClick}
               >
                 {label}

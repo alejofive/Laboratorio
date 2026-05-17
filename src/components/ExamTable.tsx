@@ -14,9 +14,10 @@ interface ExamTableProps {
   anterior: boolean;
   mostrarAnteriores: boolean;
   onToggleMostrarAnteriores: (checked: boolean) => void;
+  filtroEstado?: 'pendiente' | 'completo';
 }
 
-export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrarAnteriores }: ExamTableProps) {
+export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrarAnteriores, filtroEstado }: ExamTableProps) {
 
   const router = useRouter();
 
@@ -122,6 +123,10 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
         paciente.cedula.toLowerCase().includes(texto)
       );
     })
+    .filter(paciente => {
+      if (!filtroEstado) return true;
+      return getEstadoPaciente(paciente.id) === filtroEstado;
+    })
     .sort((a, b) => {
       if (activeCalendarOption === 'hoy') {
         return compareByFechaDescThenNombreAsc(a, b);
@@ -177,12 +182,12 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
 
 
   return (
-    <div className="space-y-4 mt-10">
+    <div className="space-y-4 mt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           {anterior ? (
             <>
-              <div className="bg-white flex shadow-lg rounded-xl overflow-hidden">
+              <div className="bg-white flex shadow-sm rounded-xl overflow-hidden">
                 {calendarOptions.map((option) => (
                   <button
                     type="button"
@@ -199,7 +204,7 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
               </div>
               <Datepicker
                 icon={CalendarIcon}
-                className="w-11 [&_input]:h-11 [&_input]:w-11 [&_input]:cursor-pointer [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-white [&_input]:px-0 [&_input]:text-transparent [&_input]:shadow-lg [&_input]:[text-indent:-9999px] [&_input]:focus:border-brand-soft [&_input]:focus:ring-2 [&_input]:focus:ring-brand-soft/30 [&_svg]:left-[10px] [&_svg]:top-[10px] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:translate-x-1/2 [&_svg]:translate-y-1/2"
+                className="w-11 [&_input]:h-10 [&_input]:w-16 [&_input]:cursor-pointer [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-white [&_input]:hover:bg-gray-200 [&_input]:px-0 [&_input]:text-transparent [&_input]:shadow-sm [&_input]:[text-indent:-9999px] [&_input]:focus:border-brand-soft [&_input]:focus:ring-2 [&_input]:focus:ring-brand-soft/30 [&_svg]:left-[10px] [&_svg]:top-[10px] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:translate-y-[11px] [&_svg]:translate-x-[21px]"
                 language="es-ES"
                 showTodayButton
                 showClearButton
@@ -216,10 +221,10 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                       selectors: {
                         base: 'mb-2 flex justify-between ',
                         button: {
-                          base: 'rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-black hover:bg-gray-100 focus:outline-none',
-                          prev: '',
-                          next: '',
-                          view: '',
+                          base: 'rounded-lg [&_svg]:translate-y-[px] [&_svg]:translate-x-[px] px-5 py-2.5 text-sm font-semibold text-black hover:bg-gray-100 focus:outline-none',
+                          prev: 'cursor-pointer',
+                          next: 'cursor-pointer',
+                          view: 'cursor-pointer',
                         },
                       },
                     },
@@ -265,7 +270,7 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
         </div>
 
         <div className="relative">
-          <Search className="text-gray-400 absolute top-2.5 right-3 w-4 h-4" />
+          <Search className="text-gray-400 absolute top-2.5 left-3 w-5 h-5" />
           <input
             type="text"
             value={busqueda}
@@ -273,8 +278,8 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
               setBusqueda(e.target.value);
               setPaginaActual(1);
             }}
-            className="text-secondary border-border-input rounded-xl border bg-white px-4 py-2 pr-10 text-base focus:outline-none focus:border-brand-soft"
-            placeholder="Buscar por cedula, nombre..."
+            className="text-secondary border-border-input w-[470px] rounded-xl border bg-white px-4 py-2 pl-11 text-base focus:outline-none focus:border-brand-soft"
+            placeholder="Buscar por cédula, nombre o teléfono..."
           />
         </div>
       </div>
@@ -283,12 +288,12 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
         <table className="w-full">
           <thead className="bg-surface-muted border-b border-surface-muted">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary tracking-wider"># Solicitud</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary tracking-wider">Paciente</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary tracking-wider">Fecha</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary tracking-wider">Examenes</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary tracking-wider">Estado</th>
-              <th className="px-4 py-3 text-right text-xs font-bold text-secondary tracking-wider"></th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider"># Solicitud</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Paciente</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Fecha</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Examenes</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Estado</th>
+              <th className="px-4 py-3 text-right text-base font-medium text-secondary tracking-wider"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

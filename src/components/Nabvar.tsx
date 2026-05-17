@@ -20,14 +20,14 @@ export default function Navbar() {
     return (
 
         <aside
-            className={`min-h-screen bg-white border-r border-slate-200 flex flex-col transition-all duration-200 ease-in-out
-      ${collapsed ? 'w-20' : 'w-[294px]'}
+            className={`min-h-screen bg-white border-r border-slate-200 flex flex-col  min-w-[218px]
+      ${collapsed ? 'w-20' : ''}
     `}
         >
             {/* Header */}
-            <div className='p-6 flex items-center justify-between'>
+            <div className='px-5 my-8 flex items-center justify-between'>
                 <div className="flex items-center gap-2.5">
-                    <div className={`transition-all duration-200 ease-in-out overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-10 h-12 opacity-100'}`}>
+                    <div className={` ${collapsed ? 'w-0 opacity-0' : 'w-10 h-12 opacity-100'}`}>
                         <div className=" mb-8 text-sm font-semibold leading-5 flex items-center gap-2">
                             <img className='w-10 h-12' src="/png/logo.png" alt="Logo" />
 
@@ -41,7 +41,7 @@ export default function Navbar() {
             </div>
 
             {/* Menu */}
-            <nav className='flex flex-col gap-5 mt-4 px-5'>
+            <nav className='flex flex-col gap-5 px-5'>
                 {menuItems.map(item => {
                     const isActive = pathname === item.href
 
@@ -49,7 +49,7 @@ export default function Navbar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isActive ? 'bg-brand-active text-brand-primary font-semibold' : 'text-secondary'}`}
+                            className={`flex items-center  text-base gap-2 rounded-xl px-3 py-2 ${isActive ? 'bg-brand-active text-brand-primary font-bold' : 'text-secondary hover:bg-gray-100'}`}
                         >
                             {/* Icon */}
                             <SvgIcon src={item.iconSrc} size={24} />

@@ -5,11 +5,15 @@ import TopResumen from "@/components/TopResumen";
 
 import { useLab } from "@/context/LabContext";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 
 export default function SolicitudPage() {
     const { examenes, pacientes } = useLab();
     const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+    const searchParams = useSearchParams();
+    const estado = searchParams.get('estado');
+    const filtroEstado = estado === 'pendiente' || estado === 'completo' ? estado : undefined;
 
     const getFechaHoy = () => {
         const hoy = new Date();
@@ -37,11 +41,12 @@ export default function SolicitudPage() {
 
     return (<div className="p-9 w-full min-h-screen">
         <div className="">
-            <TopResumen />
+            <TopResumen solicitudes={true} />
             <ExamTable
                 anterior={true}
                 mostrarAnteriores={mostrarAnteriores}
                 onToggleMostrarAnteriores={setMostrarAnteriores}
+                filtroEstado={filtroEstado}
             />
         </div>
     </div>)

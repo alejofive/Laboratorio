@@ -110,7 +110,7 @@ export default function PacienteHistorialPage() {
         <p className='text-primary text-2xl font-semibold'>Paciente</p>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-5">
+      <div className="bg-white rounded-3xl border border-gray-200 p-6 mb-5">
         <div className=" md:items-center md:justify-between gap-4 ">
           <div className='flex justify-between mb-4'>
             <span className='text-xl text-secondary'>Paciente</span>
@@ -137,16 +137,17 @@ export default function PacienteHistorialPage() {
       </div>
 
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-5">Historial de visitas</h1>
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+      <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-5">Historial de solicitudes</h1>
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm mt-4">
 
-        <table className="w-full">
+        <table className="w-full ">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider"># Solicitud</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Fecha</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Exámenes</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Estado</th>
+              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider"># Solicitud</th>
+              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Fecha</th>
+              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Exámenes</th>
+              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Estado</th>
+              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -193,6 +194,10 @@ export default function PacienteHistorialPage() {
 
                   <td className="px-4 py-3">
                     {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
+                  </td>
+
+                  <td className="text-right">
+                    <img src="/svg/arrow-up-2.svg" alt="" />
                   </td>
                 </tr>
               );

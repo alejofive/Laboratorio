@@ -18,6 +18,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { useMemo, useState } from 'react';
 import { sileo } from 'sileo';
+import { toast } from 'react-hot-toast';
 import DetallePaciente from './DetallePaciente';
 import TopResumen from './TopResumen';
 import SvgIcon from './ui/SvgIcon';
@@ -70,7 +71,7 @@ interface FormValues {
 }
 
 export default function NuevoPacienteForm() {
-  const { crearPaciente, buscarPacientePorCedula, pacientes } = useLab();
+  const { crearPaciente, buscarPacientePorCedula, pacientes, getPacientesUnicos } = useLab();
 
   const {
     register,
@@ -102,18 +103,23 @@ export default function NuevoPacienteForm() {
   const shouldShowResults = searchTerm.trim().length >= 2;
   const isSearching = searchTerm.trim().length > 0;
 
+  const pacientesUnicos = useMemo(
+    () => Array.from(getPacientesUnicos().values()).map((item) => item.paciente),
+    [getPacientesUnicos, pacientes]
+  );
+
   const results = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
 
-    return pacientes.filter((paciente) => {
+    return pacientesUnicos.filter((paciente) => {
       return (
         paciente.cedula.toLowerCase().includes(term) ||
         paciente.nombre.toLowerCase().includes(term) ||
         paciente.telefono.toLowerCase().includes(term)
       );
     });
-  }, [pacientes, searchTerm]);
+  }, [pacientesUnicos, searchTerm]);
 
   const selectedPatient = useMemo(
     () => pacientes.find((paciente) => paciente.id === selectedPatientId) ?? null,
@@ -180,7 +186,7 @@ export default function NuevoPacienteForm() {
     setSearchTerm(value);
   };
 
-  const onSelectPatient = (paciente: (typeof pacientes)[number]) => {
+  const onSelectPatient = (paciente: (typeof pacientesUnicos)[number]) => {
     setValue('cedula', paciente.cedula);
     setValue('nombre', paciente.nombre);
     setValue('edad', paciente.edad.toString());
@@ -231,27 +237,23 @@ export default function NuevoPacienteForm() {
     setValue('examenes', newExamenes, { shouldValidate: true });
   };
 
-  const onSubmit = (data: FormValues) => {
-    crearPaciente({
-      nombre: data.nombre,
-      edad: parseInt(data.edad) || 0,
-      telefono: data.telefono,
-      cedula: data.cedula,
-      direccion: data.direccion,
-      examenes: data.examenes,
-    });
-    onClearPatient();
-    reset();
-    sileo.success({
-      title: 'Solicitud creada exitosamente',
-      duration: 3000,
-      fill: 'black',
-      styles: {
-        title: 'text-white!',
-        description: 'text-white/75!',
-        badge: 'bg-white/20!',
-      },
-    });
+  const onSubmit = async (data: FormValues) => {
+    try {
+      await crearPaciente({
+        nombre: data.nombre,
+        edad: parseInt(data.edad) || 0,
+        telefono: data.telefono,
+        cedula: data.cedula,
+        direccion: data.direccion,
+        examenes: data.examenes,
+      });
+
+      onClearPatient();
+      reset();
+      toast.success('Solicitud creada exitosamente');
+    } catch {
+      toast.error('No se pudo crear la solicitud');
+    }
   };
 
 
@@ -401,7 +403,7 @@ export default function NuevoPacienteForm() {
       </section>
 
 
-      <section className="bg-surface border border-border-default rounded-3xl p-4 h-[358px]">
+      <section className="bg-surface border border-border-default rounded-3xl p-4 pb-10">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-xl font-semibold leading-none">Exámenes a realizar</h3>
@@ -437,7 +439,7 @@ export default function NuevoPacienteForm() {
                 className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
                   }`}
               >
-                <input type="checkbox" className="size-5 cursor-pointer" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
+                <input type="checkbox" className="size-5 shrink-0 cursor-pointer" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
                 <span>{exam.label}</span>
               </label>
             );

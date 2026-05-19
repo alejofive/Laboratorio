@@ -65,6 +65,7 @@ import {
 import { Save } from 'lucide-react';
 import Loading from './loading';
 import { Button } from '@/components/ui/Button';
+import { toast } from 'react-hot-toast';
 
 
 
@@ -181,13 +182,18 @@ export default function ExamenPage() {
     const doctorOrdenanteNormalizado = doctorOrdenanteInput.trim();
     const doctorOrdenanteFinal = doctorOrdenanteNormalizado || 'Sin orden médica';
 
-    setDoctorOrdenanteByExam(prev => ({
-      ...prev,
-      [examen.id]: doctorOrdenanteFinal,
-    }));
+    try {
+      setDoctorOrdenanteByExam(prev => ({
+        ...prev,
+        [examen.id]: doctorOrdenanteFinal,
+      }));
 
-    await cambiarEstado(examen.id, 'completo', doctorOrdenanteFinal);
-    setCurrentReadOnly(true);
+      await cambiarEstado(examen.id, 'completo', doctorOrdenanteFinal);
+      setCurrentReadOnly(true);
+      toast.success('Resultado guardado exitosamente');
+    } catch {
+      toast.error('No se pudo guardar el resultado');
+    }
   };
 
   const handleCancelEdit = () => {

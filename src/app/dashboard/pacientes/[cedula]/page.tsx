@@ -143,11 +143,11 @@ export default function PacienteHistorialPage() {
         <table className="w-full ">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider"># Solicitud</th>
-              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Fecha</th>
-              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Exámenes</th>
-              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider">Estado</th>
-              <th className="px-4 py-3 text-left text-base font-bold text-secondary tracking-wider"></th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider"># Solicitud</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Fecha</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Exámenes</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Estado</th>
+              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

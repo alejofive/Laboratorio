@@ -149,6 +149,54 @@
       ],
       "cedula": "12490966",
       "direccion": "Barrio"
+    },
+    {
+      "id": "mpcs7iyh5sdtafw8pk5",
+      "nombre": "Sidney",
+      "edad": 32,
+      "telefono": "0426-2420788",
+      "fecha": "19/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "23548265",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mpcsat9xwonx3yjrj1",
+      "nombre": "Alejandro Garcia",
+      "edad": 23,
+      "telefono": "0416-9793024",
+      "fecha": "19/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "23568290",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mpcsi8wsiqnnotjuyts",
+      "nombre": "Sidney",
+      "edad": 32,
+      "telefono": "0426-2420788",
+      "fecha": "19/5/2026",
+      "examenes": [
+        "dengue"
+      ],
+      "cedula": "23548265",
+      "direccion": "Barrio"
+    },
+    {
+      "id": "mpcsrcoqddxk6bjwemn",
+      "nombre": "Sidney",
+      "edad": 32,
+      "telefono": "0426-2420788",
+      "fecha": "19/5/2026",
+      "examenes": [
+        "hematologia"
+      ],
+      "cedula": "23548265",
+      "direccion": "Barrio"
     }
   ],
   "examenes": [
@@ -579,10 +627,10 @@
       "tipo": "dengue",
       "estado": "completo",
       "fechaCreacion": "2026-05-17T15:00:28.721Z",
-      "fechaActualizacion": "2026-05-17T15:07:19.283Z",
+      "fechaActualizacion": "2026-05-19T15:00:31.780Z",
       "resultados": {
         "IgG": "Positivo",
-        "IgM": "Positivo",
+        "IgM": "Negativo",
         "observaciones": "tggjgj"
       },
       "doctorOrdenante": "Sin orden médica"
@@ -602,6 +650,90 @@
       "estado": "pendiente",
       "fechaCreacion": "2026-05-17T15:18:40.556Z",
       "fechaActualizacion": "2026-05-17T15:18:40.556Z"
+    },
+    {
+      "id": "mpcs7iyph7gtyr36w6d",
+      "pacienteId": "mpcs7iyh5sdtafw8pk5",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-19T15:22:23.033Z",
+      "fechaActualizacion": "2026-05-19T15:23:39.015Z",
+      "resultados": {
+        "leucocitos": "123",
+        "hematies": "123",
+        "hemoglobina": "2",
+        "hematocrito": "4",
+        "segmentados": "2",
+        "linfocitos": "3",
+        "eosinofilos": "3",
+        "otros": "2",
+        "sedimentacion_1h": "31",
+        "sedimentacion_2h": "23",
+        "plaquetas": "12",
+        "t_protrombina": "32",
+        "t_protrombina_control": "23",
+        "inr": "12",
+        "razon_pc": "12",
+        "ptt": "32",
+        "ptt_control": "23",
+        "t_sangria": "23",
+        "t_coagulacion": "23",
+        "observaciones": "sdfsdfsf"
+      },
+      "doctorOrdenante": "doc"
+    },
+    {
+      "id": "mpcsat9zy914msrkw1",
+      "pacienteId": "mpcsat9xwonx3yjrj1",
+      "tipo": "hematologia",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-19T15:24:56.373Z",
+      "fechaActualizacion": "2026-05-19T15:29:24.921Z",
+      "resultados": {
+        "leucocitos": "23",
+        "hematies": "23",
+        "hemoglobina": "12",
+        "hematocrito": "23",
+        "segmentados": "23",
+        "linfocitos": "12",
+        "eosinofilos": "23",
+        "otros": "12",
+        "sedimentacion_1h": "32",
+        "sedimentacion_2h": "23",
+        "plaquetas": "123",
+        "t_protrombina": "12",
+        "t_protrombina_control": "23",
+        "inr": "12",
+        "razon_pc": "23",
+        "ptt": "12",
+        "ptt_control": "34",
+        "t_sangria": "32",
+        "t_coagulacion": "12",
+        "observaciones": "sdfsdf"
+      },
+      "doctorOrdenante": "Sin orden médica"
+    },
+    {
+      "id": "mpcsi8xp99kyg6nc05",
+      "pacienteId": "mpcsi8wsiqnnotjuyts",
+      "tipo": "dengue",
+      "estado": "completo",
+      "fechaCreacion": "2026-05-19T15:30:43.228Z",
+      "fechaActualizacion": "2026-05-19T15:31:01.357Z",
+      "resultados": {
+        "IgG": "Positivo",
+        "IgM": "Negativo",
+        "observaciones": "sdfsdfsdf"
+      },
+      "doctorOrdenante": "doc"
+    },
+    {
+      "id": "mpcsrcor43t2uvrhgkm",
+      "pacienteId": "mpcsrcoqddxk6bjwemn",
+      "tipo": "hematologia",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-05-19T15:37:48.026Z",
+      "fechaActualizacion": "2026-05-19T15:37:48.026Z"
     }
   ]
 }

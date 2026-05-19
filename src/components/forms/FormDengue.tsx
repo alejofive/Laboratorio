@@ -60,14 +60,23 @@ export default function FormDengue({ resultados, onChange, onValidChange, readOn
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {campos.map(campo => (
-          <Select
-            key={campo.key}
-            label={campo.label}
-            value={data[campo.key as keyof ResultadosDengue] as string}
-            onChange={value => handleChange(campo.key as keyof ResultadosDengue, value)}
-            options={opciones}
-            readOnly={readOnly}
-          />
+          readOnly ? (
+            <div key={campo.key} className="w-full">
+              <label className="block text-base font-medium text-tertiary mb-1">{campo.label}</label>
+              <p className="text-lg font-medium text-primary">
+                {(data[campo.key as keyof ResultadosDengue] as string)?.trim() || '-'}
+              </p>
+            </div>
+          ) : (
+            <Select
+              key={campo.key}
+              label={campo.label}
+              value={data[campo.key as keyof ResultadosDengue] as string}
+              onChange={value => handleChange(campo.key as keyof ResultadosDengue, value)}
+              options={opciones}
+              readOnly={readOnly}
+            />
+          )
         ))}
       </div>
 

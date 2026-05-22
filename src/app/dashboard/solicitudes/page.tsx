@@ -4,11 +4,11 @@ import ExamTable from "@/components/ExamTable";
 import TopResumen from "@/components/TopResumen";
 
 import { useLab } from "@/context/LabContext";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 
-export default function SolicitudPage() {
+function SolicitudPageContent() {
     const { examenes, pacientes } = useLab();
     const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
     const searchParams = useSearchParams();
@@ -50,4 +50,12 @@ export default function SolicitudPage() {
             />
         </div>
     </div>)
+}
+
+export default function SolicitudPage() {
+    return (
+        <Suspense fallback={<div className="p-9 w-full min-h-screen" />}>
+            <SolicitudPageContent />
+        </Suspense>
+    );
 }

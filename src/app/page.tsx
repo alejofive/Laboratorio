@@ -1,10 +1,5 @@
 'use client';
 
-import { useLab } from '@/context/LabContext';
-
-import ExamTable from '@/components/ExamTable';
-import NuevoPacienteForm from '@/components/NuevoPacienteForm';
-
 export default function Dashboard() {
 
 

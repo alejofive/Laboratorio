@@ -1,22 +1,9 @@
 'use client';
 
-import { useLab } from '@/context/LabContext';
 import { TipoExamen } from '@/types';
-import {
-  UserCheck,
-  Droplets,
-  FlaskConical,
-  Microscope,
-  TestTube,
-  Activity,
-  Baby,
-  Shield,
-  Cross,
-  FileText,
-  MicroscopeIcon
-} from 'lucide-react';
+
 import { useForm } from 'react-hook-form';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { sileo } from 'sileo';
 import { toast } from 'react-hot-toast';
 import DetallePaciente from './DetallePaciente';
@@ -24,55 +11,76 @@ import TopResumen from './TopResumen';
 import SvgIcon from './ui/SvgIcon';
 import { Button } from './ui/Button';
 import { PillFilter } from './PillFilter';
+import { useCreateOrder, useCreatePatient, useExams, usePatientById, usePatients } from '@/data/createPatients';
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles';
 
-const examenesDisponibles: { value: TipoExamen; label: string; icon: React.ReactNode; color: string; group: GrupoExamen }[] = [
-  { value: 'hematologia', label: 'Hematología', icon: <Droplets className="w-5 h-5 text-rose-500" />, color: 'rose', group: 'hematologia' },
-  { value: 'hemoglobina_hematocritos', label: 'Hemoglobina y hematocritos', icon: <Droplets className="w-5 h-5 text-pink-500" />, color: 'pink', group: 'hematologia' },
-  { value: 'frotis_sangre', label: 'Frotis de sangre periférica', icon: <Microscope className="w-5 h-5 text-red-600" />, color: 'red', group: 'hematologia' },
-  { value: 'hemoparasitos', label: 'Hemoparásitos', icon: <Microscope className="w-5 h-5 text-red-700" />, color: 'red', group: 'hematologia' },
-  { value: 'tipo_sangre', label: 'Tipo de sangre', icon: <Droplets className="w-5 h-5 text-red-400" />, color: 'red', group: 'hematologia' },
+type ExamItem = {
+  templateId: string;
+  label: string;
+  value: TipoExamen;
+  group: GrupoExamen;
+};
 
-  { value: 'quimica', label: 'Química', icon: <FlaskConical className="w-5 h-5 text-green-600" />, color: 'green', group: 'quimica' },
-  { value: 'quimica_corta', label: 'Química sanguínea más corta', icon: <FlaskConical className="w-5 h-5 text-lime-500" />, color: 'lime', group: 'quimica' },
-  { value: 'quimica_colinesterasa', label: 'Química colinesterasa', icon: <FlaskConical className="w-5 h-5 text-green-500" />, color: 'green', group: 'quimica' },
-  { value: 'glicemia_pre_post', label: 'Glicemia pre y post', icon: <FlaskConical className="w-5 h-5 text-amber-500" />, color: 'amber', group: 'quimica' },
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 
-  { value: 'serologia', label: 'Serología', icon: <Shield className="w-5 h-5 text-blue-700" />, color: 'blue', group: 'serologia' },
-  { value: 'vdrl_hepatitis', label: 'VDRL, hepatitis y demás', icon: <Cross className="w-5 h-5 text-rose-600" />, color: 'rose', group: 'serologia' },
-  { value: 'serologia_asto_psa_pylori', label: 'Serología ASTO, PSA y Pylori', icon: <Activity className="w-5 h-5 text-blue-600" />, color: 'blue', group: 'serologia' },
-  { value: 'helicobacter_pylori', label: 'Helicobacter Pylori', icon: <MicroscopeIcon className="w-5 h-5 text-purple-500" />, color: 'purple', group: 'serologia' },
-  { value: 'dengue', label: 'Dengue', icon: <Droplets className="w-5 h-5 text-red-500" />, color: 'red', group: 'serologia' },
+const categoryToGroup: Record<string, GrupoExamen> = {
+  hematologia: 'hematologia',
+  'quimica sanguinea': 'quimica',
+  'inmunologia y serologia': 'serologia',
+  'coprologia y uroanalisis': 'orina_heces',
+  'perfiles combinados': 'paneles',
+};
 
-  { value: 'orina', label: 'Orina', icon: <TestTube className="w-5 h-5 text-yellow-500" />, color: 'yellow', group: 'orina_heces' },
-  { value: 'heces', label: 'Heces', icon: <FileText className="w-5 h-5 text-amber-700" />, color: 'amber', group: 'orina_heces' },
-  { value: 'prueba_embarazo', label: 'Prueba de embarazo', icon: <Baby className="w-5 h-5 text-pink-400" />, color: 'pink', group: 'orina_heces' },
+const examNameToTipo: Record<string, TipoExamen> = {
+  'frotisde sangre periferica': 'frotis_sangre',
+  hematologia: 'hematologia',
+  'hemoglomina hematocritos': 'hemoglobina_hematocritos',
+  hemoparasitos: 'hemoparasitos',
+  'tipo de sangre': 'tipo_sangre',
+  'glicemia pre post': 'glicemia_pre_post',
+  'quimica sanguinea mas corta': 'quimica_corta',
+  quimica: 'quimica',
+  'quimica colinesteraza': 'quimica_colinesterasa',
+  dengue: 'dengue',
+  'helicobacter pylori': 'helicobacter_pylori',
+  'prueba de embarazo': 'prueba_embarazo',
+  serologia: 'serologia',
+  'serologia asto psa pylori': 'serologia_asto_psa_pylori',
+  'vdrl hepatitis y demas': 'vdrl_hepatitis',
+  heces: 'heces',
+  orina: 'orina',
+  'heces y hematologia': 'heces_hematologia',
+  'hematologia y orina': 'hematologia_orina',
+  'hematologia y quimica': 'hematologia_quimica',
+  'hematologia y serologia': 'hematologia_serologia',
+  'nuevo completo': 'nuevo_completo',
+  'orina y heces': 'orina_heces',
+  'quimica y heces': 'quimica_heces',
+  'quimica y orina': 'quimica_orina',
+  'quimica y serologia': 'quimica_serologia',
+  'serologia y heces': 'serologia_heces',
+  'serologia y orina': 'serologia_orina',
+};
 
-  { value: 'hematologia_quimica', label: 'Hematología y Química', icon: <FlaskConical className="w-5 h-5 text-indigo-500" />, color: 'indigo', group: 'paneles' },
-  { value: 'hematologia_serologia', label: 'Hematología y Serología', icon: <Shield className="w-5 h-5 text-violet-500" />, color: 'violet', group: 'paneles' },
-  { value: 'quimica_heces', label: 'Química y heces', icon: <FlaskConical className="w-5 h-5 text-emerald-500" />, color: 'emerald', group: 'paneles' },
-  { value: 'quimica_orina', label: 'Química y orina', icon: <FlaskConical className="w-5 h-5 text-teal-600" />, color: 'teal', group: 'paneles' },
-  { value: 'quimica_serologia', label: 'Química y serología', icon: <Shield className="w-5 h-5 text-blue-500" />, color: 'blue', group: 'paneles' },
-  { value: 'serologia_heces', label: 'Serología y heces', icon: <Shield className="w-5 h-5 text-indigo-600" />, color: 'indigo', group: 'paneles' },
-  { value: 'serologia_orina', label: 'Serología y orina', icon: <Shield className="w-5 h-5 text-sky-500" />, color: 'sky', group: 'paneles' },
-  { value: 'orina_heces', label: 'Orina y Heces', icon: <FlaskConical className="w-5 h-5 text-teal-500" />, color: 'teal', group: 'paneles' },
 
-  { value: 'nuevo_completo', label: 'Nuevo Completo', icon: <TestTube className="w-5 h-5 text-cyan-500" />, color: 'cyan', group: 'perfiles' },
-];
 
 interface FormValues {
   nombre: string;
-  edad: string;
+  fechaNacimiento: string;
   telefono: string;
   cedula: string;
   direccion: string;
+  apellido: string;
   examenes: TipoExamen[];
 }
 
 export default function NuevoPacienteForm() {
-  const { crearPaciente, buscarPacientePorCedula, pacientes, getPacientesUnicos } = useLab();
-
   const {
     register,
     handleSubmit,
@@ -84,10 +92,11 @@ export default function NuevoPacienteForm() {
     mode: 'onChange',
     defaultValues: {
       nombre: '',
-      edad: '',
+      fechaNacimiento: '',
       telefono: '',
       cedula: '',
       direccion: '',
+      apellido: '',
       examenes: [],
     },
   });
@@ -98,59 +107,52 @@ export default function NuevoPacienteForm() {
   const [activeCategory, setActiveCategory] = useState<GrupoExamen>('hematologia');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const cedulaValue = watch('cedula');
 
-  const shouldShowResults = searchTerm.trim().length >= 2;
+  const { data: examsData } = useExams();
+  const shouldShowResults = debouncedSearchTerm.trim().length >= 2;
   const isSearching = searchTerm.trim().length > 0;
+  const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
+    page: 1,
+    limit: 10,
+    search: shouldShowResults ? debouncedSearchTerm : '',
+  });
+  const { data: selectedPatientDetail, isLoading: isLoadingPatientDetail } = usePatientById(selectedPatientId);
 
-  const pacientesUnicos = useMemo(
-    () => Array.from(getPacientesUnicos().values()).map((item) => item.paciente),
-    [getPacientesUnicos, pacientes]
-  );
+  const createPatientMutation = useCreatePatient();
+  const createOrderMutation = useCreateOrder();
 
-  const results = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return [];
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 350);
 
-    return pacientesUnicos.filter((paciente) => {
-      return (
-        paciente.cedula.toLowerCase().includes(term) ||
-        paciente.nombre.toLowerCase().includes(term) ||
-        paciente.telefono.toLowerCase().includes(term)
-      );
-    });
-  }, [pacientesUnicos, searchTerm]);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const results = patientsData?.data ?? [];
 
   const selectedPatient = useMemo(
-    () => pacientes.find((paciente) => paciente.id === selectedPatientId) ?? null,
-    [pacientes, selectedPatientId]
+    () => results.find((patient) => patient._id === selectedPatientId) ?? null,
+    [results, selectedPatientId]
   );
 
-  const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cedula = e.target.value;
-    setValue('cedula', cedula);
+  useEffect(() => {
+    if (!selectedPatientDetail) return;
 
-    if (cedula.length >= 3) {
-      const pacienteExistente = buscarPacientePorCedula(cedula);
-      if (pacienteExistente) {
-        setValue('nombre', pacienteExistente.nombre);
-        setValue('edad', pacienteExistente.edad.toString());
-        setValue('telefono', pacienteExistente.telefono);
-        setValue('direccion', pacienteExistente.direccion);
-        sileo.info({
-          title: 'Datos cargados',
-          description: `Se cargaron los datos de ${pacienteExistente.nombre}`,
-          duration: 2000,
-          fill: 'black',
-          styles: {
-            title: 'text-white!',
-            description: 'text-white/75!',
-            badge: 'bg-white/20!',
-          },
-        });
-      }
+    setValue('cedula', selectedPatientDetail.document_number ?? '');
+    setValue('nombre', selectedPatientDetail.first_name ?? '');
+    setValue('apellido', selectedPatientDetail.last_name ?? '');
+    setValue('telefono', selectedPatientDetail.phone ?? '');
+    setValue('direccion', selectedPatientDetail.address ?? '');
+
+    if (selectedPatientDetail.birth_date) {
+      setValue('fechaNacimiento', selectedPatientDetail.birth_date.split('T')[0]);
     }
-  };
+  }, [selectedPatientDetail, setValue]);
+
+  const selectedPatientCard = selectedPatientDetail ?? selectedPatient;
 
   const EXAM_CATEGORIES: { key: GrupoExamen; label: string; iconSrc: string }[] = [
     { key: 'hematologia', label: 'Hematología', iconSrc: '/svg/examenes/Hematología.svg' },
@@ -161,16 +163,41 @@ export default function NuevoPacienteForm() {
     { key: 'perfiles', label: 'Perfiles Completos', iconSrc: '/svg/examenes/Perfil completo.svg' },
   ];
 
+  const allExams = useMemo<ExamItem[]>(() => {
+    if (!examsData?.categories) return [];
+
+    return examsData.categories.flatMap((category) => {
+      const normalizedCategoryName = normalizeText(category.name);
+      const group = categoryToGroup[normalizedCategoryName] ?? 'perfiles';
+
+      return category.exams
+        .map((exam) => {
+          const normalizedExamName = normalizeText(exam.name);
+          const tipo = examNameToTipo[normalizedExamName];
+
+          if (!tipo) return null;
+
+          return {
+            templateId: exam.id,
+            label: exam.name,
+            value: tipo,
+            group,
+          };
+        })
+        .filter((item): item is ExamItem => item !== null);
+    });
+  }, [examsData]);
+
   const examCountByCategory: Record<GrupoExamen, number> = {
-    hematologia: examenesDisponibles.filter((exam) => exam.group === 'hematologia').length,
-    quimica: examenesDisponibles.filter((exam) => exam.group === 'quimica').length,
-    serologia: examenesDisponibles.filter((exam) => exam.group === 'serologia').length,
-    orina_heces: examenesDisponibles.filter((exam) => exam.group === 'orina_heces').length,
-    paneles: examenesDisponibles.filter((exam) => exam.group === 'paneles').length,
-    perfiles: examenesDisponibles.filter((exam) => exam.group === 'perfiles').length,
+    hematologia: allExams.filter((exam) => exam.group === 'hematologia').length,
+    quimica: allExams.filter((exam) => exam.group === 'quimica').length,
+    serologia: allExams.filter((exam) => exam.group === 'serologia').length,
+    orina_heces: allExams.filter((exam) => exam.group === 'orina_heces').length,
+    paneles: allExams.filter((exam) => exam.group === 'paneles').length,
+    perfiles: allExams.filter((exam) => exam.group === 'perfiles').length,
   };
 
-  const visibleExams = examenesDisponibles.filter((exam) => {
+  const visibleExams = allExams.filter((exam) => {
     const byCategory = exam.group === activeCategory;
     const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase());
     return byCategory && byText;
@@ -186,19 +213,19 @@ export default function NuevoPacienteForm() {
     setSearchTerm(value);
   };
 
-  const onSelectPatient = (paciente: (typeof pacientesUnicos)[number]) => {
-    setValue('cedula', paciente.cedula);
-    setValue('nombre', paciente.nombre);
-    setValue('edad', paciente.edad.toString());
-    setValue('telefono', paciente.telefono);
-    setValue('direccion', paciente.direccion);
-    setSelectedPatientId(paciente.id);
+  const onSelectPatient = (patient: (typeof results)[number]) => {
+    setValue('cedula', patient.document_number);
+    setValue('nombre', patient.first_name);
+    setValue('apellido', patient.last_name);
+    setValue('telefono', patient.phone);
+    setValue('direccion', '');
+    setSelectedPatientId(patient._id);
     setShowCreateForm(false);
     setSearchTerm('');
 
     sileo.info({
       title: 'Datos cargados',
-      description: `Se cargaron los datos de ${paciente.nombre}`,
+      description: `Se cargaron los datos de ${patient.first_name} ${patient.last_name}`,
       duration: 2000,
       fill: 'black',
       styles: {
@@ -212,7 +239,8 @@ export default function NuevoPacienteForm() {
   const onCreatePatient = () => {
     reset({
       nombre: '',
-      edad: '',
+      apellido: '',
+      fechaNacimiento: '',
       telefono: '',
       cedula: '',
       direccion: '',
@@ -239,13 +267,41 @@ export default function NuevoPacienteForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await crearPaciente({
-        nombre: data.nombre,
-        edad: parseInt(data.edad) || 0,
-        telefono: data.telefono,
-        cedula: data.cedula,
-        direccion: data.direccion,
-        examenes: data.examenes,
+      const selectedTemplates = allExams
+        .filter((exam) => selectedExams.includes(exam.value))
+        .map((exam) => exam.templateId);
+
+      if (selectedTemplates.length === 0) {
+        toast.error('Debes seleccionar al menos un examen valido');
+        return;
+      }
+
+      let patientId = '';
+
+      if (showCreateForm) {
+        const created = await createPatientMutation.mutateAsync({
+          first_name: data.nombre.trim(),
+          last_name: data.apellido.trim(),
+          document_number: data.cedula.trim(),
+          birth_date: data.fechaNacimiento,
+          phone: data.telefono.trim(),
+          address: data.direccion.trim(),
+        });
+
+        patientId = created._id;
+      } else {
+        if (!selectedPatientId) {
+          toast.error('No se encontro el paciente en API para crear la orden');
+          return;
+        }
+
+        patientId = selectedPatientId;
+      }
+
+      await createOrderMutation.mutateAsync({
+        patient_id: patientId,
+        exam_template_ids: selectedTemplates,
+        notes: 'Paciente en ayuno',
       });
 
       onClearPatient();
@@ -256,7 +312,6 @@ export default function NuevoPacienteForm() {
     }
   };
 
-
   return (
     <div className="w-full">
       <TopResumen />
@@ -266,9 +321,13 @@ export default function NuevoPacienteForm() {
 
         {!showCreateForm ? (
           <div className="flex flex-wrap items-center gap-4">
-            {selectedPatient ? (
+            {selectedPatientCard || isLoadingPatientDetail ? (
               <div className="w-full">
-                <DetallePaciente paciente={selectedPatient} onClearPatient={onClearPatient} />
+                <DetallePaciente
+                  paciente={selectedPatientCard ?? undefined}
+                  isLoading={isLoadingPatientDetail}
+                  onClearPatient={onClearPatient}
+                />
               </div>
             ) : (
               <div className='w-full'>
@@ -296,16 +355,18 @@ export default function NuevoPacienteForm() {
                         {results.length > 0 ? (
                           results.map((result, index) => (
                             <button
-                              key={result.id}
+                              key={result._id}
                               type="button"
                               onClick={() => onSelectPatient(result)}
                               className={`flex w-full items-center hover:bg-gray-200 cursor-pointer z-0 justify-between px-4 py-3 text-left ${index > 0 ? 'border-t border-border-default' : ''}`}
                             >
                               <span className="text-tertiary text-base">
-                                {result.nombre} · {result.cedula} · {result.telefono} · {result.edad} años
+                                {result.first_name} {result.last_name} · {result.document_number} · {result.phone} · {result.age} años
                               </span>
                             </button>
                           ))
+                        ) : isLoadingPatients ? (
+                          <p className="text-secondary px-4 py-3 text-base">Buscando pacientes...</p>
                         ) : (
                           <p className="text-secondary px-4 py-3 text-base">No se encontraron pacientes.</p>
                         )}
@@ -343,7 +404,7 @@ export default function NuevoPacienteForm() {
                     type="text"
                     inputMode="numeric"
                     value={cedulaValue}
-                    onChange={handleCedulaChange}
+                    onChange={(e) => setValue('cedula', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="V-12345678"
                   />
@@ -351,26 +412,40 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Nombre completo</label>
-                  <input
-                    type="text"
-                    {...register('nombre', { required: 'El nombre es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Nombre y apellido"
-                  />
-                  {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
+
+                  <div className='flex gap-4'>
+
+                    <div className='flex-1'>
+                      <label className="block text-tertiary text-sm font-bold mb-1">Nombre</label>
+                      <input
+                        type="text"
+                        {...register('nombre', { required: 'El nombre es requerido' })}
+                        className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="Nombre"
+                      />
+                      {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
+                    </div>
+                    <div className='flex-1'>
+                      <label className="block text-tertiary text-sm font-bold mb-1">Apellido</label>
+                      <input
+                        type="text"
+                        {...register('apellido', { required: 'El apellido es requerido' })}
+                        className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.apellido ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="Apellido"
+                      />
+                      {errors.apellido && <p className="text-red-500 text-xs mt-1">{errors.apellido.message}</p>}
+                    </div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Edad</label>
+                  <label className="block text-tertiary text-sm font-bold mb-1">Fecha de nacimiento</label>
                   <input
-                    type="text"
-                    inputMode="numeric"
-                    {...register('edad', { required: 'La edad es requerida', min: { value: '1', message: 'Debe ser mayor a 0' } })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.edad ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Ej. 34"
+                    type="date"
+                    {...register('fechaNacimiento', { required: 'La fecha de nacimiento es requerida' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.fechaNacimiento ? 'border-red-500' : 'border-gray-300'}`}
                   />
-                  {errors.edad && <p className="text-red-500 text-xs mt-1">{errors.edad.message}</p>}
+                  {errors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{errors.fechaNacimiento.message}</p>}
                 </div>
 
                 <div>
@@ -451,7 +526,7 @@ export default function NuevoPacienteForm() {
             <h4 className="text-xl font-semibold">Exámenes seleccionados: {selectedExams.length}</h4>
             <div className="mt-3 flex flex-wrap gap-3">
               {selectedExams.map((exam) => {
-                const examLabel = examenesDisponibles.find((item) => item.value === exam)?.label ?? exam;
+                const examLabel = allExams.find((item) => item.value === exam)?.label ?? exam;
                 return <PillFilter selected key={exam} label={examLabel} onRemove={() => toggleExamen(exam)} />;
               })}
             </div>
@@ -464,7 +539,7 @@ export default function NuevoPacienteForm() {
         <Button
           type="button"
           onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitDisabled}
+          disabled={isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending}
           className="cursor-pointer whitespace-nowrap rounded-2xl disabled:cursor-not-allowed disabled:opacity-60"
         >
           Guardar y crear solicitud

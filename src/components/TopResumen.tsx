@@ -1,12 +1,24 @@
 'use client';
 
 
+import { useLab } from "@/context/LabContext";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useLab } from "@/context/LabContext";
 import { Button } from "./ui/Button";
 
-export default function TopResumen({ solicitudes }: { solicitudes?: boolean }) {
+interface TopResumenProps {
+    solicitudes?: boolean;
+    filtroEstado?: 'pendiente' | 'completo';
+    totalSolicitudes?: number;
+    totalParaImprimir?: number;
+}
+
+export default function TopResumen({
+    solicitudes,
+    filtroEstado,
+    totalSolicitudes,
+    totalParaImprimir,
+}: TopResumenProps) {
     const router = useRouter();
     const { pacientes, examenes } = useLab();
     const fechaActual = useMemo(() => {
@@ -31,23 +43,31 @@ export default function TopResumen({ solicitudes }: { solicitudes?: boolean }) {
         pacientes
             .filter((paciente) => paciente.fecha === fechaHoy)
             .forEach((paciente) => {
-            const examenesPaciente = examenes.filter((examen) => examen.pacienteId === paciente.id);
+                const examenesPaciente = examenes.filter((examen) => examen.pacienteId === paciente.id);
 
-            if (examenesPaciente.length === 0) return;
+                if (examenesPaciente.length === 0) return;
 
-            const todosCompletos = examenesPaciente.every(
-                (examen) => examen.estado === 'completo' || examen.estado === 'enviado'
-            );
+                const todosCompletos = examenesPaciente.every(
+                    (examen) => examen.estado === 'completo' || examen.estado === 'enviado'
+                );
 
-            if (todosCompletos) {
-                completosCount += 1;
-            } else {
-                pendientesCount += 1;
-            }
+                if (todosCompletos) {
+                    completosCount += 1;
+                } else {
+                    pendientesCount += 1;
+                }
             });
 
         return { pendientes: pendientesCount, completos: completosCount };
     }, [pacientes, examenes]);
+
+    const solicitudesMostradas = totalSolicitudes ?? (solicitudes ? 0 : pendientes);
+
+    const paraImprimirMostradas = totalParaImprimir ?? (solicitudes ? 0 : completos);
+
+    const labelSolicitudes = solicitudes && filtroEstado === 'completo'
+        ? 'Para imprimir'
+        : 'Solicitudes';
 
     return (
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -63,8 +83,8 @@ export default function TopResumen({ solicitudes }: { solicitudes?: boolean }) {
                 </div>
             )}
             <div className="flex items-center gap-3">
-                <Button onClick={() => router.push('/dashboard/solicitudes?estado=pendiente')} variant="outline" className="cursor-pointer"><strong>{pendientes}</strong> Solicitudes</Button>
-                <Button onClick={() => router.push('/dashboard/solicitudes?estado=completo')} variant="outline-green" className="cursor-pointer"><strong>{completos}</strong> para Imprimir</Button>
+                <Button onClick={() => router.push('/dashboard/solicitudes?estado=pendiente')} variant="outline" className="cursor-pointer"><strong>{solicitudesMostradas}</strong> {labelSolicitudes}</Button>
+                <Button onClick={() => router.push('/dashboard/solicitudes?estado=completo')} variant="outline-green" className="cursor-pointer"><strong>{paraImprimirMostradas}</strong> para Imprimir</Button>
             </div>
         </div>
     );

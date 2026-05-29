@@ -1,59 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Examen, EstadoExamen, Paciente } from '@/types';
-import { useLab } from '@/context/LabContext';
+import { Examen, Paciente } from '@/types';
 import EstadoBadge from './EstadoBadge';
-import { ArrowLeft, FileText, FlaskConical, Mail } from 'lucide-react';
+import { ArrowLeft, FileText, Mail } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface AccionesExamenProps {
   examen: Examen;
   paciente: Paciente;
   mostrarAccionesResultado?: boolean;
+  totalExamenesPaciente: number;
+  examenesCompletadosPaciente: number;
+  onEnviarEmail: (email: string) => Promise<void>;
 }
 
-const examLabels: Record<string, string> = {
-  dengue: 'Dengue',
-  frotis_sangre: 'Frotis de sangre periferica',
-  glicemia_pre_post: 'GLICEMIA PRE POST',
-  heces: 'Examen de Heces',
-  hematologia: 'Hematología',
-  helicobacter_pylori: 'Helicobacter Pylori',
-  hematologia_quimica: 'Hematología y Química',
-  hematologia_serologia: 'Hematología y Serología',
-  hemoglobina_hematocritos: 'Hemoglobina Hematocritos',
-  hemoparasitos: 'Hemoparasitos',
-  nuevo_completo: 'Nuevo Completo',
-  orina_heces: 'Orina y Heces',
-  orina: 'Análisis de Orina',
-  prueba_embarazo: 'PRUEBA DE EMBARAZO',
-  quimica_colinesterasa: 'Química Colinesterasa',
-  quimica_corta: 'QUIMICA SANGUINEA MAS CORTA',
-  quimica_heces: 'Química y Heces',
-  quimica_orina: 'Química y Orina',
-  quimica_serologia: 'Química y Serología',
-  quimica: 'Química Sanguínea',
-  serologia_asto_psa_pylori: 'Serologia ASTO PSA Pylori',
-  serologia_heces: 'Serología y Heces',
-  serologia_orina: 'Serología y Orina',
-  serologia: 'Serología',
-  tipo_sangre: 'Tipo de sangre',
-  vdrl_hepatitis: 'VDRL Hepatitis y demas',
-};
-
-export default function AccionesExamen({ examen, paciente, mostrarAccionesResultado = true }: AccionesExamenProps) {
+export default function AccionesExamen({
+  examen,
+  paciente,
+  mostrarAccionesResultado = true,
+  totalExamenesPaciente,
+  examenesCompletadosPaciente,
+  onEnviarEmail,
+}: AccionesExamenProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cedulaParam = searchParams.get('cedula');
-  const { enviarEmail, getExamenesPorPaciente } = useLab();
   const [email, setEmail] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  const examenesPaciente = getExamenesPorPaciente(paciente.id);
-  const completados = examenesPaciente.filter((ex) => ex.estado === 'completo' || ex.estado === 'enviado').length;
-  const total = examenesPaciente.length;
+  const completados = examenesCompletadosPaciente;
+  const total = totalExamenesPaciente;
   const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
   const porcentajeSeguro = Math.min(100, Math.max(0, porcentaje));
 
@@ -70,12 +48,12 @@ export default function AccionesExamen({ examen, paciente, mostrarAccionesResult
     window.print();
   };
 
-  const handleEnviarEmail = () => {
+  const handleEnviarEmail = async () => {
     if (email) {
-      enviarEmail(examen.id, email);
+      await onEnviarEmail(email);
       setShowEmailModal(false);
       setEmail('');
-      alert('Email enviado (simulado)');
+      alert('Email enviado');
     }
   };
 

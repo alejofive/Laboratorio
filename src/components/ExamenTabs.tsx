@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { Examen, TipoExamen } from '@/types';
-import { X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ExamenTabsProps {
   examenes: { id: string; tipo: TipoExamen }[];
@@ -16,37 +15,6 @@ interface ExamenTabsProps {
   onPrint: () => void;
   onSendEmail: () => void;
 }
-
-const examLabels: Record<TipoExamen, string> = {
-  dengue: 'Dengue',
-  frotis_sangre: 'Frotis de sangre periferica',
-  glicemia_pre_post: 'Glicemia pre post',
-  heces: 'Heces',
-  heces_hematologia: 'Heces y Hematologia',
-  hematologia: 'Hematología',
-  hematologia_orina: 'Hematología y Orina',
-  helicobacter_pylori: 'Helicobacter Pylori',
-  hematologia_quimica: 'Hematología y Química',
-  hematologia_serologia: 'Hematología y Serología',
-  hemoglobina_hematocritos: 'Hemoglobina Hematocritos',
-  hemoparasitos: 'Hemoparasitos',
-  nuevo_completo: 'Nuevo Completo',
-  orina_heces: 'Orina y Heces',
-  orina: 'Orina',
-  prueba_embarazo: 'Prueba de embarazo',
-  quimica_colinesterasa: 'Química Colinesterasa',
-  quimica_corta: 'Quimica sanguinea mas corta',
-  quimica_heces: 'Química y Heces',
-  quimica_orina: 'Química y Orina',
-  quimica_serologia: 'Química y Serología',
-  quimica: 'Química',
-  serologia_asto_psa_pylori: 'Serologia ASTO PSA Pylori',
-  serologia_heces: 'Serología y Heces',
-  serologia_orina: 'Serología y Orina',
-  serologia: 'Serología',
-  tipo_sangre: 'Tipo de sangre',
-  vdrl_hepatitis: 'VDRL Hepatitis y demas',
-};
 
 export default function ExamenTabs({
   examenes,

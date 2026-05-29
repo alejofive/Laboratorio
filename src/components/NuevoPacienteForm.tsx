@@ -2,16 +2,17 @@
 
 import { TipoExamen } from '@/types';
 
-import { useForm } from 'react-hook-form';
+import { useCreateOrder, useCreatePatient, useExams, useOrders, usePatientById, usePatients } from '@/data/createPatients';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { sileo } from 'sileo';
+import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
+import { sileo } from 'sileo';
 import DetallePaciente from './DetallePaciente';
-import TopResumen from './TopResumen';
-import SvgIcon from './ui/SvgIcon';
-import { Button } from './ui/Button';
 import { PillFilter } from './PillFilter';
-import { useCreateOrder, useCreatePatient, useExams, usePatientById, usePatients } from '@/data/createPatients';
+import TopResumen from './TopResumen';
+import { Button } from './ui/Button';
+import SvgIcon from './ui/SvgIcon';
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles';
 
@@ -43,9 +44,12 @@ const examNameToTipo: Record<string, TipoExamen> = {
   'hemoglomina hematocritos': 'hemoglobina_hematocritos',
   hemoparasitos: 'hemoparasitos',
   'tipo de sangre': 'tipo_sangre',
+  glicemia: 'glicemia_pre_post',
   'glicemia pre post': 'glicemia_pre_post',
+  'quimica sanguinea': 'quimica',
   'quimica sanguinea mas corta': 'quimica_corta',
   quimica: 'quimica',
+  'quimica colinesterasa': 'quimica_colinesterasa',
   'quimica colinesteraza': 'quimica_colinesterasa',
   dengue: 'dengue',
   'helicobacter pylori': 'helicobacter_pylori',
@@ -81,6 +85,7 @@ interface FormValues {
 }
 
 export default function NuevoPacienteForm() {
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -111,6 +116,31 @@ export default function NuevoPacienteForm() {
   const cedulaValue = watch('cedula');
 
   const { data: examsData } = useExams();
+  const todayApiDate = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const { data: ordersToday = [] } = useOrders({
+    page: 1,
+    limit: 100,
+    start_date: todayApiDate,
+    end_date: todayApiDate,
+  });
+
+  const resumenHoy = useMemo(() => {
+    const totalParaImprimir = ordersToday.filter((order) => order.status === 'completed' || order.status === 'sent').length;
+    const totalSolicitudes = ordersToday.length - totalParaImprimir;
+
+    return {
+      totalSolicitudes,
+      totalParaImprimir,
+    };
+  }, [ordersToday]);
+
   const shouldShowResults = debouncedSearchTerm.trim().length >= 2;
   const isSearching = searchTerm.trim().length > 0;
   const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
@@ -205,7 +235,7 @@ export default function NuevoPacienteForm() {
 
   const selectedExams = examenesSeleccionados || [];
   const shouldShowSelected = selectedExams.length > 0;
-  const canCreateFromSearch = Boolean(selectedPatient);
+  const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0;
   const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0;
   const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm);
 
@@ -304,6 +334,8 @@ export default function NuevoPacienteForm() {
         notes: 'Paciente en ayuno',
       });
 
+      await queryClient.invalidateQueries({ queryKey: ['orders-api'] });
+
       onClearPatient();
       reset();
       toast.success('Solicitud creada exitosamente');
@@ -314,7 +346,10 @@ export default function NuevoPacienteForm() {
 
   return (
     <div className="w-full">
-      <TopResumen />
+      <TopResumen
+        totalSolicitudes={resumenHoy.totalSolicitudes}
+        totalParaImprimir={resumenHoy.totalParaImprimir}
+      />
 
 
       <section className="bg-surface border-border-default border rounded-3xl p-4 mt-6 mb-4">

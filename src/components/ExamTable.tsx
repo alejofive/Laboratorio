@@ -1,33 +1,35 @@
 'use client';
 
-import Link from 'next/link';
-import { useLab } from '@/context/LabContext';
-import EstadoBadge from './EstadoBadge';
+import { useOrders } from '@/data/createPatients';
+import { OrderItem } from '@/types/create';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Datepicker } from 'flowbite-react';
-import type { SVGProps } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { DateRange, DayPicker } from 'react-day-picker';
+import 'react-day-picker/style.css';
+import EstadoBadge from './EstadoBadge';
 import SvgIcon from './ui/SvgIcon';
+
+const EMPTY_ORDERS: OrderItem[] = [];
 
 interface ExamTableProps {
   anterior: boolean;
   mostrarAnteriores: boolean;
   onToggleMostrarAnteriores: (checked: boolean) => void;
   filtroEstado?: 'pendiente' | 'completo';
+  onSummaryChange?: (summary: { totalSolicitudes: number; totalParaImprimir: number }) => void;
 }
 
-export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrarAnteriores, filtroEstado }: ExamTableProps) {
-
+export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrarAnteriores, filtroEstado, onSummaryChange }: ExamTableProps) {
   const router = useRouter();
-
-  const { examenes, pacientes } = useLab();
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeCalendarOption, setActiveCalendarOption] = useState<'hoy' | 'ayer' | 'ultimos7' | 'fecha'>(
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [showRangePicker, setShowRangePicker] = useState(false);
+  const [activeCalendarOption, setActiveCalendarOption] = useState<'hoy' | 'ayer' | 'ultimos7' | 'rango'>(
     mostrarAnteriores ? 'ayer' : 'hoy'
   );
+
   const PACIENTES_POR_PAGINA = 12;
   const calendarOptions = [
     { value: 'hoy', label: 'Hoy' },
@@ -35,151 +37,155 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
     { value: 'ultimos7', label: 'Ultimos 7 dias' },
   ] as const;
 
-  const CalendarIcon = (props: SVGProps<SVGSVGElement>) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.7754 0.917969C13.1896 0.917969 13.5254 1.25378 13.5254 1.66797V2.57129C16.8596 3.08659 18.0178 4.66563 18.2744 8.58105C18.3054 9.05313 18.3231 9.55938 18.3301 10.1016L18.334 10.6553C18.334 11.4104 18.3156 12.1003 18.2744 12.7295C17.9838 17.1633 16.5376 18.6032 12.084 18.8926C11.452 18.9336 10.7584 18.9512 10 18.9512C3.13779 18.9511 1.667 17.4869 1.66699 10.6553C1.66699 9.90014 1.68533 9.2103 1.72656 8.58105C1.98321 4.66556 3.14042 3.08655 6.47461 2.57129V1.66797C6.47463 1.25378 6.81041 0.917969 7.22461 0.917969C7.63862 0.918193 7.97459 1.25391 7.97461 1.66797V2.41504C8.59094 2.37661 9.26467 2.35938 10 2.35938C10.7355 2.35938 11.409 2.37659 12.0254 2.41504V1.66797C12.0254 1.25391 12.3614 0.918192 12.7754 0.917969ZM3.19141 9.33105C3.1759 9.74199 3.16699 10.1826 3.16699 10.6553C3.16699 12.3288 3.25882 13.5708 3.46777 14.5068C3.67281 15.4253 3.97025 15.9551 4.31836 16.3018C4.66709 16.6489 5.20153 16.9466 6.12695 17.1514C7.06914 17.3598 8.31876 17.4512 10 17.4512C10.479 17.4512 10.9258 17.4435 11.3418 17.4277C11.3526 17.3067 11.3666 17.181 11.3838 17.0518C11.5234 16.0018 11.9056 14.6131 12.9434 13.5801C13.9805 12.5478 15.3736 12.1681 16.4268 12.0293C16.5583 12.012 16.6864 11.9981 16.8096 11.9873C16.8253 11.5741 16.834 11.131 16.834 10.6553C16.834 10.1826 16.8251 9.74199 16.8096 9.33105H3.19141ZM16.6221 13.5156C15.7086 13.6361 14.7007 13.9481 14.002 14.6436C13.3036 15.3388 12.9909 16.3409 12.8701 17.249C12.8671 17.2715 12.865 17.2941 12.8623 17.3164C14.4168 17.1329 15.2123 16.769 15.6816 16.3018C16.149 15.8364 16.5121 15.0489 16.6963 13.5078C16.672 13.5108 16.6467 13.5124 16.6221 13.5156ZM10 3.85938C9.23217 3.85938 8.56132 3.87859 7.97461 3.91797V4.43359C7.97444 4.84753 7.63853 5.18337 7.22461 5.18359C6.8105 5.18359 6.47478 4.84766 6.47461 4.43359V4.09082C5.5928 4.24652 5.00001 4.47894 4.58301 4.7832C3.97345 5.2281 3.51171 6.01363 3.29883 7.83105H16.7021C16.4893 6.01403 16.0273 5.22818 15.418 4.7832C15.001 4.47886 14.4075 4.24655 13.5254 4.09082V4.43359C13.5252 4.84766 13.1895 5.18359 12.7754 5.18359C12.3615 5.18337 12.0256 4.84753 12.0254 4.43359V3.91797C11.4386 3.87857 10.7679 3.85938 10 3.85938Z" fill="#545454" />
-    </svg>
+  const dayPickerClassNames = {
+    months: 'flex flex-col',
+    month: 'space-y-3',
+    caption: 'flex items-center justify-between px-1 py-1',
+    caption_label: 'text-lg font-semibold text-tertiary',
+    nav: 'flex items-center justify-end gap-1',
+    button_previous:
+      'h-8 w-8 rounded-md !text-secondary hover:bg-gray-200 hover:text-tertiary transition-colors',
+    button_next:
+      'h-8 w-8 rounded-md !text-secondary hover:bg-gray-200 hover:text-tertiary transition-colors',
+    chevron: 'text-secondary',
+    month_grid: 'w-full border-collapse',
+    weekdays: 'mb-1',
+    weekday: 'text-[14px] font-medium text-secondary px-1 pb-1',
+    week: 'mt-1',
+    day: 'h-9 w-9 text-sm p-0 text-tertiary  rounded-md transition-colors',
+    day_button:
+      'h-9 w-[42px] rounded-md font-medium hover:bg-gray-200 hover:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft/50',
+    today: 'ring-1 border border-brand-soft/20',
+    selected: 'bg-primary text-white !rounded-md hover:bg-primary hover:text-white',
+    range_start: 'bg-primary text-white !rounded-md  hover:bg-primary',
+    range_middle: 'bg-primary/30 text-tertiary rounded-none hover:bg-primary/20',
+    range_end: 'bg-primary text-white !rounded-md rounded-l-none hover:bg-primary',
+    outside: 'text-gray-300',
+    disabled: 'text-gray-300 opacity-50',
+  };
 
-  );
+  const getEstadoSolicitud = (status: OrderItem['status']): 'pendiente' | 'completo' => {
+    if (status === 'completed' || status === 'sent') return 'completo';
+    return 'pendiente';
+  };
 
-  const getExamenesDelPaciente = (pacienteId: string) =>
-    examenes.filter(e => e.pacienteId === pacienteId);
+  const toApiDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
-  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado';
+  const { startDate, endDate } = useMemo(() => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
 
-  const parseFechaToTimestamp = (fecha: string) => {
-    const [dia, mes, anio] = fecha.split('/').map(Number);
-
-    if (!dia || !mes || !anio) {
-      return 0;
+    if (activeCalendarOption === 'hoy') {
+      const date = toApiDate(hoy);
+      return { startDate: date, endDate: date };
     }
 
-    return Date.UTC(anio, mes - 1, dia);
-  };
+    if (activeCalendarOption === 'ayer') {
+      const ayer = new Date(hoy);
+      ayer.setDate(ayer.getDate() - 1);
+      const date = toApiDate(ayer);
+      return { startDate: date, endDate: date };
+    }
 
-  const parseFechaToDate = (fecha: string) => {
-    const [dia, mes, anio] = fecha.split('/').map(Number);
-    if (!dia || !mes || !anio) return null;
-    const date = new Date(anio, mes - 1, dia);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  };
+    if (activeCalendarOption === 'ultimos7') {
+      const inicio = new Date(hoy);
+      inicio.setDate(inicio.getDate() - 6);
+      return { startDate: toApiDate(inicio), endDate: toApiDate(hoy) };
+    }
 
-  const isSameDay = (a: Date, b: Date) => {
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  };
+    const from = dateRange?.from ? new Date(dateRange.from) : new Date(hoy);
+    from.setHours(0, 0, 0, 0);
+    const to = dateRange?.to ? new Date(dateRange.to) : new Date(from);
+    to.setHours(0, 0, 0, 0);
 
-  const estadoPacienteCache = new Map<string, 'pendiente' | 'completo'>();
-  const getEstadoPaciente = (pacienteId: string): 'pendiente' | 'completo' => {
-    const estadoCacheado = estadoPacienteCache.get(pacienteId);
-    if (estadoCacheado) return estadoCacheado;
+    return { startDate: toApiDate(from), endDate: toApiDate(to) };
+  }, [activeCalendarOption, dateRange]);
 
-    const examenesPaciente = getExamenesDelPaciente(pacienteId);
-    const todosCompletos = examenesPaciente.every(e => isExamenCompleto(e.estado));
-    const estado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
-    estadoPacienteCache.set(pacienteId, estado);
-    return estado;
-  };
+  const { data: orders } = useOrders({
+    page: 1,
+    limit: 100,
+    search: busqueda.trim(),
+    start_date: startDate,
+    end_date: endDate,
+  });
 
-  const compareByFechaDescThenNombreAsc = (a: (typeof pacientes)[number], b: (typeof pacientes)[number]) => {
-    const fechaDiff = parseFechaToTimestamp(b.fecha) - parseFechaToTimestamp(a.fecha);
+  const safeOrders = orders ?? EMPTY_ORDERS;
+
+  const compareByFechaDescThenNombreAsc = (a: OrderItem, b: OrderItem) => {
+    const fechaDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     if (fechaDiff !== 0) return fechaDiff;
-    return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
+    return a.patient.name.localeCompare(b.patient.name, 'es', { sensitivity: 'base' });
   };
 
-  const sortedPacientes = [...pacientes]
-    .filter(paciente => {
-      const fechaPaciente = parseFechaToDate(paciente.fecha);
-      if (!fechaPaciente) return false;
+  const sortedOrders = useMemo(() => {
+    return [...safeOrders]
+      .filter((order) => {
+        if (!filtroEstado) return true;
+        return getEstadoSolicitud(order.status) === filtroEstado;
+      })
+      .sort((a, b) => {
+        if (activeCalendarOption === 'hoy') {
+          return compareByFechaDescThenNombreAsc(a, b);
+        }
 
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
+        const estadoA = getEstadoSolicitud(a.status);
+        const estadoB = getEstadoSolicitud(b.status);
 
-      if (activeCalendarOption === 'hoy') {
-        return isSameDay(fechaPaciente, hoy);
-      }
+        if (estadoA !== estadoB) {
+          return estadoA === 'pendiente' ? -1 : 1;
+        }
 
-      if (activeCalendarOption === 'ayer') {
-        const ayer = new Date(hoy);
-        ayer.setDate(ayer.getDate() - 1);
-        return isSameDay(fechaPaciente, ayer);
-      }
-
-      if (activeCalendarOption === 'ultimos7') {
-        const inicio = new Date(hoy);
-        inicio.setDate(inicio.getDate() - 6);
-        return fechaPaciente >= inicio && fechaPaciente <= hoy;
-      }
-
-      const fechaSeleccionada = new Date(selectedDate);
-      fechaSeleccionada.setHours(0, 0, 0, 0);
-      return isSameDay(fechaPaciente, fechaSeleccionada);
-    })
-    .filter(paciente => {
-      if (!busqueda) return true;
-      const texto = busqueda.toLowerCase();
-      return (
-        paciente.nombre.toLowerCase().includes(texto) ||
-        paciente.cedula.toLowerCase().includes(texto)
-      );
-    })
-    .filter(paciente => {
-      if (!filtroEstado) return true;
-      return getEstadoPaciente(paciente.id) === filtroEstado;
-    })
-    .sort((a, b) => {
-      if (activeCalendarOption === 'hoy') {
         return compareByFechaDescThenNombreAsc(a, b);
-      }
+      });
+  }, [safeOrders, activeCalendarOption, filtroEstado]);
 
-      const estadoA = getEstadoPaciente(a.id);
-      const estadoB = getEstadoPaciente(b.id);
+  useEffect(() => {
+    if (!onSummaryChange) return;
 
-      if (estadoA !== estadoB) {
-        return estadoA === 'pendiente' ? -1 : 1;
-      }
+    const totalSolicitudes = filtroEstado
+      ? sortedOrders.length
+      : sortedOrders.filter((order) => getEstadoSolicitud(order.status) === 'pendiente').length;
 
-      return compareByFechaDescThenNombreAsc(a, b);
-    });
+    const totalParaImprimir = sortedOrders.filter((order) => getEstadoSolicitud(order.status) === 'completo').length;
 
-  const totalPaginas = Math.ceil(sortedPacientes.length / PACIENTES_POR_PAGINA);
-  const pacientesPaginados = sortedPacientes.slice(
+    onSummaryChange({ totalSolicitudes, totalParaImprimir });
+  }, [sortedOrders, filtroEstado, onSummaryChange]);
+
+  const totalPaginas = Math.ceil(sortedOrders.length / PACIENTES_POR_PAGINA);
+  const ordersPaginados = sortedOrders.slice(
     (paginaActual - 1) * PACIENTES_POR_PAGINA,
     paginaActual * PACIENTES_POR_PAGINA
   );
 
-  if (pacientes.length === 0) {
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <p className="text-secondary">No hay pacientes registrados.</p>
-        <Link href="/dashboard" className="text-emerald-600 hover:underline mt-2 inline-block">
-          Registrar primer paciente
-        </Link>
-      </div>
-    );
-  }
+  // if (orders.length === 0) {
+  //   return (
+  //     <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+  //       <p className="text-secondary">No hay pacientes registrados.</p>
+  //       <Link href="/dashboard" className="text-emerald-600 hover:underline mt-2 inline-block">
+  //         Registrar primer paciente
+  //       </Link>
+  //     </div>
+  //   );
+  // }
 
   const handleCalendarOptionClick = (value: 'hoy' | 'ayer' | 'ultimos7') => {
     setActiveCalendarOption(value);
     onToggleMostrarAnteriores(value !== 'hoy');
+    setShowRangePicker(false);
     setPaginaActual(1);
   };
 
-  const formatDateToDayOfYear = (isoDate: string) => {
-    const date = new Date(isoDate);
-    const year = date.getFullYear();
-
-    // Calcular el día del año
-    const startOfYear = new Date(year, 0, 1);
-    const diff = date.getTime() - startOfYear.getTime();
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-
-    // Formatear con ceros a la izquierda (3 dígitos)
-    const dayFormatted = String(dayOfYear).padStart(3, '0');
-
-    return `${year}-${dayFormatted}`;
-  }
-
+  const handleRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setActiveCalendarOption('rango');
+    onToggleMostrarAnteriores(true);
+    setPaginaActual(1);
+  };
 
   return (
     <div className="space-y-4 mt-6">
@@ -202,69 +208,36 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                   </button>
                 ))}
               </div>
-              <Datepicker
-                icon={CalendarIcon}
-                className="w-11 [&_input]:h-10 [&_input]:w-16 [&_input]:cursor-pointer [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-white [&_input]:hover:bg-gray-200 [&_input]:px-0 [&_input]:text-transparent [&_input]:shadow-sm [&_input]:[text-indent:-9999px] [&_input]:focus:border-brand-soft [&_input]:focus:ring-2 [&_input]:focus:ring-brand-soft/30 [&_svg]:left-[10px] [&_svg]:top-[10px] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:translate-y-[11px] [&_svg]:translate-x-[21px]"
-                language="es-ES"
-                showTodayButton
-                showClearButton
-                theme={{
-                  popup: {
-                    root: {
-                      base: 'absolute top-10 z-50 block',
-                      inline: 'relative top-0 z-auto',
-                      inner: 'inline-block rounded-lg !bg-white border border-gray-200  p-4 shadow-lg',
-                    },
-                    header: {
-                      base: '',
-                      title: 'px-2 py-3 text-center font-semibold text-black',
-                      selectors: {
-                        base: 'mb-2 flex justify-between ',
-                        button: {
-                          base: 'rounded-lg [&_svg]:translate-y-[px] [&_svg]:translate-x-[px] px-5 py-2.5 text-sm font-semibold text-black hover:bg-gray-100 focus:outline-none',
-                          prev: 'cursor-pointer',
-                          next: 'cursor-pointer',
-                          view: 'cursor-pointer',
-                        },
-                      },
-                    },
-                    view: {
-                      base: 'p-1 ',
-                    },
-                    footer: {
-                      base: 'mt-2 flex space-x-2',
-                      button: {
-                        base: 'w-full rounded-lg px-5 py-2 text-center text-sm font-medium',
-                        today: 'bg-primary text-white hover:opacity-90',
-                        clear: 'border border-gray-300 bg-white text-black hover:bg-gray-100',
-                      },
-                    },
-                  },
-                  views: {
-                    days: {
-                      header: {
-                        base: 'mb-1 grid grid-cols-7',
-                        title: 'h-6 text-center text-sm font-medium leading-6 text-black',
-                      },
-                      items: {
-                        base: 'grid w-64 grid-cols-7',
-                        item: {
-                          base: 'block flex-1 cursor-pointer rounded-lg border-0 text-center text-sm font-semibold leading-9 !text-black hover:bg-gray-100',
-                          selected: 'bg-primary !text-white hover:opacity-90',
-                          disabled: 'text-gray-400',
-                          today: '',
-                        },
-                      },
-                    },
-                  },
-                }}
-                value={selectedDate}
-                onChange={(date) => {
-                  setActiveCalendarOption('fecha');
-                  setSelectedDate(date ?? new Date());
-                  setPaginaActual(1);
-                }}
-              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowRangePicker((prev) => !prev)}
+                  className="h-10 w-[68px] rounded-lg flex justify-center items-center cursor-pointer bg-white shadow-sm hover:bg-gray-100"
+                >
+                  <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
+                </button>
+
+                {showRangePicker && (
+                  <div className="absolute right-0 left-0  z-20 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.12)]">
+                    <DayPicker
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={handleRangeChange}
+                      numberOfMonths={1}
+                      classNames={dayPickerClassNames}
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        type="button"
+                        className="rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200"
+                        onClick={() => setShowRangePicker(false)}
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           ) : null}
         </div>
@@ -297,24 +270,22 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {pacientesPaginados.map(paciente => {
-              const examenesPaciente = getExamenesDelPaciente(paciente.id);
-              const primerExamen = examenesPaciente[0];
-              const estadoMostrado = getEstadoPaciente(paciente.id);
-              const completados = examenesPaciente.filter((examen) => isExamenCompleto(examen.estado)).length;
-              const total = examenesPaciente.length;
+            {ordersPaginados.map((order) => {
+              const estadoMostrado = getEstadoSolicitud(order.status);
+              const completados = order.exams.completed;
+              const total = order.exams.total;
               const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
 
               return (
-                <tr onClick={() => router.push(`/dashboard/examen/${primerExamen?.id}`)} key={paciente.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-700">{formatDateToDayOfYear(primerExamen?.fechaCreacion)}</td>
+                <tr onClick={() => router.push(`/dashboard/examen/${order.id}`)} key={order.id} className="hover:bg-gray-50 cursor-pointer">
+                  <td className="px-4 py-3 text-sm text-gray-700">{order.order_number}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
-                      <span className="font-medium text-tertiary">{paciente.nombre}</span>
-                      <span className="text-[11px] text-secondary">{paciente.cedula}</span>
+                      <span className="font-medium text-tertiary">{order.patient.name}</span>
+                      <span className="text-[11px] text-secondary">{order.patient.document_number}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-secondary">{paciente.fecha}</td>
+                  <td className="px-4 py-3 text-sm text-secondary">{new Date(order.created_at).toLocaleDateString('es-VE')}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-200">
@@ -324,11 +295,9 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {primerExamen && <EstadoBadge estado={estadoMostrado} />}
+                    <EstadoBadge estado={estadoMostrado} />
                   </td>
-                  <td className="px-4 py-3 text-right">
-
-                  </td>
+                  <td className="px-4 py-3 text-right"></td>
                 </tr>
               );
             })}
@@ -336,7 +305,7 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
         </table>
       </div>
 
-      {sortedPacientes.length === 0 && (
+      {sortedOrders.length === 0 && (
         <div className="p-8 text-center text-secondary">
           {activeCalendarOption === 'hoy'
             ? 'No hay pacientes de hoy.'
@@ -344,14 +313,14 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
               ? 'No hay pacientes de ayer.'
               : activeCalendarOption === 'ultimos7'
                 ? 'No hay pacientes en los ultimos 7 dias.'
-                : 'No hay pacientes para la fecha seleccionada.'}
+                : 'No hay pacientes para el rango seleccionado.'}
         </div>
       )}
 
       {totalPaginas > 1 && (
         <div className="flex items-center justify-center gap-2 mt-4">
           <button
-            onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+            onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
             disabled={paginaActual === 1}
             className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -361,7 +330,7 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
             Página {paginaActual} de {totalPaginas}
           </span>
           <button
-            onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+            onClick={() => setPaginaActual((p) => Math.min(totalPaginas, p + 1))}
             disabled={paginaActual === totalPaginas}
             className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >

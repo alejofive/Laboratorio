@@ -31,6 +31,13 @@ export default function DynamicExamForm({
     });
   };
 
+  const renderReadOnlyValue = (key: string, label: string, value: string | boolean | undefined, className = 'col-span-2') => (
+    <div key={key} className={className}>
+      <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
+      <p className="w-full py-2 text-lg text-primary break-words">{String(value ?? '').trim() || '-'}</p>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {sections.map((section, idx) => (
@@ -42,6 +49,10 @@ export default function DynamicExamForm({
               const value = values[field.key];
 
               if (field.type === 'textarea') {
+                if (readOnly) {
+                  return renderReadOnlyValue(field._id ?? field.key, label, value, 'col-span-6');
+                }
+
                 return (
                   <div key={field._id ?? field.key} className="col-span-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -58,6 +69,10 @@ export default function DynamicExamForm({
               }
 
               if (field.type === 'select') {
+                if (readOnly) {
+                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                }
+
                 return (
                   <div key={field._id ?? field.key} className="col-span-2">
                     <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
@@ -79,6 +94,15 @@ export default function DynamicExamForm({
               }
 
               if (field.type === 'checkbox') {
+                if (readOnly) {
+                  return (
+                    <div key={field._id ?? field.key} className="col-span-2">
+                      <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
+                      <p className="w-full py-2 text-lg text-primary break-words">{value ? 'Si' : 'No'}</p>
+                    </div>
+                  );
+                }
+
                 return (
                   <label key={field._id ?? field.key} className="flex items-center gap-2 text-sm text-tertiary">
                     <input
@@ -93,6 +117,10 @@ export default function DynamicExamForm({
               }
 
               if (field.type === 'radio') {
+                if (readOnly) {
+                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                }
+
                 return (
                   <div key={field._id ?? field.key} className="col-span-2">
                     <label className="block text-sm font-medium text-tertiary mb-2 col-span-2">{label}</label>
@@ -116,6 +144,10 @@ export default function DynamicExamForm({
               }
 
               if (field.type === 'number') {
+                if (readOnly) {
+                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                }
+
                 return (
                   <div key={field._id ?? field.key} className='col-span-2'>
                     <InputNumber
@@ -128,6 +160,10 @@ export default function DynamicExamForm({
                     />
                   </div>
                 );
+              }
+
+              if (readOnly) {
+                return renderReadOnlyValue(field._id ?? field.key, label, value);
               }
 
               return (

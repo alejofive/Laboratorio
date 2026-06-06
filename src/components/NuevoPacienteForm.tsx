@@ -7,7 +7,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { sileo } from 'sileo';
 import DetallePaciente from './DetallePaciente';
 import { PillFilter } from './PillFilter';
 import TopResumen from './TopResumen';
@@ -253,17 +252,7 @@ export default function NuevoPacienteForm() {
     setShowCreateForm(false);
     setSearchTerm('');
 
-    sileo.info({
-      title: 'Datos cargados',
-      description: `Se cargaron los datos de ${patient.first_name} ${patient.last_name}`,
-      duration: 2000,
-      fill: 'black',
-      styles: {
-        title: 'text-white!',
-        description: 'text-white/75!',
-        badge: 'bg-white/20!',
-      },
-    });
+    toast.success(`Se cargaron los datos de ${patient.first_name} ${patient.last_name}`);
   };
 
   const onCreatePatient = () => {

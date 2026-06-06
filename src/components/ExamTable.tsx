@@ -4,13 +4,50 @@ import { useOrders } from '@/data/createPatients';
 import { OrderItem } from '@/types/create';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 import EstadoBadge from './EstadoBadge';
 import SvgIcon from './ui/SvgIcon';
 
 const EMPTY_ORDERS: OrderItem[] = [];
+const CALENDAR_OPTION_STORAGE_KEY = 'exam-table-calendar-option';
+const DATE_RANGE_STORAGE_KEY = 'exam-table-date-range';
+type CalendarOption = 'hoy' | 'ayer' | 'ultimos7' | 'rango';
+
+const isCalendarOption = (value: string | null): value is CalendarOption => {
+  return value === 'hoy' || value === 'ayer' || value === 'ultimos7' || value === 'rango';
+};
+
+const getStoredCalendarOption = (fallback: CalendarOption): CalendarOption => {
+  if (typeof window === 'undefined') return fallback;
+
+  const storedOption = window.sessionStorage.getItem(CALENDAR_OPTION_STORAGE_KEY);
+  return isCalendarOption(storedOption) ? storedOption : fallback;
+};
+
+const getStoredDateRange = (): DateRange | undefined => {
+  if (typeof window === 'undefined') return undefined;
+
+  const storedRange = window.sessionStorage.getItem(DATE_RANGE_STORAGE_KEY);
+  if (!storedRange) return undefined;
+
+  try {
+    const parsed = JSON.parse(storedRange) as { from?: string; to?: string };
+    return {
+      from: parsed.from ? new Date(parsed.from) : undefined,
+      to: parsed.to ? new Date(parsed.to) : undefined,
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+const formatRangeDate = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+};
 
 interface ExamTableProps {
   anterior: boolean;
@@ -24,11 +61,13 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
   const router = useRouter();
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [busquedaDebounced, setBusquedaDebounced] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => getStoredDateRange());
   const [showRangePicker, setShowRangePicker] = useState(false);
-  const [activeCalendarOption, setActiveCalendarOption] = useState<'hoy' | 'ayer' | 'ultimos7' | 'rango'>(
-    mostrarAnteriores ? 'ayer' : 'hoy'
+  const [activeCalendarOption, setActiveCalendarOption] = useState<CalendarOption>(() =>
+    getStoredCalendarOption(mostrarAnteriores ? 'ayer' : 'hoy')
   );
+  const rangePickerRef = useRef<HTMLDivElement>(null);
 
   const PACIENTES_POR_PAGINA = 12;
   const calendarOptions = [
@@ -109,12 +148,58 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
   const { data: orders } = useOrders({
     page: 1,
     limit: 100,
-    search: busqueda.trim(),
+    search: busquedaDebounced.trim(),
     start_date: startDate,
     end_date: endDate,
   });
 
   const safeOrders = orders ?? EMPTY_ORDERS;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setBusquedaDebounced(busqueda);
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [busqueda]);
+
+  useEffect(() => {
+    window.sessionStorage.setItem(CALENDAR_OPTION_STORAGE_KEY, activeCalendarOption);
+    onToggleMostrarAnteriores(activeCalendarOption !== 'hoy');
+  }, [activeCalendarOption, onToggleMostrarAnteriores]);
+
+  useEffect(() => {
+    if (!dateRange) {
+      window.sessionStorage.removeItem(DATE_RANGE_STORAGE_KEY);
+      return;
+    }
+
+    window.sessionStorage.setItem(
+      DATE_RANGE_STORAGE_KEY,
+      JSON.stringify({
+        from: dateRange.from?.toISOString(),
+        to: dateRange.to?.toISOString(),
+      })
+    );
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (!showRangePicker) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!rangePickerRef.current?.contains(event.target as Node)) {
+        setShowRangePicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showRangePicker]);
 
   const compareByFechaDescThenNombreAsc = (a: OrderItem, b: OrderItem) => {
     const fechaDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -161,6 +246,11 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
     (paginaActual - 1) * PACIENTES_POR_PAGINA,
     paginaActual * PACIENTES_POR_PAGINA
   );
+  const calendarButtonLabel = dateRange?.from
+    ? dateRange.to
+      ? `${formatRangeDate(dateRange.from)} - ${formatRangeDate(dateRange.to)}`
+      : formatRangeDate(dateRange.from)
+    : null;
 
   // if (orders.length === 0) {
   //   return (
@@ -173,9 +263,8 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
   //   );
   // }
 
-  const handleCalendarOptionClick = (value: 'hoy' | 'ayer' | 'ultimos7') => {
+  const handleCalendarOptionClick = (value: Exclude<CalendarOption, 'rango'>) => {
     setActiveCalendarOption(value);
-    onToggleMostrarAnteriores(value !== 'hoy');
     setShowRangePicker(false);
     setPaginaActual(1);
   };
@@ -183,7 +272,12 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
   const handleRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     setActiveCalendarOption('rango');
-    onToggleMostrarAnteriores(true);
+    setPaginaActual(1);
+  };
+
+  const handleClearRange = () => {
+    setDateRange(undefined);
+    setActiveCalendarOption('hoy');
     setPaginaActual(1);
   };
 
@@ -208,13 +302,20 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                   </button>
                 ))}
               </div>
-              <div className="relative">
+              <div ref={rangePickerRef} className="relative">
                 <button
                   type="button"
                   onClick={() => setShowRangePicker((prev) => !prev)}
-                  className="h-10 w-[68px] rounded-lg flex justify-center items-center cursor-pointer bg-white shadow-sm hover:bg-gray-100"
+                  className={`h-10 rounded-lg flex justify-center items-center cursor-pointer shadow-sm transition-colors ${activeCalendarOption === 'rango'
+                    ? 'min-w-[126px] bg-primary px-4 text-base font-semibold text-white hover:bg-primary'
+                    : 'w-[68px] bg-white hover:bg-gray-100'
+                    }`}
                 >
-                  <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
+                  {activeCalendarOption === 'rango' && calendarButtonLabel ? (
+                    calendarButtonLabel
+                  ) : (
+                    <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
+                  )}
                 </button>
 
                 {showRangePicker && (
@@ -226,7 +327,14 @@ export default function ExamTable({ anterior, mostrarAnteriores, onToggleMostrar
                       numberOfMonths={1}
                       classNames={dayPickerClassNames}
                     />
-                    <div className="mt-2 flex justify-end">
+                    <div className="mt-2 flex justify-between">
+                      <button
+                        type="button"
+                        className="rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200"
+                        onClick={handleClearRange}
+                      >
+                        Limpiar
+                      </button>
                       <button
                         type="button"
                         className="rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200"

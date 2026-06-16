@@ -9,7 +9,8 @@ import SvgIcon from "./ui/SvgIcon"
 const menuItems = [
     { label: 'Crear Solicitud', iconSrc: '/svg/plus.svg', href: '/dashboard' },
     { label: 'Solicitudes', iconSrc: '/svg/list.svg', href: '/dashboard/solicitudes' },
-    { label: 'Pacientes', iconSrc: '/svg/people.svg', href: '/dashboard/pacientes' }
+    { label: 'Pacientes', iconSrc: '/svg/people.svg', href: '/dashboard/pacientes' },
+    { label: 'Plantillas', iconSrc: '/svg/list.svg', href: '/dashboard/exam-templates' }
 ]
 
 export default function Navbar() {
@@ -43,7 +44,7 @@ export default function Navbar() {
             {/* Menu */}
             <nav className='flex flex-col gap-5 px-5'>
                 {menuItems.map(item => {
-                    const isActive = pathname === item.href
+                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
                     return (
                         <Link

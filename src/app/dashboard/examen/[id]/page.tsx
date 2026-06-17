@@ -296,7 +296,7 @@ export default function ExamenPage() {
         tipo,
         estado: estadoByExam[exam._id] ?? mapResultStatus(exam.result_status),
         resultados: mapExamPayload(tipo, exam.result_payload),
-        doctorOrdenante: doctorOrdenanteByExam[exam._id] ?? exam.bioanalyst_name ?? '',
+        doctorOrdenante: doctorOrdenanteByExam[exam._id] ?? exam.doctor_name ?? '',
         fechaCreacion: exam.created_at ?? order.created_at,
         fechaActualizacion: exam.updated_at ?? order.updated_at ?? order.created_at,
         templateSections,
@@ -430,7 +430,7 @@ export default function ExamenPage() {
 
       await createOrderExamResult(orderId, examen.id, {
         result_payload: normalizedPayload,
-        bioanalyst_name: bioanalystName,
+        doctor_name: bioanalystName,
       });
 
       setDoctorOrdenanteByExam((prev) => ({

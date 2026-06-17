@@ -73,6 +73,7 @@ export function ExamPreview({ template }: { template: ExamTemplate }) {
                     {field.required ? <span className="text-brand-logo">*</span> : null}
                     {field.unit ? <span className="font-normal text-secondary">({field.unit})</span> : null}
                   </label>
+                  {field.reference_value ? <p className="text-xs text-secondary">Referencia: {field.reference_value}</p> : null}
                   <PreviewControl field={field} />
                 </div>
               ))}

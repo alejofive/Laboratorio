@@ -24,6 +24,7 @@ function createEmptyField(): ExamTemplateField {
     type: 'text',
     options: [],
     unit: '',
+    reference_value: '',
     required: false,
   };
 }
@@ -244,6 +245,10 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                       <div>
                         <label className={labelClass}>Unidad</label>
                         <input value={field.unit ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { unit: event.target.value })} className={inputClass} placeholder="mm3" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Valores de referencia</label>
+                        <input value={field.reference_value ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { reference_value: event.target.value })} className={inputClass} placeholder="4.000 - 10.000" />
                       </div>
                     </div>
 

@@ -68,7 +68,7 @@ export type OrderStatusApi = 'pending' | 'in_progress' | 'completed' | 'sent';
 
 export interface OrderItem {
     id: string;
-    order_number: string;
+    order_number: number;
     status: OrderStatusApi;
     created_at: string;
     patient: {
@@ -91,7 +91,7 @@ export interface OrderExamDetail {
     order_id: string;
     exam_template_id: string;
     result_status: string;
-    bioanalyst_name?: string;
+    doctor_name?: string;
     template_snapshot?: ExamTemplateSnapshot;
     result_payload?: Record<string, unknown>;
     created_at?: string;
@@ -100,7 +100,7 @@ export interface OrderExamDetail {
 
 export interface OrderDetailResponse {
     _id: string;
-    order_number: string;
+    order_number: number;
     patient_id: string;
     status: OrderStatusApi;
     requested_at?: string;

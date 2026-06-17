@@ -7,6 +7,7 @@ interface ExamenTabsProps {
   examenes: { id: string; tipo: TipoExamen }[];
   examenActualId: string;
   examen: Examen;
+  examenNombre: string;
   readOnly: boolean;
   setCurrentReadOnly: (nextValue: boolean) => void;
   doctorOrdenante: string;
@@ -17,9 +18,8 @@ interface ExamenTabsProps {
 }
 
 export default function ExamenTabs({
-  examenes,
-  examenActualId,
   examen,
+  examenNombre,
   readOnly,
   setCurrentReadOnly,
   doctorOrdenante,
@@ -28,7 +28,6 @@ export default function ExamenTabs({
   onPrint,
   onSendEmail,
 }: ExamenTabsProps) {
-  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   const formularioGuardado = examen.estado === 'completo' || examen.estado === 'enviado';
   const doctorOrdenanteMostrado = doctorOrdenante.trim() || 'Sin orden médica';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,7 +50,7 @@ export default function ExamenTabs({
     <div className="">
 
       <div className="flex p-6 justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Examen: {capitalize(examen.tipo)}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Examen: {examenNombre}</h1>
         <div className="flex gap-6 items-center">
           <div className="flex text-base gap-2 items-center font-medium text-tertiary">
             <p>Ordenado por:</p>

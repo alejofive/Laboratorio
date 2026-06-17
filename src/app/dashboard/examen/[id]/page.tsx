@@ -117,6 +117,16 @@ const examTypeAlias: Record<string, TipoExamen> = {
   dengue: 'dengue',
   quimica: 'quimica',
   serologia: 'serologia',
+  heces_y_hematologia: 'heces_hematologia',
+  hematologia_y_orina: 'hematologia_orina',
+  hematologia_y_quimica: 'hematologia_quimica',
+  hematologia_y_serologia: 'hematologia_serologia',
+  orina_y_heces: 'orina_heces',
+  quimica_y_heces: 'quimica_heces',
+  quimica_y_orina: 'quimica_orina',
+  quimica_y_serologia: 'quimica_serologia',
+  serologia_y_heces: 'serologia_heces',
+  serologia_y_orina: 'serologia_orina',
 };
 
 function normalizeExamType(rawName?: string): TipoExamen | null {
@@ -592,6 +602,7 @@ export default function ExamenPage() {
           readOnly={readOnly}
           setCurrentReadOnly={setCurrentReadOnly}
           examen={examen}
+          examenNombre={examen.templateName || examLabels[examen.tipo]}
           examenes={examenesPaciente.map((e) => ({ id: e.id, tipo: e.tipo }))}
           examenActualId={examen.id}
           onPrint={() => window.print()}

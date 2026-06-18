@@ -1,0 +1,23 @@
+info:
+  name: Delete Exam
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/exams/{{examId}}"
+  auth:
+    type: none
+
+settings:
+  encodeUrl: true
+
+meta:
+  notes: |
+    Este endpoint puede existir por compatibilidad, pero el flujo recomendado del módulo
+    es desactivar/activar por PATCH usando `is_active` para preservar historial y versiones.
+
+    Ejemplo recomendado (PATCH):
+    {
+      "is_active": false
+    }

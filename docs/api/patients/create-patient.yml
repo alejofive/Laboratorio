@@ -1,0 +1,29 @@
+info:
+  name: Create Patient
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/patients"
+  headers:
+    - name: content-type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "first_name": "Luis",
+        "last_name": "Fernandez",
+        "document_number": "v-12345678",
+        "birth_date": "1990-05-14",
+        "sex": "male",
+        "phone": "04141234567",
+        "address": "Caracas"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

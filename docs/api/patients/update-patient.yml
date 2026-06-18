@@ -1,0 +1,29 @@
+info:
+  name: Update Patient
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/patients/{{patientId}}"
+  headers:
+    - name: content-type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "first_name": "Betty",
+        "sex": "female"
+      }
+
+runtime:
+  variables:
+    - name: patientId
+      value: 6a025884b1a08ae9139adf89
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

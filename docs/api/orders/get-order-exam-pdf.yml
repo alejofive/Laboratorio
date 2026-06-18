@@ -1,0 +1,14 @@
+info:
+  name: Get Order Exam Pdf
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseUrl}}/orders/{{orderId}}/exams/{{orderExamId}}/pdf"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

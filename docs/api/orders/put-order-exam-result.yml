@@ -1,0 +1,26 @@
+info:
+  name: Put Order Exam Result
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/orders/{{orderId}}/exams/{{orderExamId}}/result"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "result_payload": {
+          "tsh_valor": 212
+        },
+        "doctor_name": "Dra. Ana Perez"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

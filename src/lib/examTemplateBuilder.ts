@@ -6,6 +6,7 @@ export interface ExamTemplatePayloadField {
   type: ExamTemplateFieldType;
   options?: string[];
   unit?: string;
+  reference_value?: string;
   required: boolean;
 }
 
@@ -135,6 +136,10 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
 
         if (field.unit?.trim()) {
           payloadField.unit = field.unit.trim();
+        }
+
+        if (field.reference_value?.trim()) {
+          payloadField.reference_value = field.reference_value.trim();
         }
 
         if (field.type === 'select' || field.type === 'radio') {

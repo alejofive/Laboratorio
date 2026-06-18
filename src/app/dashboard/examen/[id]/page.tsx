@@ -30,7 +30,8 @@ import FormSerologiaOrina from '@/components/forms/FormSerologiaOrina';
 import FormTipoSangre from '@/components/forms/FormTipoSangre';
 import FormVDRLHepatitis from '@/components/forms/FormVDRLHepatitis';
 import { Button } from '@/components/ui/Button';
-import { createOrderExamResult, sendOrderExamEmail, useOrderById, usePatientById } from '@/data/createPatients';
+import { createOrderExamResult, getOrderExamPdf, sendOrderExamEmail, useOrderById, usePatientById } from '@/data/createPatients';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   buildInitialValuesFromTemplate,
   extractTemplatePayload,
@@ -274,6 +275,7 @@ function mapPatient(apiPatient: {
 }
 
 export default function ExamenPage() {
+  const queryClient = useQueryClient();
   const params = useParams();
   const searchParams = useSearchParams();
   const orderId = (params.id as string) || '';
@@ -299,19 +301,22 @@ export default function ExamenPage() {
       const normalizedTipo = normalizeExamType(exam.template_snapshot?.name);
       const tipo: TipoExamen = normalizedTipo ?? 'nuevo_completo';
       const templateSections = normalizeTemplateSections(exam.template_snapshot?.sections);
+      const useDynamicForm = tipo !== 'hematologia' || templateSections.length > 0;
 
       mapped.push({
         id: exam._id,
         pacienteId: order.patient_id,
         tipo,
         estado: estadoByExam[exam._id] ?? mapResultStatus(exam.result_status),
-        resultados: mapExamPayload(tipo, exam.result_payload),
+        resultados: useDynamicForm
+          ? exam.result_payload as ResultadosExamen | undefined
+          : mapExamPayload(tipo, exam.result_payload),
         doctorOrdenante: doctorOrdenanteByExam[exam._id] ?? exam.doctor_name ?? '',
         fechaCreacion: exam.created_at ?? order.created_at,
         fechaActualizacion: exam.updated_at ?? order.updated_at ?? order.created_at,
         templateSections,
         templateName: exam.template_snapshot?.name || 'Examen',
-        useDynamicForm: tipo !== 'hematologia' || templateSections.length > 0,
+        useDynamicForm,
       });
 
     }
@@ -443,12 +448,25 @@ export default function ExamenPage() {
         doctor_name: bioanalystName,
       });
 
+      if (examen.templateSections.length > 0) {
+        setDraftTemplateValuesByExam((prev) => ({
+          ...prev,
+          [examen.id]: buildInitialValuesFromTemplate(examen.templateSections, normalizedPayload),
+        }));
+      } else {
+        setDraftResultadosByExam((prev) => ({
+          ...prev,
+          [examen.id]: normalizedPayload as unknown as ResultadosExamen,
+        }));
+      }
+
       setDoctorOrdenanteByExam((prev) => ({
         ...prev,
         [examen.id]: bioanalystName,
       }));
       setEstadoByExam((prev) => ({ ...prev, [examen.id]: 'completo' }));
       setCurrentReadOnly(true);
+      await queryClient.invalidateQueries({ queryKey: ['order-by-id', orderId] });
       toast.success('Resultado guardado exitosamente');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo guardar el resultado');
@@ -473,6 +491,26 @@ export default function ExamenPage() {
       alert('Email enviado');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo enviar el email');
+    }
+  };
+
+  const handlePrintPdf = async () => {
+    const pdfWindow = window.open('', '_blank');
+
+    if (!pdfWindow) {
+      toast.error('El navegador bloqueo la apertura del PDF');
+      return;
+    }
+
+    try {
+      const pdfBlob = await getOrderExamPdf(orderId, examen.id);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      pdfWindow.location.href = pdfUrl;
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 60_000);
+    } catch (error) {
+      pdfWindow.close();
+      toast.error(error instanceof Error ? error.message : 'No se pudo generar el PDF');
     }
   };
 
@@ -605,7 +643,7 @@ export default function ExamenPage() {
           examenNombre={examen.templateName || examLabels[examen.tipo]}
           examenes={examenesPaciente.map((e) => ({ id: e.id, tipo: e.tipo }))}
           examenActualId={examen.id}
-          onPrint={() => window.print()}
+          onPrint={handlePrintPdf}
           onSendEmail={handleSendEmail}
           doctorOrdenante={doctorOrdenanteInput}
           onDoctorOrdenanteChange={(value) => {

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Examen, Paciente } from '@/types';
-import EstadoBadge from './EstadoBadge';
 import { ArrowLeft, FileText, Mail } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import EstadoBadge from './EstadoBadge';
 import { Button } from './ui/Button';
 
 interface AccionesExamenProps {

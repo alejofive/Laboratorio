@@ -1,0 +1,58 @@
+info:
+  name: Update Exam
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/exams/{{examId}}"
+  headers:
+    - name: content-type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "price": 29.99,
+        "description": "Descripción actualizada",
+        "is_active": false,
+        "sections": [
+          {
+            "title": "Química sanguínea",
+            "fields": [
+              {
+                "key": "glucosa_ayunas",
+                "label": "Glucosa en ayunas",
+                "type": "number",
+                "unit": "mg/dL",
+                "required": true
+              },
+              {
+                "key": "fecha_toma",
+                "label": "Fecha de toma",
+                "type": "date",
+                "required": true
+              }
+            ]
+          }
+        ]
+      }
+  auth:
+    type: none
+
+settings:
+  encodeUrl: true
+
+meta:
+  notes: |
+    - Endpoint de actualización principal: PATCH /exams/{id}.
+    - `schema_version` NO se envía en payload (campo bloqueado en DTO).
+    - Si cambia `sections`, el backend puede incrementar `schema_version`.
+    - Este endpoint también permite activar/desactivar usando `is_active`.
+
+    Error estable de validación de plantilla:
+    {
+      "statusCode": 400,
+      "code": "EXAM_TEMPLATE_INVALID",
+      "message": "Field 'field_key' requires non-empty unique options for type 'select'"
+    }

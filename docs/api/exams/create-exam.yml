@@ -1,0 +1,189 @@
+info:
+  name: Create Exam
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: '{{baseUrl}}/exams'
+  headers:
+    - name: content-type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Hematologia",
+        "description": "Panel hematologico completo.",
+        "category": "hematología",
+        "price": 0,
+        "is_active": true,
+        "sections": [
+          {
+            "title": "Serie Roja",
+            "fields": [
+              {
+                "key": "eritrocitos",
+                "label": "Eritrocitos",
+                "type": "number",
+                "unit": "x10^6/uL",
+                "required": true
+              },
+              {
+                "key": "hemoglobina",
+                "label": "Hemoglobina",
+                "type": "number",
+                "unit": "g/dL",
+                "required": true
+              },
+              {
+                "key": "hematocrito",
+                "label": "Hematocrito",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              },
+              {
+                "key": "vcm",
+                "label": "VCM",
+                "type": "number",
+                "unit": "fL",
+                "required": true
+              },
+              {
+                "key": "hcm",
+                "label": "HCM",
+                "type": "number",
+                "unit": "pg",
+                "required": true
+              },
+              {
+                "key": "chcm",
+                "label": "CHCM",
+                "type": "number",
+                "unit": "g/dL",
+                "required": true
+              },
+              {
+                "key": "rdw",
+                "label": "RDW",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              }
+            ]
+          },
+          {
+            "title": "Serie Blanca",
+            "fields": [
+              {
+                "key": "leucocitos",
+                "label": "Leucocitos",
+                "type": "number",
+                "unit": "x10^3/uL",
+                "required": true
+              }
+            ]
+          },
+          {
+            "title": "Formula Leucocitaria",
+            "fields": [
+              {
+                "key": "neutrofilos",
+                "label": "Neutrofilos",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              },
+              {
+                "key": "linfocitos",
+                "label": "Linfocitos",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              },
+              {
+                "key": "monocitos",
+                "label": "Monocitos",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              },
+              {
+                "key": "eosinofilos",
+                "label": "Eosinofilos",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              },
+              {
+                "key": "basofilos",
+                "label": "Basofilos",
+                "type": "number",
+                "unit": "%",
+                "required": true
+              }
+            ]
+          },
+          {
+            "title": "Plaquetas",
+            "fields": [
+              {
+                "key": "plaquetas",
+                "label": "Plaquetas",
+                "type": "number",
+                "unit": "x10^3/uL",
+                "required": true
+              },
+              {
+                "key": "vpm",
+                "label": "VPM",
+                "type": "number",
+                "unit": "fL",
+                "required": true
+              }
+            ]
+          },
+          {
+            "title": "Velocidad de Sedimentacion",
+            "fields": [
+              {
+                "key": "vsg_1_hora",
+                "label": "VSG 1 hora",
+                "type": "number",
+                "unit": "mm/h",
+                "required": true
+              }
+            ]
+          },
+          {
+            "title": "Observaciones",
+            "fields": [
+              {
+                "key": "observacion",
+                "label": "Observacion",
+                "type": "textarea",
+                "required": false
+              }
+            ]
+          }
+        ]
+      }
+  auth:
+    type: none
+
+settings:
+  encodeUrl: true
+
+meta:
+  notes: |
+    - No usar `code` ni `active` en payload.
+    - `schema_version` es administrado por el sistema (inicia en 1).
+    - Tipos válidos: text, textarea, number, select, radio, checkbox, date.
+    - `options` es obligatorio para `select` y `radio`, prohibido para otros tipos.
+    - Error estable de validación:
+      {
+        "statusCode": 400,
+        "code": "EXAM_TEMPLATE_INVALID",
+        "message": "Field 'aspect' requires non-empty unique options for type 'radio'"
+      }

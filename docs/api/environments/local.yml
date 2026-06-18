@@ -1,0 +1,16 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost:3001/api
+  - name: patientId
+    value: 6a025884b1a08ae9139adf89
+  - name: orderId
+    value: 6a331f658e0a1f74fb5bc7f9
+  - name: examId
+    value: 6a31b9b4ace87ad0b2ca8723
+  - name: orderExamId
+    value: 6a331f658e0a1f74fb5bc7fb
+  - name: examId1
+    value: 6a035d401254352a6f32b178
+  - name: examId2
+    value: 6a035d401254352a6f32b178

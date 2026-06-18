@@ -1,0 +1,25 @@
+info:
+  name: Post Order
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/orders"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "patient_id": "{{patientId}}",
+        "exam_template_ids": ["{{examId1}}", "{{examId2}}"],
+        "notes": "Paciente en ayuno"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,16 @@
+name: prod
+variables:
+  - name: baseUrl
+    value: https://laboratory-backend-hd97.onrender.com/api
+  - name: patientId
+    value: 6a025884b1a08ae9139adf89
+  - name: orderId
+    value: 6a038dc23effb10b72c1dd8a
+  - name: examId
+    value: 6a035d401254352a6f32b178
+  - name: orderExamId
+    value: 6a035d401254352a6f32b178
+  - name: examId1
+    value: 6a035d401254352a6f32b178
+  - name: examId2
+    value: 6a035d401254352a6f32b178

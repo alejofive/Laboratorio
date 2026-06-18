@@ -1,0 +1,186 @@
+info:
+  name: List Exams
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/exams"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const grouped = res.body ?? {};
+        const exams = Object.values(grouped)
+          .flat()
+          .filter((exam) => exam && typeof exam.id === "string");
+
+        bru.setVar("examId1", exams[0]?.id ?? "");
+        bru.setVar("examId2", exams[1]?.id ?? "");
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: "200"
+    request:
+      url: "{{baseUrl}}/exams"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: x-powered-by
+          value: Express
+        - name: vary
+          value: Origin
+        - name: access-control-allow-credentials
+          value: "true"
+        - name: content-type
+          value: application/json; charset=utf-8
+        - name: content-length
+          value: "1728"
+        - name: etag
+          value: W/"6c0-uu4IJxhw23iLRGW9+9Mgx0z+p/I"
+        - name: date
+          value: Tue, 16 Jun 2026 20:12:59 GMT
+        - name: connection
+          value: keep-alive
+        - name: keep-alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+            "categories": [
+              {
+                "name": "Hematología",
+                "exams": [
+                  {
+                    "id": "6a31a2e54fe480c545aeb166",
+                    "name": "Frotis de Sangre Periferica"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb190",
+                    "name": "Hematologia"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb2f5",
+                    "name": "Hemoglobina y Hematocrito"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb18c",
+                    "name": "Hemoparasitos"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1d6",
+                    "name": "Tipo de Sangre"
+                  }
+                ]
+              },
+              {
+                "name": "Química Sanguínea",
+                "exams": [
+                  {
+                    "id": "6a31a2e54fe480c545aeb16c",
+                    "name": "Glicemia"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1e7",
+                    "name": "Quimica Colinesterasa"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1de",
+                    "name": "Quimica Sanguinea"
+                  }
+                ]
+              },
+              {
+                "name": "Inmunología y Serología",
+                "exams": [
+                  {
+                    "id": "6a31a2e54fe480c545aeb161",
+                    "name": "Dengue"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1eb",
+                    "name": "Helicobacter Pylori"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1da",
+                    "name": "Prueba de Embarazo"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1c1",
+                    "name": "Serologia"
+                  }
+                ]
+              },
+              {
+                "name": "Coprología y Uroanálisis",
+                "exams": [
+                  {
+                    "id": "6a31a2e54fe480c545aeb171",
+                    "name": "Heces"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1a8",
+                    "name": "Orina"
+                  }
+                ]
+              },
+              {
+                "name": "Perfiles Combinados",
+                "exams": [
+                  {
+                    "id": "6a31a2e54fe480c545aeb389",
+                    "name": "Heces y Hematologia"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb359",
+                    "name": "Hematologia y Orina"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb339",
+                    "name": "Hematologia y Quimica"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb30d",
+                    "name": "Hematologia y Serologia"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb2c2",
+                    "name": "Orina y Heces"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb29f",
+                    "name": "Quimica y Heces"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb27e",
+                    "name": "Quimica y Orina"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb261",
+                    "name": "Quimica y Serologia"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb24c",
+                    "name": "Serologia ASTO PSA Pylori"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb21d",
+                    "name": "Serologia y Heces"
+                  },
+                  {
+                    "id": "6a31a2e54fe480c545aeb1f0",
+                    "name": "Serologia y Orina"
+                  }
+                ]
+              }
+            ]
+          }

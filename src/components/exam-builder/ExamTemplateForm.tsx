@@ -1,10 +1,10 @@
 'use client';
 
+import { cleanExamTemplatePayload, ExamTemplatePayload, FIELD_TYPES, generateKeyFromLabel, initialExamTemplate, validateExamTemplate } from '@/lib/examTemplateBuilder';
+import { ExamTemplate, ExamTemplateField, ExamTemplateFieldType } from '@/types/exam-template';
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
-import { cleanExamTemplatePayload, ExamTemplatePayload, FIELD_TYPES, generateKeyFromLabel, initialExamTemplate, validateExamTemplate } from '@/lib/examTemplateBuilder';
-import { ExamTemplate, ExamTemplateField, ExamTemplateFieldType } from '@/types/exam-template';
 import { ExamPreview } from './ExamPreview';
 
 interface ExamTemplateFormProps {
@@ -15,7 +15,7 @@ interface ExamTemplateFormProps {
 }
 
 const inputClass = 'w-full rounded-xl border border-border-input bg-surface px-3 py-2 text-sm text-primary outline-none transition focus:border-brand-soft focus:ring-2 focus:ring-brand-soft/30';
-const labelClass = 'mb-1 block text-sm font-semibold text-tertiary';
+const labelClass = 'mb-1 block text-primary text-sm font-semibold text-tertiary';
 
 function createEmptyField(): ExamTemplateField {
   return {
@@ -215,10 +215,10 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
         <section className="space-y-4">
           {template.sections.map((section, sectionIndex) => (
-            <div key={`${section.title}-${sectionIndex}`} className="rounded-3xl border border-border-default bg-surface p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div key={section._id ?? sectionIndex} className="rounded-3xl border border-border-default bg-surface p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex-1">
-                  <label className={labelClass}>Seccion {sectionIndex + 1}</label>
+                  <label className={`text-lg! text-primary! ${labelClass} `}>Seccion {sectionIndex + 1}</label>
                   <input value={section.title} onChange={(event) => updateSectionTitle(sectionIndex, event.target.value)} className={inputClass} placeholder="Resultados" />
                 </div>
                 <button type="button" onClick={() => removeSection(sectionIndex)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-secondary hover:bg-surface-muted">
@@ -229,7 +229,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
               <div className="mt-5 space-y-4">
                 {section.fields.map((field, fieldIndex) => (
-                  <div key={`${field.key}-${fieldIndex}`} className="rounded-2xl border border-border-default bg-canvas/60 p-4">
+                  <div key={field._id ?? fieldIndex} className="rounded-2xl border border-border-default bg-canvas/60 p-4">
                     <div className="grid gap-4 lg:grid-cols-4">
                       <div>
                         <label className={labelClass}>Nombre visible</label>

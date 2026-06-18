@@ -44,7 +44,9 @@ export default function Navbar() {
             {/* Menu */}
             <nav className='flex flex-col gap-5 px-5'>
                 {menuItems.map(item => {
-                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    const isActive = item.href === '/dashboard'
+                        ? pathname === item.href
+                        : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
                     return (
                         <Link

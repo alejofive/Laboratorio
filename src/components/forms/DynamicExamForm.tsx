@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
 import { InputNumber } from '@/components/ui/InputNumber';
-import { ExamTemplateSection } from '@/types/exam-template';
 import { TemplateFormValues, validateTemplateValues } from '@/lib/examTemplate';
+import { ExamTemplateSection } from '@/types/exam-template';
+import { useEffect } from 'react';
 
 interface DynamicExamFormProps {
   sections: ExamTemplateSection[];

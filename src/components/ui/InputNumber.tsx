@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Pencil, Check, X } from 'lucide-react';
+import { Check, Pencil, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface InputNumberProps {
   label?: string;
@@ -33,8 +33,14 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
     if (readOnly) {
       return;
     }
-    setLocalValue(e.target.value);
-    onChange(e.target.value);
+
+    const nextValue = e.target.value;
+    if (!/^\d*([.,]\d*)?$/.test(nextValue)) {
+      return;
+    }
+
+    setLocalValue(nextValue);
+    onChange(nextValue);
   };
 
   const handleLabelClick = () => {
@@ -72,7 +78,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
             <div className="flex items-center gap-1 flex-1">
               <input
                 ref={labelInputRef}
-                type="text"
+                type="number"
                 value={labelEditValue}
                 onChange={e => setLabelEditValue(e.target.value)}
                 onKeyDown={handleLabelKeyDown}

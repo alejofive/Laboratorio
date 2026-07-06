@@ -532,6 +532,7 @@ export type ResultadosExamen =
 export interface Examen {
   id: string;
   pacienteId: string;
+  orderNumber?: number;
   tipo: TipoExamen;
   estado: EstadoExamen;
   resultados?: ResultadosExamen;

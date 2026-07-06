@@ -29,9 +29,21 @@ function createEmptyField(): ExamTemplateField {
   };
 }
 
+function normalizeTemplateForEditor(template: ExamTemplate): ExamTemplate {
+  return {
+    ...template,
+    description: '',
+    price: 0,
+    sections: template.sections.map((section) => ({
+      ...section,
+      fields: section.fields.map((field) => ({ ...field, required: false })),
+    })),
+  };
+}
+
 export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false }: ExamTemplateFormProps) {
   const router = useRouter();
-  const [template, setTemplate] = useState<ExamTemplate>(() => initialValue ?? initialExamTemplate);
+  const [template, setTemplate] = useState<ExamTemplate>(() => normalizeTemplateForEditor(initialValue ?? initialExamTemplate));
   const [errors, setErrors] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
 
@@ -194,14 +206,6 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
               <label className={labelClass}>Categoria</label>
               <input value={template.category ?? ''} onChange={(event) => updateTemplate({ category: event.target.value })} className={inputClass} placeholder="hematology" />
             </div>
-            <div>
-              <label className={labelClass}>Precio</label>
-              <input type="number" min="0" value={template.price ?? 0} onChange={(event) => updateTemplate({ price: Number(event.target.value) })} className={inputClass} />
-            </div>
-            <div className="md:col-span-2">
-              <label className={labelClass}>Descripcion</label>
-              <textarea value={template.description ?? ''} onChange={(event) => updateTemplate({ description: event.target.value })} rows={3} className={inputClass} placeholder="Panel hematologico completo" />
-            </div>
           </div>
         </section>
 
@@ -233,7 +237,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                   <div key={field._id ?? fieldIndex} className="rounded-2xl border border-border-default bg-canvas/60 p-4">
                     <div className="grid gap-4 lg:grid-cols-4">
                       <div>
-                        <label className={labelClass}>Nombre visible</label>
+                        <label className={labelClass}>Nombre</label>
                         <input value={field.label} onChange={(event) => updateField(sectionIndex, fieldIndex, { label: event.target.value })} className={inputClass} placeholder="Leucocitos" />
                       </div>
                       <div>
@@ -252,11 +256,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-tertiary">
-                        <input type="checkbox" checked={field.required} onChange={(event) => updateField(sectionIndex, fieldIndex, { required: event.target.checked })} />
-                        Obligatorio
-                      </label>
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                       <button type="button" onClick={() => removeField(sectionIndex, fieldIndex)} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
                         <Trash2 size={16} />
                         Eliminar campo

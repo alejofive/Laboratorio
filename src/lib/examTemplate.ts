@@ -21,7 +21,7 @@ export function normalizeTemplateSections(sections?: ExamTemplateSection[]): Exa
       ...field,
       label: field.label || field.key,
       options: Array.isArray(field.options) ? field.options : [],
-      required: Boolean(field.required),
+      required: false,
       type: field.type || 'text',
     })),
   }));

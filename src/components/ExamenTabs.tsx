@@ -1,6 +1,7 @@
 'use client';
 
 import { Examen, TipoExamen } from '@/types';
+import { Calendar } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface ExamenTabsProps {
@@ -19,7 +20,6 @@ interface ExamenTabsProps {
 
 export default function ExamenTabs({
   examen,
-  examenNombre,
   readOnly,
   setCurrentReadOnly,
   doctorOrdenante,
@@ -32,6 +32,7 @@ export default function ExamenTabs({
   const doctorOrdenanteMostrado = doctorOrdenante.trim() || 'Sin orden médica';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const fechaExamen = new Date(examen.fechaCreacion).toLocaleDateString('es-ES');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,15 +48,13 @@ export default function ExamenTabs({
 
 
   return (
-    <div className="">
-
-      <div className="flex p-6 justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Examen: {examenNombre}</h1>
-        <div className="flex gap-6 items-center">
-          <div className="flex text-base gap-2 items-center font-medium text-tertiary">
-            <p>Ordenado por:</p>
+    <div className="rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="grid w-full gap-6 md:max-w-[548px] md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-tertiary">Ordenado por:</label>
             {readOnly ? (
-              <span className="text-lg text-primary">
+              <span className="flex h-12 items-center rounded-xl border border-border-input px-4 text-base text-primary">
                 {doctorOrdenanteMostrado}
               </span>
             ) : (
@@ -64,67 +63,74 @@ export default function ExamenTabs({
                 value={doctorOrdenante}
                 onChange={(event) => onDoctorOrdenanteChange(event.target.value)}
                 readOnly={readOnly}
-                className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 w-48"
+                className="h-12 w-full rounded-xl border border-border-input px-4 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none"
                 placeholder="Nombre del doctor"
               />
             )}
           </div>
-          {formularioGuardado && (
-            <div ref={menuRef}>
-              <button
-                onClick={() => {
-                  if (readOnly) {
-                    setIsMenuOpen(prev => !prev);
-                    return;
-                  }
-
-                  onCancelEdit();
-                  setCurrentReadOnly(true);
-                  setIsMenuOpen(false);
-                }}
-                className=""
-              >
-                {readOnly ? (
-                  <img src="/svg/menu.svg" alt="Menu" className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex gap-2 items-center h-9 justify-center bg-white shadow-sm border border-gray-200 text-secondary" />
-                ) : (
-                  <img src="/svg/xicon.svg" alt="Cerrar" className="text-secondary px-3 py-1.5 " />
-                )}
-              </button>
-
-              {readOnly && isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-lg z-20 py-1">
-                  <button
-                    onClick={() => {
-                      onPrint();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <img src="/svg/material2.svg" alt="" /> Imprimir examen
-                  </button>
-                  <button
-                    onClick={() => {
-                      onSendEmail();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <img src="/svg/email.svg" alt="" /> Enviar al correo
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentReadOnly(false);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <img src="/svg/edit.svg" alt="" /> Editar
-                  </button>
-                </div>
-              )}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-tertiary">Fecha del examen</label>
+            <div className="flex h-12 items-center justify-between rounded-xl border border-border-input px-4 text-base text-primary">
+              <span>{fechaExamen}</span>
+              <Calendar className="h-4 w-4 text-secondary" />
             </div>
-          )}
+          </div>
         </div>
+        {formularioGuardado && (
+          <div ref={menuRef} className="relative self-start md:self-center">
+            <button
+              onClick={() => {
+                if (readOnly) {
+                  setIsMenuOpen(prev => !prev);
+                  return;
+                }
+
+                onCancelEdit();
+                setCurrentReadOnly(true);
+                setIsMenuOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              {readOnly ? (
+                <img src="/svg/menu.svg" alt="Menu" className="flex h-9 items-center justify-center rounded-md border border-border-default bg-white px-3 py-1.5 text-sm font-medium text-secondary shadow-sm transition-colors" />
+              ) : (
+                <img src="/svg/xicon.svg" alt="Cerrar" className="px-3 py-1.5 text-secondary" />
+              )}
+            </button>
+
+            {readOnly && isMenuOpen && (
+              <div className="absolute right-0 z-20 mt-2 w-52 rounded-xl border border-border-default bg-white py-1 shadow-lg">
+                <button
+                  onClick={() => {
+                    onPrint();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-tertiary hover:bg-surface-muted"
+                >
+                  <img src="/svg/material2.svg" alt="" /> Imprimir examen
+                </button>
+                <button
+                  onClick={() => {
+                    onSendEmail();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-tertiary hover:bg-surface-muted"
+                >
+                  <img src="/svg/email.svg" alt="" /> Enviar al correo
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentReadOnly(false);
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-tertiary hover:bg-surface-muted"
+                >
+                  <img src="/svg/edit.svg" alt="" /> Editar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { InputNumber } from '@/components/ui/InputNumber';
-import { TemplateFormValues, validateTemplateValues } from '@/lib/examTemplate';
-import { ExamTemplateSection } from '@/types/exam-template';
-import { useEffect } from 'react';
+import { InputNumber } from '@/components/ui/InputNumber'
+import { TemplateFormValues, validateTemplateValues } from '@/lib/examTemplate'
+import { ExamTemplateSection } from '@/types/exam-template'
+import { useEffect } from 'react'
 
 interface DynamicExamFormProps {
-  sections: ExamTemplateSection[];
-  values: TemplateFormValues;
-  onChange: (values: TemplateFormValues) => void;
-  onValidChange?: (isValid: boolean) => void;
-  readOnly?: boolean;
+  sections: ExamTemplateSection[]
+  values: TemplateFormValues
+  onChange: (values: TemplateFormValues) => void
+  onValidChange?: (isValid: boolean) => void
+  readOnly?: boolean
 }
 
 export default function DynamicExamForm({
@@ -21,168 +21,234 @@ export default function DynamicExamForm({
   readOnly = false,
 }: DynamicExamFormProps) {
   useEffect(() => {
-    onValidChange?.(validateTemplateValues(sections, values));
-  }, [sections, values, onValidChange]);
+    onValidChange?.(validateTemplateValues(sections, values))
+  }, [sections, values, onValidChange])
 
   const updateValue = (key: string, value: string | boolean) => {
     onChange({
       ...values,
       [key]: value,
-    });
-  };
+    })
+  }
 
-  const renderReadOnlyValue = (key: string, label: string, value: string | boolean | undefined, className = 'col-span-2') => (
+  const renderReference = (referenceValue?: string) =>
+    referenceValue ? <p className='mt-1 ml-4 text-xs text-secondary'>{referenceValue}</p> : null
+
+  const renderReadOnlyValue = (
+    key: string,
+    label: string,
+    value: string | boolean | undefined,
+    referenceValue?: string,
+    className = '',
+  ) => (
     <div key={key} className={className}>
-      <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
-      <p className="w-full py-2 text-lg text-primary break-words">{String(value ?? '').trim() || '-'}</p>
+      <label className='mb-1 block text-sm font-medium text-tertiary'>{label}</label>
+      <p className='flex min-h-12 w-full items-center rounded-xl border border-border-input bg-white px-4 text-base text-primary wrap-break-word'>
+        {String(value ?? '').trim() || '-'}
+      </p>
+      {renderReference(referenceValue)}
     </div>
-  );
+  )
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {sections.map((section, idx) => (
-        <div key={section._id ?? `${section.title}-${idx}`} className="border border-surface-muted rounded-3xl">
-          <h3 className="text-base font-bold text-primary bg-surface-muted py-2 px-5 rounded-t-3xl">{section.title}</h3>
-          <div className="grid grid-cols-6 gap-4 p-6">
-            {section.fields.map((field) => {
-              const label = field.unit ? `${field.label} (${field.unit})` : field.label;
-              const value = values[field.key];
+        <section
+          key={section._id ?? `${section.title}-${idx}`}
+          className='rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5'
+        >
+          <h3 className='mb-4 text-base font-bold uppercase text-primary'>{section.title}</h3>
+          <div className='grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4'>
+            {section.fields.map(field => {
+              const labelBase = field.unit ? `${field.label} (${field.unit})` : field.label
+              const value = values[field.key]
 
               if (field.type === 'textarea') {
                 if (readOnly) {
-                  return renderReadOnlyValue(field._id ?? field.key, label, value, 'col-span-6');
+                  return renderReadOnlyValue(
+                    field._id ?? field.key,
+                    labelBase,
+                    value,
+                    field.reference_value,
+                    'md:col-span-2 lg:col-span-4',
+                  )
                 }
 
                 return (
-                  <div key={field._id ?? field.key} className="col-span-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                  <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
+                    <label className='mb-1 block text-sm font-medium text-tertiary'>
+                      {labelBase}
+                    </label>
                     <textarea
                       value={String(value ?? '')}
-                      onChange={(event) => updateValue(field.key, event.target.value)}
+                      onChange={event => updateValue(field.key, event.target.value)}
                       readOnly={readOnly}
                       rows={3}
                       placeholder={field.label}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
+                      className='min-h-35 w-full rounded-xl border border-border-input bg-white px-4 py-3 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none'
                     />
+                    {renderReference(field.reference_value)}
                   </div>
-                );
+                )
               }
 
               if (field.type === 'select') {
                 if (readOnly) {
-                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                  return renderReadOnlyValue(
+                    field._id ?? field.key,
+                    labelBase,
+                    value,
+                    field.reference_value,
+                  )
                 }
 
                 return (
-                  <div key={field._id ?? field.key} className="col-span-2">
-                    <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
+                  <div key={field._id ?? field.key}>
+                    <label className='mb-1 block text-sm font-medium text-tertiary'>
+                      {labelBase}
+                    </label>
                     <select
                       value={String(value ?? '')}
-                      onChange={(event) => updateValue(field.key, event.target.value)}
+                      onChange={event => updateValue(field.key, event.target.value)}
                       disabled={readOnly}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent bg-white"
+                      className='h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary focus:border-brand-primary focus:outline-none'
                     >
-                      <option value="">Seleccionar</option>
-                      {field.options.map((option) => (
+                      <option value=''>Seleccionar</option>
+                      {field.options.map(option => (
                         <option key={option} value={option}>
                           {option}
                         </option>
                       ))}
                     </select>
+                    {renderReference(field.reference_value)}
                   </div>
-                );
+                )
               }
 
               if (field.type === 'checkbox') {
                 if (readOnly) {
                   return (
-                    <div key={field._id ?? field.key} className="col-span-2">
-                      <label className="block text-sm font-medium text-tertiary mb-1">{label}</label>
-                      <p className="w-full py-2 text-lg text-primary break-words">{value ? 'Si' : 'No'}</p>
+                    <div key={field._id ?? field.key} className='col-span-2'>
+                      <label className='mb-1 block text-sm font-medium text-tertiary'>
+                        {labelBase}
+                      </label>
+                      <p className='flex min-h-12 w-full items-center rounded-xl border border-border-input bg-white px-4 text-base text-primary break-words'>
+                        {value ? 'Si' : 'No'}
+                      </p>
+                      {renderReference(field.reference_value)}
                     </div>
-                  );
+                  )
                 }
 
                 return (
-                  <label key={field._id ?? field.key} className="flex items-center gap-2 text-sm text-tertiary">
+                  <label
+                    key={field._id ?? field.key}
+                    className='flex items-center gap-2 text-sm text-tertiary'
+                  >
                     <input
-                      type="checkbox"
+                      type='checkbox'
                       checked={Boolean(value)}
-                      onChange={(event) => updateValue(field.key, event.target.checked)}
+                      onChange={event => updateValue(field.key, event.target.checked)}
                       disabled={readOnly}
                     />
-                    {label}
+                    {labelBase}
+                    {renderReference(field.reference_value)}
                   </label>
-                );
+                )
               }
 
               if (field.type === 'radio') {
                 if (readOnly) {
-                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                  return renderReadOnlyValue(
+                    field._id ?? field.key,
+                    labelBase,
+                    value,
+                    field.reference_value,
+                  )
                 }
 
                 return (
-                  <div key={field._id ?? field.key} className="col-span-2">
-                    <label className="block text-sm font-medium text-tertiary mb-2 col-span-2">{label}</label>
-                    <div className="flex flex-wrap gap-4">
-                      {field.options.map((option) => (
-                        <label key={option} className="flex items-center gap-2 text-sm text-tertiary">
+                  <div key={field._id ?? field.key}>
+                    <label className='mb-2 block text-sm font-medium text-tertiary'>
+                      {labelBase}
+                    </label>
+                    <div className='flex flex-wrap gap-4'>
+                      {field.options.map(option => (
+                        <label
+                          key={option}
+                          className='flex items-center gap-2 text-sm text-tertiary'
+                        >
                           <input
-                            type="radio"
+                            type='radio'
                             name={field.key}
                             value={option}
                             checked={String(value ?? '') === option}
-                            onChange={(event) => updateValue(field.key, event.target.value)}
+                            onChange={event => updateValue(field.key, event.target.value)}
                             disabled={readOnly}
                           />
                           {option}
                         </label>
                       ))}
                     </div>
+                    {renderReference(field.reference_value)}
                   </div>
-                );
+                )
               }
 
               if (field.type === 'number') {
                 if (readOnly) {
-                  return renderReadOnlyValue(field._id ?? field.key, label, value);
+                  return renderReadOnlyValue(
+                    field._id ?? field.key,
+                    labelBase,
+                    value,
+                    field.reference_value,
+                  )
                 }
 
                 return (
-                  <div key={field._id ?? field.key} className='col-span-2'>
+                  <div key={field._id ?? field.key}>
                     <InputNumber
                       key={field._id ?? field.key}
-                      label={label}
+                      label={labelBase}
                       value={String(value ?? '')}
-                      onChange={(nextValue) => updateValue(field.key, nextValue)}
+                      onChange={nextValue => updateValue(field.key, nextValue)}
                       placeholder={field.label}
                       readOnly={readOnly}
                     />
+                    {renderReference(field.reference_value)}
                   </div>
-                );
+                )
               }
 
               if (readOnly) {
-                return renderReadOnlyValue(field._id ?? field.key, label, value);
+                return renderReadOnlyValue(
+                  field._id ?? field.key,
+                  labelBase,
+                  value,
+                  field.reference_value,
+                )
               }
 
               return (
-                <div key={field._id ?? field.key} className='col-span-2'>
-                  <label className="block text-sm font-medium text-tertiary mb-1 col-span-2">{label}</label>
+                <div key={field._id ?? field.key}>
+                  <label className='mb-1 block text-sm font-medium text-tertiary'>
+                    {labelBase}
+                  </label>
                   <input
-                    type="text"
+                    type='text'
                     value={String(value ?? '')}
-                    onChange={(event) => updateValue(field.key, event.target.value)}
+                    onChange={event => updateValue(field.key, event.target.value)}
                     readOnly={readOnly}
                     placeholder={field.label}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
+                    className='h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none'
                   />
+                  {renderReference(field.reference_value)}
                 </div>
-              );
+              )
             })}
           </div>
-        </div>
+        </section>
       ))}
     </div>
-  );
+  )
 }

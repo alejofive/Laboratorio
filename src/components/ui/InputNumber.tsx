@@ -83,7 +83,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
                 onChange={e => setLabelEditValue(e.target.value)}
                 onKeyDown={handleLabelKeyDown}
                 onBlur={handleLabelSave}
-                className="text-sm font-medium text-gray-tertiary border border-cyan-500 rounded px-1 py-0.5 w-full"
+                className="w-full rounded-xl border border-border-input px-3 py-2 text-sm font-medium text-tertiary"
               />
               <button type="button" onClick={handleLabelSave} className="text-green-600 hover:text-green-700">
                 <Check className="w-3 h-3" />
@@ -95,13 +95,13 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
           ) : (
             <div className="flex items-center gap-1 flex-1">
               <label
-                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-cyan-600' : 'text-tertiary'}`}
+                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-brand-primary' : 'text-tertiary'}`}
                 onClick={handleLabelClick}
               >
                 {label}
               </label>
               {!readOnly && onLabelChange && (
-                <Pencil className="w-3 h-3 text-gray-400 cursor-pointer hover:text-cyan-600" onClick={handleLabelClick} />
+                <Pencil className="w-3 h-3 text-gray-400 cursor-pointer hover:text-brand-primary" onClick={handleLabelClick} />
               )}
             </div>
           )}
@@ -115,7 +115,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
         onChange={handleChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent"
+        className="h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none disabled:opacity-100"
       />
     </div>
   );

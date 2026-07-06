@@ -120,9 +120,9 @@ export function validateExamTemplate(template: ExamTemplate) {
 export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePayload {
   return {
     name: template.name.trim(),
-    description: template.description?.trim() ?? '',
+    description: '',
     category: template.category?.trim() ?? '',
-    price: Number(template.price ?? 0),
+    price: 0,
     is_active: Boolean(template.is_active),
     sections: template.sections.map((section) => ({
       title: section.title.trim(),
@@ -131,7 +131,7 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
           key: field.key.trim(),
           label: field.label.trim(),
           type: field.type,
-          required: Boolean(field.required),
+          required: false,
         };
 
         if (field.unit?.trim()) {

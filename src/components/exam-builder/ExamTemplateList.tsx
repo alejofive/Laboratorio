@@ -1,19 +1,46 @@
 'use client';
 
-import { Copy, FilePlus2, Pencil, Power, Trash2 } from 'lucide-react';
+import { Copy, FilePlus2, Pencil, Power, Search, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { cleanExamTemplatePayload } from '@/lib/examTemplateBuilder';
 import { fetchExamTemplate, useCreateExamTemplate, useDeleteExamTemplate, useExamTemplates, useUpdateExamTemplate } from '@/lib/api/exam-templates';
+import { useState } from 'react';
 
 function getTemplateId(template: { _id?: string; id?: string }) {
   return template._id ?? template.id ?? '';
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 export function ExamTemplateList() {
   const { data: templates = [], isLoading, error } = useExamTemplates();
+  const [searchTerm, setSearchTerm] = useState('');
   const createTemplate = useCreateExamTemplate();
   const updateTemplate = useUpdateExamTemplate();
   const deleteTemplate = useDeleteExamTemplate();
+  const normalizedSearchTerm = normalizeSearchText(searchTerm);
+  const filteredTemplates = normalizedSearchTerm
+    ? templates.filter((template) => {
+      const sections = template.sections ?? [];
+      const searchableText = normalizeSearchText([
+        template.name,
+        template.description,
+        template.category,
+        ...sections.flatMap((section) => [
+          section.title,
+          ...(section.fields ?? []).map((field) => field.label),
+        ]),
+      ].filter(Boolean).join(' '));
+
+      return searchableText.includes(normalizedSearchTerm);
+    })
+    : templates;
 
   const duplicateTemplate = async (templateId: string) => {
     const template = await fetchExamTemplate(templateId);
@@ -56,6 +83,16 @@ export function ExamTemplateList() {
         </div>
       ) : null}
 
+      <div className="mb-4 flex items-center gap-3 rounded-2xl border border-border-default bg-surface px-4 py-3">
+        <Search size={18} className="text-secondary" />
+        <input
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Buscar plantilla por nombre, categoría o campo"
+          className="w-full bg-transparent text-sm text-primary outline-none placeholder:text-secondary"
+        />
+      </div>
+
       <div className="rounded-3xl border border-border-default bg-surface">
         {isLoading ? <p className="p-6 text-sm text-secondary">Cargando plantillas...</p> : null}
 
@@ -66,8 +103,15 @@ export function ExamTemplateList() {
           </div>
         ) : null}
 
+        {!isLoading && templates.length > 0 && filteredTemplates.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-lg font-bold text-primary">No hay plantillas para esa busqueda</p>
+            <p className="mt-2 text-sm text-secondary">Prueba con otro nombre, categoria o campo.</p>
+          </div>
+        ) : null}
+
         <div className="divide-y divide-border-default">
-          {templates.map((template) => {
+          {filteredTemplates.map((template) => {
             const templateId = getTemplateId(template);
             const sections = template.sections ?? [];
             const fieldCount = sections.reduce((total, section) => total + (section.fields?.length ?? 0), 0);

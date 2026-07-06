@@ -1,33 +1,40 @@
-'use client';
+'use client'
 
-import { TipoExamen } from '@/types';
+import { TipoExamen } from '@/types'
 
-import { useCreateOrder, useCreatePatient, useExams, useOrders, usePatientById, usePatients } from '@/data/createPatients';
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import DetallePaciente from './DetallePaciente';
-import { PillFilter } from './PillFilter';
-import TopResumen from './TopResumen';
-import { Button } from './ui/Button';
-import SvgIcon from './ui/SvgIcon';
+import {
+  useCreateOrder,
+  useCreatePatient,
+  useExams,
+  useOrders,
+  usePatientById,
+  usePatients,
+} from '@/data/createPatients'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'react-hot-toast'
+import DetallePaciente from './DetallePaciente'
+import { PillFilter } from './PillFilter'
+import TopResumen from './TopResumen'
+import { Button } from './ui/Button'
+import SvgIcon from './ui/SvgIcon'
 
-type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles';
+type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles'
 
 type ExamItem = {
-  templateId: string;
-  label: string;
-  value: TipoExamen;
-  group: GrupoExamen;
-};
+  templateId: string
+  label: string
+  value: TipoExamen
+  group: GrupoExamen
+}
 
 const normalizeText = (value: string) =>
   value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .trim();
+    .trim()
 
 const categoryToGroup: Record<string, GrupoExamen> = {
   hematologia: 'hematologia',
@@ -35,7 +42,7 @@ const categoryToGroup: Record<string, GrupoExamen> = {
   'inmunologia y serologia': 'serologia',
   'coprologia y uroanalisis': 'orina_heces',
   'perfiles combinados': 'paneles',
-};
+}
 
 const examNameToTipo: Record<string, TipoExamen> = {
   'frotisde sangre periferica': 'frotis_sangre',
@@ -69,22 +76,64 @@ const examNameToTipo: Record<string, TipoExamen> = {
   'quimica y serologia': 'quimica_serologia',
   'serologia y heces': 'serologia_heces',
   'serologia y orina': 'serologia_orina',
-};
+}
 
+const toApiDate = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
+const formatDisplayDate = (value: string) => {
+  if (!value) return ''
+
+  const [year, month, day] = value.split('-')
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
+const parseApiDate = (value: string) => {
+  if (!value) return undefined
+
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+
+  return new Date(year, month - 1, day)
+}
+
+const birthMonths = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
+const getDaysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate()
 
 interface FormValues {
-  nombre: string;
-  fechaNacimiento: string;
-  telefono: string;
-  cedula: string;
-  direccion: string;
-  apellido: string;
-  examenes: TipoExamen[];
+  nombre: string
+  fechaNacimiento: string
+  sexo: string
+  telefono: string
+  cedula: string
+  direccion: string
+  apellido: string
+  observaciones: string
+  examenes: TipoExamen[]
 }
 
 export default function NuevoPacienteForm() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
@@ -97,205 +146,294 @@ export default function NuevoPacienteForm() {
     defaultValues: {
       nombre: '',
       fechaNacimiento: '',
+      sexo: '',
       telefono: '',
       cedula: '',
       direccion: '',
       apellido: '',
+      observaciones: '',
       examenes: [],
     },
-  });
+  })
 
-  const examenesSeleccionados = watch('examenes');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchExam, setSearchExam] = useState('');
-  const [activeCategory, setActiveCategory] = useState<GrupoExamen>('hematologia');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const cedulaValue = watch('cedula');
+  const examenesSeleccionados = watch('examenes')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchExam, setSearchExam] = useState('')
+  const [activeCategory, setActiveCategory] = useState<GrupoExamen>('hematologia')
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [showBirthDatePicker, setShowBirthDatePicker] = useState(false)
+  const [birthDateDraft, setBirthDateDraft] = useState({ day: '', month: '', year: '' })
+  const birthDatePickerRef = useRef<HTMLDivElement>(null)
+  const cedulaValue = watch('cedula')
+  const birthDateValue = watch('fechaNacimiento')
 
-  const { data: examsData } = useExams();
+  const { data: examsData } = useExams()
   const todayApiDate = useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }, []);
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }, [])
 
   const { data: ordersToday = [] } = useOrders({
     page: 1,
     limit: 100,
     start_date: todayApiDate,
     end_date: todayApiDate,
-  });
+  })
 
   const resumenHoy = useMemo(() => {
-    const totalParaImprimir = ordersToday.filter((order) => order.status === 'completed' || order.status === 'sent').length;
-    const totalSolicitudes = ordersToday.length - totalParaImprimir;
+    const totalParaImprimir = ordersToday.filter(
+      order => order.status === 'completed' || order.status === 'sent',
+    ).length
+    const totalSolicitudes = ordersToday.length - totalParaImprimir
 
     return {
       totalSolicitudes,
       totalParaImprimir,
-    };
-  }, [ordersToday]);
+    }
+  }, [ordersToday])
 
-  const shouldShowResults = debouncedSearchTerm.trim().length >= 2;
-  const isSearching = searchTerm.trim().length > 0;
+  const shouldShowResults = debouncedSearchTerm.trim().length >= 2
+  const isSearching = searchTerm.trim().length > 0
   const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
     page: 1,
     limit: 10,
     search: shouldShowResults ? debouncedSearchTerm : '',
-  });
-  const { data: selectedPatientDetail, isLoading: isLoadingPatientDetail } = usePatientById(selectedPatientId);
+  })
+  const { data: selectedPatientDetail, isLoading: isLoadingPatientDetail } =
+    usePatientById(selectedPatientId)
 
-  const createPatientMutation = useCreatePatient();
-  const createOrderMutation = useCreateOrder();
+  const createPatientMutation = useCreatePatient()
+  const createOrderMutation = useCreateOrder()
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.trim());
-    }, 350);
+      setDebouncedSearchTerm(searchTerm.trim())
+    }, 350)
 
-    return () => window.clearTimeout(timeoutId);
-  }, [searchTerm]);
+    return () => window.clearTimeout(timeoutId)
+  }, [searchTerm])
 
-  const results = patientsData?.data ?? [];
+  const results = patientsData?.data ?? []
 
   const selectedPatient = useMemo(
-    () => results.find((patient) => patient._id === selectedPatientId) ?? null,
-    [results, selectedPatientId]
-  );
+    () => results.find(patient => patient._id === selectedPatientId) ?? null,
+    [results, selectedPatientId],
+  )
 
   useEffect(() => {
-    if (!selectedPatientDetail) return;
+    if (!selectedPatientDetail) return
 
-    setValue('cedula', selectedPatientDetail.document_number ?? '');
-    setValue('nombre', selectedPatientDetail.first_name ?? '');
-    setValue('apellido', selectedPatientDetail.last_name ?? '');
-    setValue('telefono', selectedPatientDetail.phone ?? '');
-    setValue('direccion', selectedPatientDetail.address ?? '');
+    setValue('cedula', selectedPatientDetail.document_number ?? '')
+    setValue('nombre', selectedPatientDetail.first_name ?? '')
+    setValue('apellido', selectedPatientDetail.last_name ?? '')
+    setValue('telefono', selectedPatientDetail.phone ?? '')
+    setValue('direccion', selectedPatientDetail.address ?? '')
 
     if (selectedPatientDetail.birth_date) {
-      setValue('fechaNacimiento', selectedPatientDetail.birth_date.split('T')[0]);
+      setValue('fechaNacimiento', selectedPatientDetail.birth_date.split('T')[0])
     }
-  }, [selectedPatientDetail, setValue]);
+  }, [selectedPatientDetail, setValue])
 
-  const selectedPatientCard = selectedPatientDetail ?? selectedPatient;
+  const selectedPatientCard = selectedPatientDetail ?? selectedPatient
 
   const EXAM_CATEGORIES: { key: GrupoExamen; label: string; iconSrc: string }[] = [
-    { key: 'hematologia', label: 'Hematología', iconSrc: '/svg/examenes/Hematología.svg' },
-    { key: 'quimica', label: 'Química', iconSrc: '/svg/examenes/Química.svg' },
+    { key: 'hematologia', label: 'Hematología', iconSrc: '/svg/examenes/hematologia.svg' },
+    { key: 'quimica', label: 'Química', iconSrc: '/svg/examenes/quimica.svg' },
     { key: 'serologia', label: 'Serología e Infecciosos', iconSrc: '/svg/examenes/serologia.svg' },
     { key: 'orina_heces', label: 'Orina y heces', iconSrc: '/svg/examenes/Muestras.svg' },
     { key: 'paneles', label: 'Paneles Combinados ', iconSrc: '/svg/examenes/Combinados.svg' },
-    { key: 'perfiles', label: 'Perfiles Completos', iconSrc: '/svg/examenes/Perfil completo.svg' },
-  ];
+    { key: 'perfiles', label: 'Perfiles Completos', iconSrc: '/svg/examenes/perfil-completo.svg' },
+  ]
 
   const allExams = useMemo<ExamItem[]>(() => {
-    if (!examsData?.categories) return [];
+    if (!examsData?.categories) return []
 
-    return examsData.categories.flatMap((category) => {
-      const normalizedCategoryName = normalizeText(category.name);
-      const group = categoryToGroup[normalizedCategoryName] ?? 'perfiles';
+    return examsData.categories.flatMap(category => {
+      const normalizedCategoryName = normalizeText(category.name)
+      const group = categoryToGroup[normalizedCategoryName] ?? 'perfiles'
 
       return category.exams
-        .map((exam) => {
-          const normalizedExamName = normalizeText(exam.name);
-          const tipo = examNameToTipo[normalizedExamName];
+        .map(exam => {
+          const normalizedExamName = normalizeText(exam.name)
+          const tipo = examNameToTipo[normalizedExamName]
 
-          if (!tipo) return null;
+          if (!tipo) return null
 
           return {
             templateId: exam.id,
             label: exam.name,
             value: tipo,
             group,
-          };
+          }
         })
-        .filter((item): item is ExamItem => item !== null);
-    });
-  }, [examsData]);
+        .filter((item): item is ExamItem => item !== null)
+    })
+  }, [examsData])
 
   const examCountByCategory: Record<GrupoExamen, number> = {
-    hematologia: allExams.filter((exam) => exam.group === 'hematologia').length,
-    quimica: allExams.filter((exam) => exam.group === 'quimica').length,
-    serologia: allExams.filter((exam) => exam.group === 'serologia').length,
-    orina_heces: allExams.filter((exam) => exam.group === 'orina_heces').length,
-    paneles: allExams.filter((exam) => exam.group === 'paneles').length,
-    perfiles: allExams.filter((exam) => exam.group === 'perfiles').length,
-  };
+    hematologia: allExams.filter(exam => exam.group === 'hematologia').length,
+    quimica: allExams.filter(exam => exam.group === 'quimica').length,
+    serologia: allExams.filter(exam => exam.group === 'serologia').length,
+    orina_heces: allExams.filter(exam => exam.group === 'orina_heces').length,
+    paneles: allExams.filter(exam => exam.group === 'paneles').length,
+    perfiles: allExams.filter(exam => exam.group === 'perfiles').length,
+  }
 
-  const visibleExams = allExams.filter((exam) => {
-    const byCategory = exam.group === activeCategory;
-    const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase());
-    return byCategory && byText;
-  });
+  const visibleExams = allExams.filter(exam => {
+    const byCategory = exam.group === activeCategory
+    const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase())
+    return byCategory && byText
+  })
 
-  const selectedExams = examenesSeleccionados || [];
-  const shouldShowSelected = selectedExams.length > 0;
-  const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0;
-  const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0;
-  const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm);
+  const selectedExams = examenesSeleccionados || []
+  const selectedBirthDate = useMemo(() => parseApiDate(birthDateValue), [birthDateValue])
+  const birthDateLabel = birthDateValue ? formatDisplayDate(birthDateValue) : 'Seleccionar fecha'
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+  const currentDay = currentDate.getDate()
+  const birthYearOptions = useMemo(
+    () => Array.from({ length: currentYear - 1919 }, (_, index) => currentYear - index),
+    [currentYear],
+  )
+  const birthMonthOptions =
+    Number(birthDateDraft.year) === currentYear
+      ? birthMonths.slice(0, currentMonth)
+      : birthMonths
+  const birthDraftYear = Number(birthDateDraft.year) || currentYear
+  const birthDraftMonth = Number(birthDateDraft.month) || 1
+  const birthMaxDay =
+    birthDraftYear === currentYear && birthDraftMonth === currentMonth
+      ? currentDay
+      : getDaysInMonth(birthDraftYear, birthDraftMonth)
+  const birthDayOptions = Array.from(
+    { length: birthMaxDay },
+    (_, index) => index + 1,
+  )
+  const shouldShowSelected = selectedExams.length > 0
+  const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0
+  const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0
+  const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm)
 
   const onSearchTermChange = (value: string) => {
-    setSearchTerm(value);
-  };
+    setSearchTerm(value)
+  }
 
   const onSelectPatient = (patient: (typeof results)[number]) => {
-    setValue('cedula', patient.document_number);
-    setValue('nombre', patient.first_name);
-    setValue('apellido', patient.last_name);
-    setValue('telefono', patient.phone);
-    setValue('direccion', '');
-    setSelectedPatientId(patient._id);
-    setShowCreateForm(false);
-    setSearchTerm('');
+    setValue('cedula', patient.document_number)
+    setValue('nombre', patient.first_name)
+    setValue('apellido', patient.last_name)
+    setValue('telefono', patient.phone)
+    setValue('direccion', '')
+    setSelectedPatientId(patient._id)
+    setShowCreateForm(false)
+    setSearchTerm('')
 
-    toast.success(`Se cargaron los datos de ${patient.first_name} ${patient.last_name}`);
-  };
+    toast.success(`Se cargaron los datos de ${patient.first_name} ${patient.last_name}`)
+  }
+
+  useEffect(() => {
+    if (!showBirthDatePicker) return
+
+    if (selectedBirthDate) {
+      setBirthDateDraft({
+        day: String(selectedBirthDate.getDate()),
+        month: String(selectedBirthDate.getMonth() + 1),
+        year: String(selectedBirthDate.getFullYear()),
+      })
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!birthDatePickerRef.current?.contains(event.target as Node)) {
+        setShowBirthDatePicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [selectedBirthDate, showBirthDatePicker])
 
   const onCreatePatient = () => {
     reset({
       nombre: '',
       apellido: '',
       fechaNacimiento: '',
+      sexo: '',
       telefono: '',
       cedula: '',
       direccion: '',
       examenes: [],
-    });
-    setSelectedPatientId(null);
-    setShowCreateForm(true);
-    setSearchTerm('');
-  };
+    })
+    setSelectedPatientId(null)
+    setShowCreateForm(true)
+    setShowBirthDatePicker(false)
+    setBirthDateDraft({ day: '', month: '', year: '' })
+    setSearchTerm('')
+  }
 
   const onClearPatient = () => {
-    setSelectedPatientId(null);
-    setShowCreateForm(false);
-    setSearchTerm('');
-  };
+    setSelectedPatientId(null)
+    setShowCreateForm(false)
+    setShowBirthDatePicker(false)
+    setBirthDateDraft({ day: '', month: '', year: '' })
+    setSearchTerm('')
+  }
+
+  const onBirthDatePartChange = (part: 'day' | 'month' | 'year', value: string) => {
+    const nextParts = {
+      ...birthDateDraft,
+      [part]: value,
+    }
+
+    if (!nextParts.day || !nextParts.month || !nextParts.year) {
+      setBirthDateDraft(nextParts)
+      return
+    }
+
+    const year = Number(nextParts.year)
+    const month = Math.min(Number(nextParts.month), year === currentYear ? currentMonth : 12)
+    const maxDay =
+      year === currentYear && month === currentMonth ? currentDay : getDaysInMonth(year, month)
+    const day = Math.min(Number(nextParts.day), maxDay)
+
+    setBirthDateDraft({ ...nextParts, day: String(day), month: String(month) })
+
+    setValue('fechaNacimiento', toApiDate(new Date(year, month - 1, day)), {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  const onBirthDateClear = () => {
+    setValue('fechaNacimiento', '', { shouldDirty: true, shouldValidate: true })
+    setBirthDateDraft({ day: '', month: '', year: '' })
+  }
 
   const toggleExamen = (tipo: TipoExamen) => {
-    const current = examenesSeleccionados || [];
+    const current = examenesSeleccionados || []
     const newExamenes = current.includes(tipo)
       ? current.filter(e => e !== tipo)
-      : [...current, tipo];
-    setValue('examenes', newExamenes, { shouldValidate: true });
-  };
+      : [...current, tipo]
+    setValue('examenes', newExamenes, { shouldValidate: true })
+  }
 
   const onSubmit = async (data: FormValues) => {
     try {
       const selectedTemplates = allExams
-        .filter((exam) => selectedExams.includes(exam.value))
-        .map((exam) => exam.templateId);
+        .filter(exam => selectedExams.includes(exam.value))
+        .map(exam => exam.templateId)
 
       if (selectedTemplates.length === 0) {
-        toast.error('Debes seleccionar al menos un examen valido');
-        return;
+        toast.error('Debes seleccionar al menos un examen valido')
+        return
       }
 
-      let patientId = '';
+      let patientId = ''
 
       if (showCreateForm) {
         const created = await createPatientMutation.mutateAsync({
@@ -303,50 +441,52 @@ export default function NuevoPacienteForm() {
           last_name: data.apellido.trim(),
           document_number: data.cedula.trim(),
           birth_date: data.fechaNacimiento,
+          sex: data.sexo,
           phone: data.telefono.trim(),
           address: data.direccion.trim(),
-        });
+        })
 
-        patientId = created._id;
+        patientId = created._id
       } else {
         if (!selectedPatientId) {
-          toast.error('No se encontro el paciente en API para crear la orden');
-          return;
+          toast.error('No se encontro el paciente en API para crear la orden')
+          return
         }
 
-        patientId = selectedPatientId;
+        patientId = selectedPatientId
       }
 
-      await createOrderMutation.mutateAsync({
+      const observaciones = data.observaciones.trim()
+      const orderPayload = {
         patient_id: patientId,
         exam_template_ids: selectedTemplates,
-        notes: 'Paciente en ayuno',
-      });
+        ...(observaciones ? { notes: observaciones } : {}),
+      }
 
-      await queryClient.invalidateQueries({ queryKey: ['orders-api'] });
+      await createOrderMutation.mutateAsync(orderPayload)
 
-      onClearPatient();
-      reset();
-      toast.success('Solicitud creada exitosamente');
+      await queryClient.invalidateQueries({ queryKey: ['orders-api'] })
+
+      onClearPatient()
+      reset()
+      toast.success('Solicitud creada exitosamente')
     } catch {
-      toast.error('No se pudo crear la solicitud');
+      toast.error('No se pudo crear la solicitud')
     }
-  };
+  }
 
   return (
-    <div className="w-full">
+    <div className='w-full'>
       <TopResumen
         totalSolicitudes={resumenHoy.totalSolicitudes}
         totalParaImprimir={resumenHoy.totalParaImprimir}
       />
 
-
-      <section className="bg-surface border-border-default border rounded-3xl p-4 mt-6 mb-4">
-
+      <section className='bg-surface border-border-default border rounded-3xl p-4 mt-6 mb-4'>
         {!showCreateForm ? (
-          <div className="flex flex-wrap items-center gap-4">
+          <div className='flex flex-wrap items-center gap-4'>
             {selectedPatientCard || isLoadingPatientDetail ? (
-              <div className="w-full">
+              <div className='w-full'>
                 <DetallePaciente
                   paciente={selectedPatientCard ?? undefined}
                   isLoading={isLoadingPatientDetail}
@@ -355,19 +495,21 @@ export default function NuevoPacienteForm() {
               </div>
             ) : (
               <div className='w-full'>
-                <h2 className="mb-3 text-xl font-semibold leading-none">Buscar un paciente o crear solicitud</h2>
+                <h2 className='mb-3 text-xl font-semibold leading-none'>
+                  Buscar un paciente o crear solicitud
+                </h2>
                 <div className='flex items-center gap-3 justify-between'>
-                  <div className="border-border-input relative bg-surface min-w-72 flex-1 rounded-xl border px-5 py-3 leading-none">
+                  <div className='border-border-input relative bg-surface min-w-72 flex-1 rounded-xl border px-5 py-3 leading-none'>
                     <input
-                      className="text-secondary w-full bg-transparent pr-8 outline-none"
+                      className='text-secondary w-full bg-transparent pr-8 outline-none'
                       value={searchTerm}
-                      onChange={(event) => onSearchTermChange(event.target.value)}
-                      placeholder="Buscar por cédula, nombre o teléfono..."
+                      onChange={event => onSearchTermChange(event.target.value)}
+                      placeholder='Buscar por cédula, nombre o teléfono...'
                     />
                     {searchTerm ? (
                       <button
-                        type="button"
-                        className="text-secondary absolute right-4 top-2 text-xl"
+                        type='button'
+                        className='text-secondary absolute right-4 top-2 text-xl'
                         onClick={() => onSearchTermChange('')}
                       >
                         ×
@@ -375,24 +517,29 @@ export default function NuevoPacienteForm() {
                     ) : null}
 
                     {shouldShowResults ? (
-                      <div className="border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0 shadow-2xl">
+                      <div className='border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0 shadow-2xl'>
                         {results.length > 0 ? (
                           results.map((result, index) => (
                             <button
                               key={result._id}
-                              type="button"
+                              type='button'
                               onClick={() => onSelectPatient(result)}
                               className={`flex w-full items-center hover:bg-gray-200 cursor-pointer z-0 justify-between px-4 py-3 text-left ${index > 0 ? 'border-t border-border-default' : ''}`}
                             >
-                              <span className="text-tertiary text-base">
-                                {result.first_name} {result.last_name} · {result.document_number} · {result.phone} · {result.age} años
+                              <span className='text-tertiary text-base'>
+                                {result.first_name} {result.last_name} · {result.document_number} ·{' '}
+                                {result.phone} · {result.age} años
                               </span>
                             </button>
                           ))
                         ) : isLoadingPatients ? (
-                          <p className="text-secondary px-4 py-3 text-base">Buscando pacientes...</p>
+                          <p className='text-secondary px-4 py-3 text-base'>
+                            Buscando pacientes...
+                          </p>
                         ) : (
-                          <p className="text-secondary px-4 py-3 text-base">No se encontraron pacientes.</p>
+                          <p className='text-secondary px-4 py-3 text-base'>
+                            No se encontraron pacientes.
+                          </p>
                         )}
                       </div>
                     ) : null}
@@ -402,7 +549,10 @@ export default function NuevoPacienteForm() {
                     className={`origin-right overflow-hidden transition-all duration-300 ease-out ${isSearching ? 'pointer-events-none max-w-0 scale-95 opacity-0' : 'max-w-xs scale-100 opacity-100'}`}
                     aria-hidden={isSearching}
                   >
-                    <Button className="cursor-pointer whitespace-nowrap rounded-2xl" onClick={onCreatePatient}>
+                    <Button
+                      className='cursor-pointer whitespace-nowrap rounded-2xl'
+                      onClick={onCreatePatient}
+                    >
                       <SvgIcon src='/svg/plus.svg' size={24} /> Crear paciente nuevo
                     </Button>
                   </div>
@@ -413,110 +563,243 @@ export default function NuevoPacienteForm() {
         ) : null}
 
         {showCreateForm ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="">
-              <button className="text-tertiary mb-4 text-base flex items-center gap-2 cursor-pointer" onClick={onClearPatient}>
+          <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+            <div className=''>
+              <button
+                type='button'
+                className='text-tertiary mb-4 text-base flex items-center gap-2 cursor-pointer'
+                onClick={onClearPatient}
+              >
                 <SvgIcon src='/svg/arrow-back.svg' size={20} />
-                <span className="text-secondary text-base">Volver a buscar</span>
+                <span className='text-secondary text-base'>Volver a buscar</span>
               </button>
-              <h2 className="mb-3 text-xl font-semibold leading-none">Nuevo paciente</h2>
+              <h2 className='mb-3 text-xl font-semibold leading-none'>Nuevo paciente</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Cédula</label>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Cédula</label>
                   <input
-                    type="text"
-                    inputMode="numeric"
+                    type='text'
+                    inputMode='numeric'
                     value={cedulaValue}
-                    onChange={(e) => setValue('cedula', e.target.value)}
+                    onChange={e => setValue('cedula', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="V-12345678"
+                    placeholder='Ingrese cédula'
                   />
-                  {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula.message}</p>}
+                  {errors.cedula && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.cedula.message}</p>
+                  )}
                 </div>
 
                 <div>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Nombres</label>
+                  <input
+                    type='text'
+                    {...register('nombre', { required: 'El nombre es requerido' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder='Ingrese nombre'
+                  />
+                  {errors.nombre && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.nombre.message}</p>
+                  )}
+                </div>
 
-                  <div className='flex gap-4'>
+                <div>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Apellidos</label>
+                  <input
+                    type='text'
+                    {...register('apellido', { required: 'El apellido es requerido' })}
+                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.apellido ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder='Ingrese apellido'
+                  />
+                  {errors.apellido && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.apellido.message}</p>
+                  )}
+                </div>
 
-                    <div className='flex-1'>
-                      <label className="block text-tertiary text-sm font-bold mb-1">Nombre</label>
-                      <input
-                        type="text"
-                        {...register('nombre', { required: 'El nombre es requerido' })}
-                        className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Nombre"
-                      />
-                      {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
-                    </div>
-                    <div className='flex-1'>
-                      <label className="block text-tertiary text-sm font-bold mb-1">Apellido</label>
-                      <input
-                        type="text"
-                        {...register('apellido', { required: 'El apellido es requerido' })}
-                        className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.apellido ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Apellido"
-                      />
-                      {errors.apellido && <p className="text-red-500 text-xs mt-1">{errors.apellido.message}</p>}
-                    </div>
+                <div>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>
+                    Fecha de nacimiento
+                  </label>
+                  <input
+                    type='hidden'
+                    {...register('fechaNacimiento', {
+                      required: 'La fecha de nacimiento es requerida',
+                    })}
+                  />
+                  <div ref={birthDatePickerRef} className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setShowBirthDatePicker(prev => !prev)}
+                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 border rounded-xl bg-white text-left transition-colors hover:bg-gray-50 focus:outline-none focus:border-brand-soft ${errors.fechaNacimiento ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <span className={birthDateValue ? 'text-primary' : 'text-secondary'}>
+                        {birthDateLabel}
+                      </span>
+                      <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
+                    </button>
+
+                    {showBirthDatePicker ? (
+                      <div className='absolute left-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.12)]'>
+                        <div className='mb-3'>
+                          <p className='text-sm font-bold text-tertiary'>
+                            Selecciona día, mes y año
+                          </p>
+                          <p className='mt-1 text-xs text-secondary'>
+                            La fecha se guarda al completar los tres campos.
+                          </p>
+                        </div>
+                        <div className='grid grid-cols-3 gap-2'>
+                          <div>
+                            <label className='mb-1 block text-xs font-bold text-secondary'>
+                              Día
+                            </label>
+                            <select
+                              value={birthDateDraft.day}
+                              onChange={event => onBirthDatePartChange('day', event.target.value)}
+                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                            >
+                              <option value=''>Día</option>
+                              {birthDayOptions.map(day => (
+                                <option key={day} value={day}>
+                                  {day}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className='mb-1 block text-xs font-bold text-secondary'>
+                              Mes
+                            </label>
+                            <select
+                              value={birthDateDraft.month}
+                              onChange={event => onBirthDatePartChange('month', event.target.value)}
+                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                            >
+                              <option value=''>Mes</option>
+                              {birthMonthOptions.map((month, index) => (
+                                <option key={month} value={index + 1}>
+                                  {month}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className='mb-1 block text-xs font-bold text-secondary'>
+                              Año
+                            </label>
+                            <select
+                              value={birthDateDraft.year}
+                              onChange={event => onBirthDatePartChange('year', event.target.value)}
+                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                            >
+                              <option value=''>Año</option>
+                              {birthYearOptions.map(year => (
+                                <option key={year} value={year}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className='mt-3 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2'>
+                          <span className='text-xs font-bold text-secondary'>
+                            Fecha seleccionada
+                          </span>
+                          <span className='text-sm font-bold text-tertiary'>{birthDateLabel}</span>
+                        </div>
+                        <div className='mt-2 flex justify-between border-t border-gray-100 pt-2'>
+                          <button
+                            type='button'
+                            className='rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
+                            onClick={onBirthDateClear}
+                            disabled={!birthDateValue}
+                          >
+                            Limpiar
+                          </button>
+                          <button
+                            type='button'
+                            className='rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200'
+                            onClick={() => setShowBirthDatePicker(false)}
+                          >
+                            Cerrar
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
+                  {errors.fechaNacimiento && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.fechaNacimiento.message}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Fecha de nacimiento</label>
-                  <input
-                    type="date"
-                    {...register('fechaNacimiento', { required: 'La fecha de nacimiento es requerida' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.fechaNacimiento ? 'border-red-500' : 'border-gray-300'}`}
-                  />
-                  {errors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{errors.fechaNacimiento.message}</p>}
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Sexo</label>
+                  <select
+                    {...register('sexo', { required: 'El sexo es requerido' })}
+                    className={`w-full px-3 py-2 border rounded-xl bg-white focus:border-transparent text-secondary ${errors.sexo ? 'border-red-500' : 'border-gray-300'}`}
+                    defaultValue=''
+                  >
+                    <option value='' disabled>
+                      Seleccionar
+                    </option>
+                    <option value='female'>Femenino</option>
+                    <option value='male'>Masculino</option>
+                    <option value='other'>Otro</option>
+                  </select>
+                  {errors.sexo && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.sexo.message}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-tertiary text-sm font-bold mb-1">Teléfono</label>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Teléfono</label>
                   <input
-                    type="tel"
+                    type='tel'
                     {...register('telefono', { required: 'El teléfono es requerido' })}
                     className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="0414-0000000"
+                    placeholder='0414-0000000'
                   />
-                  {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono.message}</p>}
+                  {errors.telefono && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.telefono.message}</p>
+                  )}
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-tertiary text-sm font-bold mb-1">Dirección</label>
+                <div className='md:col-span-3'>
+                  <label className='block text-tertiary text-sm font-bold mb-1'>Dirección</label>
                   <input
-                    type="text"
+                    type='text'
                     {...register('direccion', { required: 'La dirección es requerida' })}
                     className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Av. / Urb / Calle"
+                    placeholder='Av. / Urb / Calle'
                   />
-                  {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion.message}</p>}
+                  {errors.direccion && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.direccion.message}</p>
+                  )}
                 </div>
               </div>
             </div>
-          </form >
+          </form>
         ) : null}
-
-
       </section>
 
-
-      <section className="bg-surface border border-border-default rounded-3xl p-4 pb-10">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+      <section className='bg-surface border border-border-default rounded-3xl p-4 pb-10'>
+        <div className='mb-3 flex flex-wrap items-start justify-between gap-3'>
           <div>
-            <h3 className="text-xl font-semibold leading-none">Exámenes a realizar</h3>
-            <p className="text-secondary text-base mt-2">Selecciona uno o varios exámenes para esta solicitud.</p>
+            <h3 className='text-xl font-semibold leading-none'>Exámenes a realizar</h3>
+            <p className='text-secondary text-base mt-2'>
+              Selecciona uno o varios exámenes para esta solicitud.
+            </p>
           </div>
           <input
-            className="text-secondary border-border-input rounded-xl border px-4 py-2 text-base"
-            placeholder="Buscar examen"
+            className='text-secondary border-border-input rounded-xl border px-4 py-2 text-base'
+            placeholder='Buscar examen'
             value={searchExam}
-            onChange={(event) => setSearchExam(event.target.value)}
+            onChange={event => setSearchExam(event.target.value)}
           />
         </div>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {EXAM_CATEGORIES.map((category) => (
+        <div className='mb-4 flex flex-wrap gap-2'>
+          {EXAM_CATEGORIES.map(category => (
             <PillFilter
               key={category.key}
               label={`${category.label} (${examCountByCategory[category.key]})`}
@@ -527,48 +810,79 @@ export default function NuevoPacienteForm() {
             />
           ))}
         </div>
-        <input type="hidden" {...register('examenes', { validate: (value) => value.length > 0 || '' })} />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {visibleExams.map((exam) => {
-            const isChecked = selectedExams.includes(exam.value);
+        <input
+          type='hidden'
+          {...register('examenes', { validate: value => value.length > 0 || '' })}
+        />
+        <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-5'>
+          {visibleExams.map(exam => {
+            const isChecked = selectedExams.includes(exam.value)
 
             return (
               <label
                 key={exam.value}
-                className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
-                  }`}
+                className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${
+                  isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
+                }`}
               >
-                <input type="checkbox" className="size-5 shrink-0 cursor-pointer" checked={isChecked} onChange={() => toggleExamen(exam.value)} />
+                <input
+                  type='checkbox'
+                  className='size-5 shrink-0 cursor-pointer'
+                  checked={isChecked}
+                  onChange={() => toggleExamen(exam.value)}
+                />
                 <span>{exam.label}</span>
               </label>
-            );
+            )
           })}
         </div>
-        {visibleExams.length === 0 ? <p className="text-secondary mt-3 text-sm">No hay exámenes para esta búsqueda.</p> : null}
+        {visibleExams.length === 0 ? (
+          <p className='text-secondary mt-3 text-sm'>No hay exámenes para esta búsqueda.</p>
+        ) : null}
         {shouldShowSelected ? (
-          <div className="mt-6">
-            <h4 className="text-xl font-semibold">Exámenes seleccionados: {selectedExams.length}</h4>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {selectedExams.map((exam) => {
-                const examLabel = allExams.find((item) => item.value === exam)?.label ?? exam;
-                return <PillFilter selected key={exam} label={examLabel} onRemove={() => toggleExamen(exam)} />;
+          <div className='mt-6'>
+            <h4 className='text-xl font-semibold'>
+              Exámenes seleccionados: {selectedExams.length}
+            </h4>
+            <div className='mt-3 flex flex-wrap gap-3'>
+              {selectedExams.map(exam => {
+                const examLabel = allExams.find(item => item.value === exam)?.label ?? exam
+                return (
+                  <PillFilter
+                    selected
+                    key={exam}
+                    label={examLabel}
+                    onRemove={() => toggleExamen(exam)}
+                  />
+                )
               })}
             </div>
           </div>
         ) : null}
-        {errors.examenes && <p className="text-red-500 text-xs mt-2">{errors.examenes.message}</p>}
+        {errors.examenes && <p className='text-red-500 text-xs mt-2'>{errors.examenes.message}</p>}
+
+        <div className='mt-6'>
+          <label className='block text-tertiary text-sm font-bold mb-1'>Observaciones</label>
+          <textarea
+            {...register('observaciones')}
+            className='w-full min-h-24 px-3 py-2 border border-gray-300 rounded-xl focus:border-transparent placeholder:text-secondary resize-y'
+            placeholder='Agregar observaciones de la solicitud'
+          />
+        </div>
       </section>
 
-      <div className="flex items-center justify-end gap-4 mt-6">
+      <div className='flex items-center justify-end gap-4 mt-6'>
         <Button
-          type="button"
+          type='button'
           onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending}
-          className="cursor-pointer whitespace-nowrap rounded-2xl disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={
+            isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending
+          }
+          className='cursor-pointer whitespace-nowrap rounded-2xl disabled:cursor-not-allowed disabled:opacity-60'
         >
           Guardar y crear solicitud
         </Button>
       </div>
-    </div >
-  );
+    </div>
+  )
 }

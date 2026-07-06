@@ -1,132 +1,106 @@
-'use client';
+'use client'
 
-import { Examen, Paciente } from '@/types';
-import { ArrowLeft, FileText, Mail } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import EstadoBadge from './EstadoBadge';
-import { Button } from './ui/Button';
+import { Examen, Paciente } from '@/types'
+import { ArrowLeft, FileText, Mail } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import EstadoBadge from './EstadoBadge'
+import { Button } from './ui/Button'
 
 interface AccionesExamenProps {
-  examen: Examen;
-  paciente: Paciente;
-  mostrarAccionesResultado?: boolean;
-  totalExamenesPaciente: number;
-  examenesCompletadosPaciente: number;
-  onEnviarEmail: (email: string) => Promise<void>;
+  examen: Examen
+  paciente: Paciente
+  mostrarAccionesResultado?: boolean
+  totalExamenesPaciente: number
+  examenesCompletadosPaciente: number
+  onEnviarEmail: (email: string) => Promise<void>
 }
 
 export default function AccionesExamen({
   examen,
   paciente,
   mostrarAccionesResultado = true,
-  totalExamenesPaciente,
-  examenesCompletadosPaciente,
   onEnviarEmail,
 }: AccionesExamenProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const cedulaParam = searchParams.get('cedula');
-  const [email, setEmail] = useState('');
-  const [showEmailModal, setShowEmailModal] = useState(false);
-
-  const completados = examenesCompletadosPaciente;
-  const total = totalExamenesPaciente;
-  const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
-  const porcentajeSeguro = Math.min(100, Math.max(0, porcentaje));
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const cedulaParam = searchParams.get('cedula')
+  const [email, setEmail] = useState('')
+  const [showEmailModal, setShowEmailModal] = useState(false)
 
   const handleVolver = () => {
     if (cedulaParam) {
-      router.push(`/dashboard/pacientes/${cedulaParam}`);
+      router.push(`/dashboard/pacientes/${cedulaParam}`)
     } else {
-      router.push('/dashboard/solicitudes');
+      router.push('/dashboard/solicitudes')
     }
-  };
-
+  }
 
   const handleImprimir = () => {
-    window.print();
-  };
+    window.print()
+  }
 
   const handleEnviarEmail = async () => {
     if (email) {
-      await onEnviarEmail(email);
-      setShowEmailModal(false);
-      setEmail('');
-      alert('Email enviado');
+      await onEnviarEmail(email)
+      setShowEmailModal(false)
+      setEmail('')
+      alert('Email enviado')
     }
-  };
-
-  const formatDateToDayOfYear = (isoDate: string) => {
-    const date = new Date(isoDate);
-    const year = date.getFullYear();
-
-    // Calcular el día del año
-    const startOfYear = new Date(year, 0, 1);
-    const diff = date.getTime() - startOfYear.getTime();
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-
-    // Formatear con ceros a la izquierda (3 dígitos)
-    const dayFormatted = String(dayOfYear).padStart(3, '0');
-
-    return `${year}-${dayFormatted}`;
   }
 
   return (
-    <div className="mb-6">
+    <div className='mb-6'>
       <div className='flex items-center mb-4 gap-4'>
-        <button
-          onClick={handleVolver}
-          className="cursor-pointer"
-        >
-          <ArrowLeft className="text-gray-700" />
+        <button onClick={handleVolver} className='cursor-pointer'>
+          <ArrowLeft className='text-gray-700' />
         </button>
-        <p className='text-primary text-2xl'><strong># Solicitud: </strong>{formatDateToDayOfYear(examen.fechaCreacion)}</p>
+        <p className='text-primary text-2xl'>
+          <strong># Solicitud: </strong>
+          {examen.orderNumber ?? examen.id}
+        </p>
         <EstadoBadge estado={examen.estado} />
       </div>
 
       <div className='bg-white rounded-3xl border border-border-default p-6'>
-        <div className=" md:items-center md:justify-between gap-4 ">
-
-          <div className='flex justify-between mb-4'>
-            <span className='text-xl text-secondary'>Paciente</span>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-36 overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full rounded-full bg-brand-primary transition-all" style={{ width: `${porcentajeSeguro}%` }} />
-              </div>
-              <span className="text-xs text-secondary">{`${completados}/${total}`}</span>
-            </div>
-          </div>
-
+        <div className=' md:items-center md:justify-between gap-4 '>
           <div className='flex justify-between items-end'>
             <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-semibold">{paciente.nombre}</p>
+              <div className='flex items-center justify-between'>
+                <p className='text-xl font-semibold'>{paciente.nombre}</p>
               </div>
-              <p className="text-secondary text-base  flex items-center gap-3 mt-4">
-                <span className="flex items-center gap-2"><img src="/svg/paciente/cedula.svg" alt="" /> {paciente.cedula}</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/phone.svg" alt="" /> {paciente.telefono}</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/calendar.svg" alt="" /> {paciente.edad} años</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/location.svg" alt="" /> {paciente.direccion}</span>
+              <p className='text-secondary text-base  flex items-center gap-3 mt-4'>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/cedula.svg' alt='' /> {paciente.cedula}
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/phone.svg' alt='' /> {paciente.telefono}
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/calendar.svg' alt='' /> {paciente.edad} años
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/location.svg' alt='' /> {paciente.direccion}
+                </span>
               </p>
             </div>
 
             {mostrarAccionesResultado && (
-              <div className="flex flex-wrap justify-between gap-2">
+              <div className='flex flex-wrap justify-between gap-2'>
                 <div className='flex items-center gap-3'>
                   <Button
                     onClick={() => setShowEmailModal(true)}
                     variant='outline'
-                    size="md"
-                    className="flex gap-2 text-sm items-center cursor-pointer"
+                    size='md'
+                    className='flex gap-2 text-sm items-center cursor-pointer'
                   >
                     <Mail size={24} /> Enviar Email
                   </Button>
                   <Button
                     onClick={handleImprimir}
                     variant='primary'
-                    size="md"
-                    className="flex gap-2 text-sm items-center cursor-pointer"
+                    size='md'
+                    className='flex gap-2 text-sm items-center cursor-pointer'
                   >
                     <FileText size={24} /> Imprimir todo
                   </Button>
@@ -136,37 +110,35 @@ export default function AccionesExamen({
           </div>
         </div>
 
-        {
-          mostrarAccionesResultado && showEmailModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Enviar por Email</h3>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 "
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleEnviarEmail}
-                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
-                  >
-                    Enviar
-                  </button>
-                  <button
-                    onClick={() => setShowEmailModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+        {mostrarAccionesResultado && showEmailModal && (
+          <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+            <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+              <h3 className='text-lg font-medium text-gray-900 mb-4'>Enviar por Email</h3>
+              <input
+                type='email'
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder='correo@ejemplo.com'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md mb-4 '
+              />
+              <div className='flex gap-2'>
+                <button
+                  onClick={handleEnviarEmail}
+                  className='flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md'
+                >
+                  Enviar
+                </button>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className='px-4 py-2 border border-gray-300 rounded-md'
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
-          )
-        }
+          </div>
+        )}
       </div>
-    </div >
-  );
+    </div>
+  )
 }

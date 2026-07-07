@@ -10,7 +10,8 @@ const menuItems = [
     { label: 'Crear Solicitud', iconSrc: '/svg/plus.svg', href: '/dashboard' },
     { label: 'Solicitudes', iconSrc: '/svg/list.svg', href: '/dashboard/solicitudes' },
     { label: 'Pacientes', iconSrc: '/svg/people.svg', href: '/dashboard/pacientes' },
-    { label: 'Plantillas', iconSrc: '/svg/list.svg', href: '/dashboard/exam-templates' }
+    { label: 'Plantillas', iconSrc: '/svg/list.svg', href: '/dashboard/exam-templates' },
+    { label: 'UI Kit', iconSrc: '/svg/list.svg', href: '/dashboard/ui-kit' }
 ]
 
 export default function Navbar() {

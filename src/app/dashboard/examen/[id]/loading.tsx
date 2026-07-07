@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
     <div className="h-full flex flex-col justify-center gap-6 animate-pulse p-8">
-      <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex gap-3 flex-wrap">
           <div className="h-9 w-24 bg-gray-200 rounded-md" />
           <div className="h-9 w-28 bg-gray-200 rounded-md" />
@@ -10,7 +10,7 @@ export default function Loading() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="bg-white rounded-lg border border-gray-200">
         <div className="border-b border-gray-200">
           <div className="flex gap-1 px-6 py-4">
             {Array.from({ length: 5 }).map((_, i) => (

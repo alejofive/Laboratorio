@@ -5,6 +5,8 @@ import { ExamTemplate, ExamTemplateField, ExamTemplateFieldType } from '@/types/
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { FieldLabel, SelectInput, TextInput } from '@/components/ui/FormField';
 import { ExamPreview } from './ExamPreview';
 
 interface ExamTemplateFormProps {
@@ -14,9 +16,6 @@ interface ExamTemplateFormProps {
   isSaving?: boolean;
 }
 
-const inputClass = 'w-full rounded-xl border border-border-input bg-surface px-3 py-2 text-sm text-primary outline-none transition focus:border-brand-soft focus:ring-2 focus:ring-brand-soft/30';
-const labelClass = 'mb-1 block text-primary text-sm font-semibold text-tertiary';
-
 function createEmptyField(): ExamTemplateField {
   return {
     key: '',
@@ -25,7 +24,6 @@ function createEmptyField(): ExamTemplateField {
     options: [],
     unit: '',
     reference_value: '',
-    required: false,
   };
 }
 
@@ -34,10 +32,6 @@ function normalizeTemplateForEditor(template: ExamTemplate): ExamTemplate {
     ...template,
     description: '',
     price: 0,
-    sections: template.sections.map((section) => ({
-      ...section,
-      fields: section.fields.map((field) => ({ ...field, required: false })),
-    })),
   };
 }
 
@@ -162,7 +156,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
           <button
             type="button"
             onClick={() => setViewMode('edit')}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${viewMode === 'edit' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}`}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${viewMode === 'edit' ? 'bg-surface text-primary' : 'text-secondary hover:text-primary'}`}
           >
             <Pencil size={16} />
             Edicion
@@ -170,7 +164,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
           <button
             type="button"
             onClick={() => setViewMode('preview')}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${viewMode === 'preview' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}`}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${viewMode === 'preview' ? 'bg-surface text-primary' : 'text-secondary hover:text-primary'}`}
           >
             <Eye size={16} />
             Vista previa
@@ -199,12 +193,12 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
-              <label className={labelClass}>Nombre del examen</label>
-              <input value={template.name} onChange={(event) => updateTemplate({ name: event.target.value })} className={inputClass} placeholder="Hematologia" />
+              <FieldLabel>Nombre del examen</FieldLabel>
+              <TextInput value={template.name} onChange={(event) => updateTemplate({ name: event.target.value })} placeholder="Hematologia" />
             </div>
             <div>
-              <label className={labelClass}>Categoria</label>
-              <input value={template.category ?? ''} onChange={(event) => updateTemplate({ category: event.target.value })} className={inputClass} placeholder="hematology" />
+              <FieldLabel>Categoria</FieldLabel>
+              <TextInput value={template.category ?? ''} onChange={(event) => updateTemplate({ category: event.target.value })} placeholder="hematology" />
             </div>
           </div>
         </section>
@@ -223,13 +217,13 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
             <div key={section._id ?? sectionIndex} className="rounded-3xl border border-border-default bg-surface p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex-1">
-                  <label className={`text-lg! text-primary! ${labelClass} `}>Seccion {sectionIndex + 1}</label>
-                  <input value={section.title} onChange={(event) => updateSectionTitle(sectionIndex, event.target.value)} className={inputClass} placeholder="Resultados" />
+                  <FieldLabel className="text-lg text-primary">Seccion {sectionIndex + 1}</FieldLabel>
+                  <TextInput value={section.title} onChange={(event) => updateSectionTitle(sectionIndex, event.target.value)} placeholder="Resultados" />
                 </div>
-                <button type="button" onClick={() => removeSection(sectionIndex)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-secondary hover:bg-surface-muted">
+                <Button type="button" onClick={() => removeSection(sectionIndex)} variant="outline" size="sm">
                   <Trash2 size={16} />
                   Eliminar seccion
-                </button>
+                </Button>
               </div>
 
               <div className="mt-5 space-y-4">
@@ -237,43 +231,43 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                   <div key={field._id ?? fieldIndex} className="rounded-2xl border border-border-default bg-canvas/60 p-4">
                     <div className="grid gap-4 lg:grid-cols-4">
                       <div>
-                        <label className={labelClass}>Nombre</label>
-                        <input value={field.label} onChange={(event) => updateField(sectionIndex, fieldIndex, { label: event.target.value })} className={inputClass} placeholder="Leucocitos" />
+                        <FieldLabel>Nombre</FieldLabel>
+                        <TextInput value={field.label} onChange={(event) => updateField(sectionIndex, fieldIndex, { label: event.target.value })} placeholder="Leucocitos" />
                       </div>
                       <div>
-                        <label className={labelClass}>Tipo</label>
-                        <select value={field.type} onChange={(event) => updateField(sectionIndex, fieldIndex, { type: event.target.value as ExamTemplateFieldType })} className={inputClass}>
+                        <FieldLabel>Tipo</FieldLabel>
+                        <SelectInput value={field.type} onChange={(event) => updateField(sectionIndex, fieldIndex, { type: event.target.value as ExamTemplateFieldType })}>
                           {FIELD_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-                        </select>
+                        </SelectInput>
                       </div>
                       <div>
-                        <label className={labelClass}>Unidad</label>
-                        <input value={field.unit ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { unit: event.target.value })} className={inputClass} placeholder="mm3" />
+                        <FieldLabel>Unidad</FieldLabel>
+                        <TextInput value={field.unit ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { unit: event.target.value })} placeholder="mm3" />
                       </div>
                       <div>
-                        <label className={labelClass}>Valores de referencia</label>
-                        <input value={field.reference_value ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { reference_value: event.target.value })} className={inputClass} placeholder="4.000 - 10.000" />
+                        <FieldLabel>Valores de referencia</FieldLabel>
+                        <TextInput value={field.reference_value ?? ''} onChange={(event) => updateField(sectionIndex, fieldIndex, { reference_value: event.target.value })} placeholder="4.000 - 10.000" />
                       </div>
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-                      <button type="button" onClick={() => removeField(sectionIndex, fieldIndex)} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+                      <Button type="button" onClick={() => removeField(sectionIndex, fieldIndex)} variant="link" size="sm" className="text-red-600 hover:text-red-700">
                         <Trash2 size={16} />
                         Eliminar campo
-                      </button>
+                      </Button>
                     </div>
 
                     {field.type === 'select' || field.type === 'radio' ? (
                       <div className="mt-4 rounded-2xl border border-dashed border-border-input p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-bold text-tertiary">Opciones</p>
-                          <button type="button" onClick={() => addOption(sectionIndex, fieldIndex)} className="text-sm font-bold text-brand-primary hover:underline">+ Agregar opcion</button>
+                          <Button type="button" onClick={() => addOption(sectionIndex, fieldIndex)} variant="link" size="sm">+ Agregar opcion</Button>
                         </div>
                         <div className="mt-3 space-y-2">
                           {(field.options ?? []).map((option, optionIndex) => (
                             <div key={optionIndex} className="flex gap-2">
-                              <input value={option} onChange={(event) => updateOption(sectionIndex, fieldIndex, optionIndex, event.target.value)} className={inputClass} placeholder="A+" />
-                              <button type="button" onClick={() => removeOption(sectionIndex, fieldIndex, optionIndex)} className="rounded-xl border border-border-default px-3 text-secondary hover:bg-surface-muted">Quitar</button>
+                              <TextInput value={option} onChange={(event) => updateOption(sectionIndex, fieldIndex, optionIndex, event.target.value)} placeholder="A+" />
+                              <Button type="button" onClick={() => removeOption(sectionIndex, fieldIndex, optionIndex)} variant="outline" size="sm">Quitar</Button>
                             </div>
                           ))}
                         </div>
@@ -283,17 +277,17 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                 ))}
               </div>
 
-              <button type="button" onClick={() => addField(sectionIndex)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-active px-4 py-2 text-sm font-bold text-brand-primary hover:bg-brand-soft/20">
+              <Button type="button" onClick={() => addField(sectionIndex)} variant="outline" size="sm" className="mt-4">
                 <Plus size={16} />
                 Agregar campo
-              </button>
+              </Button>
             </div>
           ))}
 
-          <button type="button" onClick={addSection} className="inline-flex items-center gap-2 rounded-2xl border border-border-default bg-surface px-4 py-3 text-sm font-bold text-brand-primary hover:bg-brand-active">
+          <Button type="button" onClick={addSection} variant="outline">
             <Plus size={18} />
             Agregar seccion
-          </button>
+          </Button>
         </section>
 
       </div>
@@ -302,11 +296,11 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
       )}
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button type="button" onClick={() => router.push('/dashboard/exam-templates')} className="rounded-2xl border border-border-default px-5 py-3 text-sm font-bold text-secondary hover:bg-surface-muted">Cancelar</button>
-        <button type="submit" disabled={isSaving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-primary px-5 py-3 text-sm font-bold text-white hover:bg-primary disabled:opacity-60">
+        <Button type="button" onClick={() => router.push('/dashboard/exam-templates')} variant="outline">Cancelar</Button>
+        <Button type="submit" disabled={isSaving}>
           <Save size={18} />
           {isSaving ? 'Guardando...' : 'Guardar examen'}
-        </button>
+        </Button>
       </div>
     </form>
   );

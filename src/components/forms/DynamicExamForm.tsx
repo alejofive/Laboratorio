@@ -1,6 +1,13 @@
 'use client'
 
-import { InputNumber } from '@/components/ui/InputNumber'
+import {
+  CheckboxInput,
+  FieldLabel,
+  RadioInput,
+  SelectInput,
+  TextareaInput,
+  TextInput,
+} from '@/components/ui/FormField'
 import { TemplateFormValues, validateTemplateValues } from '@/lib/examTemplate'
 import { ExamTemplateSection } from '@/types/exam-template'
 import { useEffect } from 'react'
@@ -31,8 +38,19 @@ export default function DynamicExamForm({
     })
   }
 
-  const renderReference = (referenceValue?: string) =>
-    referenceValue ? <p className='mt-1 ml-4 text-xs text-secondary'>{referenceValue}</p> : null
+  const updateNumericValue = (key: string, value: string) => {
+    if (!/^\d*([.,]\d*)?$/.test(value)) return
+    updateValue(key, value)
+  }
+
+  const renderReference = (referenceValue?: string) => {
+    if (!referenceValue) return null
+
+    const referenceLabel = /^ref\b/i.test(referenceValue)
+      ? referenceValue
+      : `Ref: ${referenceValue}`
+    return <p className='mt-1 text-xs text-secondary'>{referenceLabel}</p>
+  }
 
   const renderReadOnlyValue = (
     key: string,
@@ -42,8 +60,8 @@ export default function DynamicExamForm({
     className = '',
   ) => (
     <div key={key} className={className}>
-      <label className='mb-1 block text-sm font-medium text-tertiary'>{label}</label>
-      <p className='flex min-h-12 w-full items-center rounded-xl border border-border-input bg-white px-4 text-base text-primary wrap-break-word'>
+      <FieldLabel className='font-medium'>{label}</FieldLabel>
+      <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
         {String(value ?? '').trim() || '-'}
       </p>
       {renderReference(referenceValue)}
@@ -58,167 +76,10 @@ export default function DynamicExamForm({
           className='rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5'
         >
           <h3 className='mb-4 text-base font-bold uppercase text-primary'>{section.title}</h3>
-          <div className='grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4'>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
             {section.fields.map(field => {
               const labelBase = field.unit ? `${field.label} (${field.unit})` : field.label
               const value = values[field.key]
-
-              if (field.type === 'textarea') {
-                if (readOnly) {
-                  return renderReadOnlyValue(
-                    field._id ?? field.key,
-                    labelBase,
-                    value,
-                    field.reference_value,
-                    'md:col-span-2 lg:col-span-4',
-                  )
-                }
-
-                return (
-                  <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
-                    <label className='mb-1 block text-sm font-medium text-tertiary'>
-                      {labelBase}
-                    </label>
-                    <textarea
-                      value={String(value ?? '')}
-                      onChange={event => updateValue(field.key, event.target.value)}
-                      readOnly={readOnly}
-                      rows={3}
-                      placeholder={field.label}
-                      className='min-h-35 w-full rounded-xl border border-border-input bg-white px-4 py-3 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none'
-                    />
-                    {renderReference(field.reference_value)}
-                  </div>
-                )
-              }
-
-              if (field.type === 'select') {
-                if (readOnly) {
-                  return renderReadOnlyValue(
-                    field._id ?? field.key,
-                    labelBase,
-                    value,
-                    field.reference_value,
-                  )
-                }
-
-                return (
-                  <div key={field._id ?? field.key}>
-                    <label className='mb-1 block text-sm font-medium text-tertiary'>
-                      {labelBase}
-                    </label>
-                    <select
-                      value={String(value ?? '')}
-                      onChange={event => updateValue(field.key, event.target.value)}
-                      disabled={readOnly}
-                      className='h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary focus:border-brand-primary focus:outline-none'
-                    >
-                      <option value=''>Seleccionar</option>
-                      {field.options.map(option => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    {renderReference(field.reference_value)}
-                  </div>
-                )
-              }
-
-              if (field.type === 'checkbox') {
-                if (readOnly) {
-                  return (
-                    <div key={field._id ?? field.key} className='col-span-2'>
-                      <label className='mb-1 block text-sm font-medium text-tertiary'>
-                        {labelBase}
-                      </label>
-                      <p className='flex min-h-12 w-full items-center rounded-xl border border-border-input bg-white px-4 text-base text-primary break-words'>
-                        {value ? 'Si' : 'No'}
-                      </p>
-                      {renderReference(field.reference_value)}
-                    </div>
-                  )
-                }
-
-                return (
-                  <label
-                    key={field._id ?? field.key}
-                    className='flex items-center gap-2 text-sm text-tertiary'
-                  >
-                    <input
-                      type='checkbox'
-                      checked={Boolean(value)}
-                      onChange={event => updateValue(field.key, event.target.checked)}
-                      disabled={readOnly}
-                    />
-                    {labelBase}
-                    {renderReference(field.reference_value)}
-                  </label>
-                )
-              }
-
-              if (field.type === 'radio') {
-                if (readOnly) {
-                  return renderReadOnlyValue(
-                    field._id ?? field.key,
-                    labelBase,
-                    value,
-                    field.reference_value,
-                  )
-                }
-
-                return (
-                  <div key={field._id ?? field.key}>
-                    <label className='mb-2 block text-sm font-medium text-tertiary'>
-                      {labelBase}
-                    </label>
-                    <div className='flex flex-wrap gap-4'>
-                      {field.options.map(option => (
-                        <label
-                          key={option}
-                          className='flex items-center gap-2 text-sm text-tertiary'
-                        >
-                          <input
-                            type='radio'
-                            name={field.key}
-                            value={option}
-                            checked={String(value ?? '') === option}
-                            onChange={event => updateValue(field.key, event.target.value)}
-                            disabled={readOnly}
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                    {renderReference(field.reference_value)}
-                  </div>
-                )
-              }
-
-              if (field.type === 'number') {
-                if (readOnly) {
-                  return renderReadOnlyValue(
-                    field._id ?? field.key,
-                    labelBase,
-                    value,
-                    field.reference_value,
-                  )
-                }
-
-                return (
-                  <div key={field._id ?? field.key}>
-                    <InputNumber
-                      key={field._id ?? field.key}
-                      label={labelBase}
-                      value={String(value ?? '')}
-                      onChange={nextValue => updateValue(field.key, nextValue)}
-                      placeholder={field.label}
-                      readOnly={readOnly}
-                    />
-                    {renderReference(field.reference_value)}
-                  </div>
-                )
-              }
 
               if (readOnly) {
                 return renderReadOnlyValue(
@@ -229,18 +90,93 @@ export default function DynamicExamForm({
                 )
               }
 
+              if (field.type === 'textarea') {
+                return (
+                  <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
+                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <TextareaInput
+                      value={String(value ?? '')}
+                      onChange={event => updateValue(field.key, event.target.value)}
+                      rows={3}
+                    />
+                    {renderReference(field.reference_value)}
+                  </div>
+                )
+              }
+
+              if (field.type === 'select') {
+                return (
+                  <div key={field._id ?? field.key}>
+                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <SelectInput
+                      value={String(value ?? '')}
+                      onChange={event => updateValue(field.key, event.target.value)}
+                    >
+                      <option value=''>Seleccionar</option>
+                      {field.options.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </SelectInput>
+                    {renderReference(field.reference_value)}
+                  </div>
+                )
+              }
+
+              if (field.type === 'checkbox') {
+                return (
+                  <div key={field._id ?? field.key}>
+                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <CheckboxInput
+                      checked={Boolean(value)}
+                      onChange={event => updateValue(field.key, event.target.checked)}
+                      label='Si'
+                      className='min-h-12'
+                    />
+                    {renderReference(field.reference_value)}
+                  </div>
+                )
+              }
+
+              if (field.type === 'radio') {
+                return (
+                  <div key={field._id ?? field.key}>
+                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <div className='flex min-h-12 flex-wrap items-center gap-4'>
+                      {field.options.map(option => (
+                        <RadioInput
+                          key={option}
+                          name={field.key}
+                          value={option}
+                          checked={String(value ?? '') === option}
+                          onChange={event => updateValue(field.key, event.target.value)}
+                          label={option}
+                        />
+                      ))}
+                    </div>
+                    {renderReference(field.reference_value)}
+                  </div>
+                )
+              }
+
               return (
                 <div key={field._id ?? field.key}>
-                  <label className='mb-1 block text-sm font-medium text-tertiary'>
-                    {labelBase}
-                  </label>
-                  <input
-                    type='text'
+                  <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                  <TextInput
+                    type={field.type === 'date' ? 'date' : 'text'}
+                    inputMode={field.type === 'number' ? 'decimal' : undefined}
                     value={String(value ?? '')}
-                    onChange={event => updateValue(field.key, event.target.value)}
+                    onChange={event => {
+                      if (field.type === 'number') {
+                        updateNumericValue(field.key, event.target.value)
+                        return
+                      }
+
+                      updateValue(field.key, event.target.value)
+                    }}
                     readOnly={readOnly}
-                    placeholder={field.label}
-                    className='h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none'
+                    className='h-12'
                   />
                   {renderReference(field.reference_value)}
                 </div>

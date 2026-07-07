@@ -18,6 +18,13 @@ import DetallePaciente from './DetallePaciente'
 import { PillFilter } from './PillFilter'
 import TopResumen from './TopResumen'
 import { Button } from './ui/Button'
+import {
+  FieldLabel,
+  getFieldButtonClass,
+  SelectInput,
+  TextareaInput,
+  TextInput,
+} from './ui/FormField'
 import SvgIcon from './ui/SvgIcon'
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles'
@@ -302,19 +309,14 @@ export default function NuevoPacienteForm() {
     [currentYear],
   )
   const birthMonthOptions =
-    Number(birthDateDraft.year) === currentYear
-      ? birthMonths.slice(0, currentMonth)
-      : birthMonths
+    Number(birthDateDraft.year) === currentYear ? birthMonths.slice(0, currentMonth) : birthMonths
   const birthDraftYear = Number(birthDateDraft.year) || currentYear
   const birthDraftMonth = Number(birthDateDraft.month) || 1
   const birthMaxDay =
     birthDraftYear === currentYear && birthDraftMonth === currentMonth
       ? currentDay
       : getDaysInMonth(birthDraftYear, birthDraftMonth)
-  const birthDayOptions = Array.from(
-    { length: birthMaxDay },
-    (_, index) => index + 1,
-  )
+  const birthDayOptions = Array.from({ length: birthMaxDay }, (_, index) => index + 1)
   const shouldShowSelected = selectedExams.length > 0
   const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0
   const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0
@@ -517,7 +519,7 @@ export default function NuevoPacienteForm() {
                     ) : null}
 
                     {shouldShowResults ? (
-                      <div className='border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0 shadow-2xl'>
+                      <div className='border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0'>
                         {results.length > 0 ? (
                           results.map((result, index) => (
                             <button
@@ -577,13 +579,13 @@ export default function NuevoPacienteForm() {
 
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Cédula</label>
-                  <input
+                  <FieldLabel>Cédula</FieldLabel>
+                  <TextInput
                     type='text'
                     inputMode='numeric'
                     value={cedulaValue}
                     onChange={e => setValue('cedula', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.cedula ? 'border-red-500' : 'border-gray-300'}`}
+                    error={Boolean(errors.cedula)}
                     placeholder='Ingrese cédula'
                   />
                   {errors.cedula && (
@@ -592,12 +594,12 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Nombres</label>
-                  <input
+                  <FieldLabel>Nombres</FieldLabel>
+                  <TextInput
                     type='text'
                     {...register('nombre', { required: 'El nombre es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder='Ingrese nombre'
+                    error={Boolean(errors.nombre)}
+                    placeholder='Ingrese nombres'
                   />
                   {errors.nombre && (
                     <p className='text-red-500 text-xs mt-1'>{errors.nombre.message}</p>
@@ -605,12 +607,12 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Apellidos</label>
-                  <input
+                  <FieldLabel>Apellidos</FieldLabel>
+                  <TextInput
                     type='text'
                     {...register('apellido', { required: 'El apellido es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.apellido ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder='Ingrese apellido'
+                    error={Boolean(errors.apellido)}
+                    placeholder='Ingrese apellidos'
                   />
                   {errors.apellido && (
                     <p className='text-red-500 text-xs mt-1'>{errors.apellido.message}</p>
@@ -618,9 +620,7 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>
-                    Fecha de nacimiento
-                  </label>
+                  <FieldLabel>Fecha de nacimiento</FieldLabel>
                   <input
                     type='hidden'
                     {...register('fechaNacimiento', {
@@ -631,7 +631,7 @@ export default function NuevoPacienteForm() {
                     <button
                       type='button'
                       onClick={() => setShowBirthDatePicker(prev => !prev)}
-                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 border rounded-xl bg-white text-left transition-colors hover:bg-gray-50 focus:outline-none focus:border-brand-soft ${errors.fechaNacimiento ? 'border-red-500' : 'border-gray-300'}`}
+                      className={getFieldButtonClass(Boolean(errors.fechaNacimiento))}
                     >
                       <span className={birthDateValue ? 'text-primary' : 'text-secondary'}>
                         {birthDateLabel}
@@ -640,7 +640,7 @@ export default function NuevoPacienteForm() {
                     </button>
 
                     {showBirthDatePicker ? (
-                      <div className='absolute left-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.12)]'>
+                      <div className='absolute left-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3'>
                         <div className='mb-3'>
                           <p className='text-sm font-bold text-tertiary'>
                             Selecciona día, mes y año
@@ -654,10 +654,10 @@ export default function NuevoPacienteForm() {
                             <label className='mb-1 block text-xs font-bold text-secondary'>
                               Día
                             </label>
-                            <select
+                            <SelectInput
                               value={birthDateDraft.day}
                               onChange={event => onBirthDatePartChange('day', event.target.value)}
-                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                              className='rounded-lg px-2 text-sm text-tertiary'
                             >
                               <option value=''>Día</option>
                               {birthDayOptions.map(day => (
@@ -665,16 +665,16 @@ export default function NuevoPacienteForm() {
                                   {day}
                                 </option>
                               ))}
-                            </select>
+                            </SelectInput>
                           </div>
                           <div>
                             <label className='mb-1 block text-xs font-bold text-secondary'>
                               Mes
                             </label>
-                            <select
+                            <SelectInput
                               value={birthDateDraft.month}
                               onChange={event => onBirthDatePartChange('month', event.target.value)}
-                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                              className='rounded-lg px-2 text-sm text-tertiary'
                             >
                               <option value=''>Mes</option>
                               {birthMonthOptions.map((month, index) => (
@@ -682,16 +682,16 @@ export default function NuevoPacienteForm() {
                                   {month}
                                 </option>
                               ))}
-                            </select>
+                            </SelectInput>
                           </div>
                           <div>
                             <label className='mb-1 block text-xs font-bold text-secondary'>
                               Año
                             </label>
-                            <select
+                            <SelectInput
                               value={birthDateDraft.year}
                               onChange={event => onBirthDatePartChange('year', event.target.value)}
-                              className='w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-tertiary outline-none transition-colors focus:border-brand-soft'
+                              className='rounded-lg px-2 text-sm text-tertiary'
                             >
                               <option value=''>Año</option>
                               {birthYearOptions.map(year => (
@@ -699,19 +699,13 @@ export default function NuevoPacienteForm() {
                                   {year}
                                 </option>
                               ))}
-                            </select>
+                            </SelectInput>
                           </div>
-                        </div>
-                        <div className='mt-3 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2'>
-                          <span className='text-xs font-bold text-secondary'>
-                            Fecha seleccionada
-                          </span>
-                          <span className='text-sm font-bold text-tertiary'>{birthDateLabel}</span>
                         </div>
                         <div className='mt-2 flex justify-between border-t border-gray-100 pt-2'>
                           <button
                             type='button'
-                            className='rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
+                            className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
                             onClick={onBirthDateClear}
                             disabled={!birthDateValue}
                           >
@@ -719,7 +713,7 @@ export default function NuevoPacienteForm() {
                           </button>
                           <button
                             type='button'
-                            className='rounded-md px-2 py-1 text-base font-bold text-secondary transition-colors hover:bg-gray-200'
+                            className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200'
                             onClick={() => setShowBirthDatePicker(false)}
                           >
                             Cerrar
@@ -734,10 +728,10 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Sexo</label>
-                  <select
+                  <FieldLabel>Sexo</FieldLabel>
+                  <SelectInput
                     {...register('sexo', { required: 'El sexo es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl bg-white focus:border-transparent text-secondary ${errors.sexo ? 'border-red-500' : 'border-gray-300'}`}
+                    error={Boolean(errors.sexo)}
                     defaultValue=''
                   >
                     <option value='' disabled>
@@ -746,19 +740,19 @@ export default function NuevoPacienteForm() {
                     <option value='female'>Femenino</option>
                     <option value='male'>Masculino</option>
                     <option value='other'>Otro</option>
-                  </select>
+                  </SelectInput>
                   {errors.sexo && (
                     <p className='text-red-500 text-xs mt-1'>{errors.sexo.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Teléfono</label>
-                  <input
+                  <FieldLabel>Teléfono</FieldLabel>
+                  <TextInput
                     type='tel'
                     {...register('telefono', { required: 'El teléfono es requerido' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.telefono ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder='0414-0000000'
+                    error={Boolean(errors.telefono)}
+                    placeholder='Ingrese número de teléfono'
                   />
                   {errors.telefono && (
                     <p className='text-red-500 text-xs mt-1'>{errors.telefono.message}</p>
@@ -766,11 +760,11 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div className='md:col-span-3'>
-                  <label className='block text-tertiary text-sm font-bold mb-1'>Dirección</label>
-                  <input
+                  <FieldLabel>Dirección</FieldLabel>
+                  <TextInput
                     type='text'
                     {...register('direccion', { required: 'La dirección es requerida' })}
-                    className={`w-full px-3 py-2 border rounded-xl focus:border-transparent placeholder:text-secondary ${errors.direccion ? 'border-red-500' : 'border-gray-300'}`}
+                    error={Boolean(errors.direccion)}
                     placeholder='Av. / Urb / Calle'
                   />
                   {errors.direccion && (
@@ -791,8 +785,8 @@ export default function NuevoPacienteForm() {
               Selecciona uno o varios exámenes para esta solicitud.
             </p>
           </div>
-          <input
-            className='text-secondary border-border-input rounded-xl border px-4 py-2 text-base'
+          <TextInput
+            className='text-secondary'
             placeholder='Buscar examen'
             value={searchExam}
             onChange={event => setSearchExam(event.target.value)}
@@ -862,10 +856,9 @@ export default function NuevoPacienteForm() {
         {errors.examenes && <p className='text-red-500 text-xs mt-2'>{errors.examenes.message}</p>}
 
         <div className='mt-6'>
-          <label className='block text-tertiary text-sm font-bold mb-1'>Observaciones</label>
-          <textarea
+          <FieldLabel>Observaciones</FieldLabel>
+          <TextareaInput
             {...register('observaciones')}
-            className='w-full min-h-24 px-3 py-2 border border-gray-300 rounded-xl focus:border-transparent placeholder:text-secondary resize-y'
             placeholder='Agregar observaciones de la solicitud'
           />
         </div>
@@ -878,7 +871,7 @@ export default function NuevoPacienteForm() {
           disabled={
             isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending
           }
-          className='cursor-pointer whitespace-nowrap rounded-2xl disabled:cursor-not-allowed disabled:opacity-60'
+          className='disabled:cursor-not-allowed disabled:opacity-60'
         >
           Guardar y crear solicitud
         </Button>

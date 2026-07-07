@@ -22,7 +22,6 @@ export interface ExamTemplateField {
   options: string[];
   unit?: string;
   reference_value?: string;
-  required: boolean;
 }
 
 export interface ExamTemplateSection {

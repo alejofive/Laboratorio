@@ -7,7 +7,6 @@ export interface ExamTemplatePayloadField {
   options?: string[];
   unit?: string;
   reference_value?: string;
-  required: boolean;
 }
 
 export interface ExamTemplatePayloadSection {
@@ -131,7 +130,6 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
           key: field.key.trim(),
           label: field.label.trim(),
           type: field.type,
-          required: false,
         };
 
         if (field.unit?.trim()) {

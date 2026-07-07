@@ -21,7 +21,6 @@ export function normalizeTemplateSections(sections?: ExamTemplateSection[]): Exa
       ...field,
       label: field.label || field.key,
       options: Array.isArray(field.options) ? field.options : [],
-      required: false,
       type: field.type || 'text',
     })),
   }));
@@ -66,27 +65,8 @@ export function buildInitialValuesFromTemplate(
 }
 
 export function validateTemplateValues(sections: ExamTemplateSection[], values: TemplateFormValues): boolean {
-  for (const section of sections) {
-    for (const field of section.fields) {
-      if (!field.required) continue;
-
-      const value = values[field.key];
-      if (field.type === 'checkbox') {
-        if (!value) return false;
-        continue;
-      }
-
-      if (field.type === 'radio') {
-        const selected = String(value ?? '').trim();
-        if (!selected) return false;
-        if (field.options.length > 0 && !field.options.includes(selected)) return false;
-        continue;
-      }
-
-      if (String(value ?? '').trim() === '') return false;
-    }
-  }
-
+  void sections;
+  void values;
   return true;
 }
 

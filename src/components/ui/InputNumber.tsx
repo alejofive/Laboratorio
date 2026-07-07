@@ -2,6 +2,7 @@
 
 import { Check, Pencil, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { FieldLabel, TextInput } from './FormField';
 
 interface InputNumberProps {
   label?: string;
@@ -76,14 +77,15 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
         <div className="flex items-center gap-1 mb-1">
           {isEditingLabel ? (
             <div className="flex items-center gap-1 flex-1">
-              <input
+              <TextInput
                 ref={labelInputRef}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={labelEditValue}
                 onChange={e => setLabelEditValue(e.target.value)}
                 onKeyDown={handleLabelKeyDown}
                 onBlur={handleLabelSave}
-                className="w-full rounded-xl border border-border-input px-3 py-2 text-sm font-medium text-tertiary"
+                className="h-9 text-sm"
               />
               <button type="button" onClick={handleLabelSave} className="text-green-600 hover:text-green-700">
                 <Check className="w-3 h-3" />
@@ -94,12 +96,12 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
             </div>
           ) : (
             <div className="flex items-center gap-1 flex-1">
-              <label
-                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-brand-primary' : 'text-tertiary'}`}
+              <FieldLabel
+                className={`mb-0 font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-brand-primary' : ''}`}
                 onClick={handleLabelClick}
               >
                 {label}
-              </label>
+              </FieldLabel>
               {!readOnly && onLabelChange && (
                 <Pencil className="w-3 h-3 text-gray-400 cursor-pointer hover:text-brand-primary" onClick={handleLabelClick} />
               )}
@@ -107,7 +109,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
           )}
         </div>
       )}
-      <input
+      <TextInput
         ref={inputRef}
         type="text"
         inputMode="decimal"
@@ -115,7 +117,7 @@ export function InputNumber({ label, value, onChange, placeholder, readOnly = fa
         onChange={handleChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        className="h-12 w-full rounded-xl border border-border-input bg-white px-4 text-base text-primary placeholder:text-sm placeholder:text-secondary/70 focus:border-brand-primary focus:outline-none disabled:opacity-100"
+        className="h-12"
       />
     </div>
   );

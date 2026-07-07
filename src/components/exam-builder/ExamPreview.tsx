@@ -1,22 +1,28 @@
 'use client';
 
 import { ExamTemplate, ExamTemplateField } from '@/types/exam-template';
+import {
+  CheckboxInput,
+  FieldLabel,
+  RadioInput,
+  SelectInput,
+  TextareaInput,
+  TextInput,
+} from '@/components/ui/FormField';
 
 function PreviewControl({ field, label }: { field: ExamTemplateField; label: string }) {
-  const baseClass = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:border-transparent bg-white disabled:bg-white disabled:text-secondary';
-
   if (field.type === 'textarea') {
-    return <textarea rows={3} disabled placeholder={field.label || 'Texto largo'} className={baseClass} />;
+    return <TextareaInput rows={3} disabled placeholder={field.label || 'Texto largo'} />;
   }
 
   if (field.type === 'select') {
     return (
-      <select disabled className={baseClass} defaultValue="">
+      <SelectInput disabled defaultValue="">
         <option value="">Seleccionar</option>
         {(field.options ?? []).map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
-      </select>
+      </SelectInput>
     );
   }
 
@@ -25,10 +31,7 @@ function PreviewControl({ field, label }: { field: ExamTemplateField; label: str
       <div className="flex flex-wrap gap-4 text-sm text-tertiary">
         {field.options.length === 0 ? <span>Opciones</span> : null}
         {field.options.map((option) => (
-          <label key={option} className="flex items-center gap-2">
-            <input type="radio" disabled />
-            {option}
-          </label>
+          <RadioInput key={option} disabled label={option} />
         ))}
       </div>
     );
@@ -36,15 +39,11 @@ function PreviewControl({ field, label }: { field: ExamTemplateField; label: str
 
   if (field.type === 'checkbox') {
     return (
-      <label className="flex items-center gap-2 text-sm text-tertiary">
-        <input type="checkbox" disabled />
-        {label}
-        {field.required ? <span className="text-brand-logo">*</span> : null}
-      </label>
+      <CheckboxInput disabled label={label} />
     );
   }
 
-  return <input type={field.type === 'date' ? 'date' : field.type} disabled placeholder={field.label || 'Valor'} className={baseClass} />;
+  return <TextInput type={field.type === 'date' ? 'date' : 'text'} inputMode={field.type === 'number' ? 'decimal' : undefined} disabled placeholder={field.label || 'Valor'} />;
 }
 
 export function ExamPreview({ template }: { template: ExamTemplate }) {
@@ -76,10 +75,9 @@ export function ExamPreview({ template }: { template: ExamTemplate }) {
                 return (
                 <div key={field._id ?? fieldIndex} className={className}>
                   {field.type !== 'checkbox' ? (
-                    <label className="block text-sm font-medium text-tertiary mb-1">
+                    <FieldLabel>
                       {label}
-                      {field.required ? <span className="text-brand-logo"> *</span> : null}
-                    </label>
+                    </FieldLabel>
                   ) : null}
                   <PreviewControl field={field} label={label} />
                 </div>

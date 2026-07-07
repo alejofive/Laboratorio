@@ -1,12 +1,11 @@
-'use client';
+'use client'
 
-import { useLab } from '@/context/LabContext';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Eye, Plus, Check } from 'lucide-react';
-import EstadoBadge from '@/components/EstadoBadge';
-import { TipoExamen } from '@/types';
-import { useRouter } from 'next/navigation';
+import EstadoBadge from '@/components/EstadoBadge'
+import { useLab } from '@/context/LabContext'
+import { TipoExamen } from '@/types'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 
 const examLabels: Record<TipoExamen, string> = {
   dengue: 'Dengue',
@@ -37,180 +36,195 @@ const examLabels: Record<TipoExamen, string> = {
   serologia: 'Serología',
   tipo_sangre: 'Tipo de sangre',
   vdrl_hepatitis: 'VDRL Hepatitis y demas',
-};
+}
 
 export default function PacienteHistorialPage() {
-  const router = useRouter();
-  const params = useParams();
-  const cedula = params.cedula as string;
-  const { pacientes, examenes } = useLab();
+  const router = useRouter()
+  const params = useParams()
+  const cedula = params.cedula as string
+  const { pacientes, examenes } = useLab()
 
   const parseFechaPaciente = (fecha: string) => {
-    const [dia, mes, anio] = fecha.split('/').map(Number);
-    return new Date(anio, (mes || 1) - 1, dia || 1).getTime();
-  };
+    const [dia, mes, anio] = fecha.split('/').map(Number)
+    return new Date(anio, (mes || 1) - 1, dia || 1).getTime()
+  }
 
   const pacientesDelHistorial = pacientes
     .filter(p => p.cedula === cedula)
-    .sort((a, b) => parseFechaPaciente(b.fecha) - parseFechaPaciente(a.fecha));
+    .sort((a, b) => parseFechaPaciente(b.fecha) - parseFechaPaciente(a.fecha))
 
-  const pacienteData = pacientesDelHistorial[0];
+  const pacienteData = pacientesDelHistorial[0]
 
   if (!pacienteData) {
     return (
-      <div className="px-8 py-5 w-full min-h-screen">
-        <Link href="/dashboard/pacientes" className="inline-flex items-center gap-1hover:underline mb-4">
-          <ArrowLeft className="w-4 h-4" />
+      <div className='p-9 w-full min-h-screen'>
+        <Link
+          href='/dashboard/pacientes'
+          className='inline-flex items-center gap-1hover:underline mb-4'
+        >
+          <ArrowLeft className='w-4 h-4' />
           Volver
         </Link>
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <p className="text-gray-500">Paciente no encontrado.</p>
+        <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
+          <p className='text-gray-500'>Paciente no encontrado.</p>
         </div>
       </div>
-    );
+    )
   }
 
-  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado';
+  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado'
 
-  const historialVisitas = pacientesDelHistorial.map((visita) => {
+  const historialVisitas = pacientesDelHistorial.map(visita => {
     const examenesVisita = examenes
       .filter(examen => examen.pacienteId === visita.id)
-      .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
+      .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime())
 
-    return { visita, examenesVisita };
-  });
+    return { visita, examenesVisita }
+  })
 
   const handleVolver = () => {
-    router.push(`/dashboard/pacientes`);
-  };
+    router.push(`/dashboard/pacientes`)
+  }
 
   const formatDateToDayOfYear = (isoDate: string) => {
-    const date = new Date(isoDate);
-    const year = date.getFullYear();
+    const date = new Date(isoDate)
+    const year = date.getFullYear()
 
     // Calcular el día del año
-    const startOfYear = new Date(year, 0, 1);
-    const diff = date.getTime() - startOfYear.getTime();
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    const startOfYear = new Date(year, 0, 1)
+    const diff = date.getTime() - startOfYear.getTime()
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1
 
     // Formatear con ceros a la izquierda (3 dígitos)
-    const dayFormatted = String(dayOfYear).padStart(3, '0');
+    const dayFormatted = String(dayOfYear).padStart(3, '0')
 
-    return `${year}-${dayFormatted}`;
+    return `${year}-${dayFormatted}`
   }
 
   return (
-    <div className="px-8 py-5 w-full min-h-screen">
-
+    <div className='p-9 w-full min-h-screen'>
       <div className='flex items-center mb-4 gap-4'>
-        <button
-          onClick={handleVolver}
-          className="cursor-pointer"
-        >
-          <ArrowLeft className="text-gray-700" />
+        <button onClick={handleVolver} className='cursor-pointer'>
+          <ArrowLeft className='text-gray-700' />
         </button>
         <p className='text-primary text-2xl font-semibold'>Paciente</p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 mb-5">
-        <div className=" md:items-center md:justify-between gap-4 ">
+      <div className='bg-white rounded-3xl border border-gray-200 p-6 mb-5'>
+        <div className=' md:items-center md:justify-between gap-4 '>
           <div className='flex justify-between mb-4'>
             <span className='text-xl text-secondary'>Paciente</span>
-            <div className="flex items-center gap-2">
-
-            </div>
+            <div className='flex items-center gap-2'></div>
           </div>
 
           <div className='flex justify-between items-end'>
             <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-semibold">{pacienteData.nombre}</p>
+              <div className='flex items-center justify-between'>
+                <p className='text-xl font-semibold'>{pacienteData.nombre}</p>
               </div>
-              <p className="text-secondary text-base  flex items-center gap-3 mt-4">
-                <span className="flex items-center gap-2"><img src="/svg/paciente/cedula.svg" alt="" /> {pacienteData.cedula}</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/phone.svg" alt="" /> {pacienteData.telefono}</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/calendar.svg" alt="" /> {pacienteData.edad} años</span>
-                <span className="flex items-center gap-2"><img src="/svg/paciente/location.svg" alt="" /> {pacienteData.direccion}</span>
+              <p className='text-secondary text-base  flex items-center gap-3 mt-4'>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/cedula.svg' alt='' /> {pacienteData.cedula}
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/phone.svg' alt='' /> {pacienteData.telefono}
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/calendar.svg' alt='' /> {pacienteData.edad} años
+                </span>
+                <span className='flex items-center gap-2'>
+                  <img src='/svg/paciente/location.svg' alt='' /> {pacienteData.direccion}
+                </span>
               </p>
             </div>
-
           </div>
         </div>
       </div>
 
-
-      <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-5">Historial de solicitudes</h1>
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm mt-4">
-
-        <table className="w-full ">
-          <thead className="bg-gray-50 border-b border-gray-200">
+      <h1 className='text-2xl font-bold text-gray-900 mb-2 mt-5'>Historial de solicitudes</h1>
+      <div className='mt-4 overflow-hidden rounded-3xl border border-border-default bg-surface'>
+        <table className='w-full'>
+          <thead className='border-b border-border-default bg-surface-muted'>
             <tr>
-              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider"># Solicitud</th>
-              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Fecha</th>
-              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Exámenes</th>
-              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider">Estado</th>
-              <th className="px-4 py-3 text-left text-base font-medium text-secondary tracking-wider"></th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>
+                # Solicitud
+              </th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Fecha</th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Exámenes</th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Estado</th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className='divide-y divide-border-default'>
             {historialVisitas.map(({ visita, examenesVisita }) => {
-              const examenesVisibles = examenesVisita.slice(0, 2);
-              const examenesRestantes = examenesVisita.length - examenesVisibles.length;
-              const primerExamen = examenesVisita[0];
-              const completados = examenesVisita.filter((examen) => isExamenCompleto(examen.estado)).length;
-              const total = examenesVisita.length;
-              const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+              const examenesVisibles = examenesVisita.slice(0, 2)
+              const examenesRestantes = examenesVisita.length - examenesVisibles.length
+              const primerExamen = examenesVisita[0]
+              const completados = examenesVisita.filter(examen =>
+                isExamenCompleto(examen.estado),
+              ).length
+              const total = examenesVisita.length
+              const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0
               const todosCompletos =
                 examenesVisita.length > 0 &&
-                examenesVisita.every(examen => examen.estado === 'completo' || examen.estado === 'enviado');
-              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos ? 'completo' : 'pendiente';
+                examenesVisita.every(
+                  examen => examen.estado === 'completo' || examen.estado === 'enviado',
+                )
+              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos
+                ? 'completo'
+                : 'pendiente'
 
               return (
                 <tr
                   key={visita.id}
                   onClick={() => {
                     if (primerExamen) {
-                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`);
+                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`)
                     }
                   }}
-                  onKeyDown={(event) => {
-                    if (!primerExamen) return;
+                  onKeyDown={event => {
+                    if (!primerExamen) return
                     if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`);
+                      event.preventDefault()
+                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`)
                     }
                   }}
                   tabIndex={primerExamen ? 0 : -1}
-                  className={`hover:bg-gray-50 ${primerExamen ? 'cursor-pointer' : ''}`}
+                  className={`hover:bg-surface-muted ${primerExamen ? 'cursor-pointer' : ''}`}
                 >
-                  <td className="px-4 py-3 text-sm text-gray-700">{formatDateToDayOfYear(primerExamen?.fechaCreacion)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{visita.fecha}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-200">
-                        <div className="h-full rounded-full bg-brand-primary transition-all" style={{ width: `${porcentaje}%` }} />
+                  <td className='px-4 py-3 text-sm font-medium text-tertiary'>
+                    {formatDateToDayOfYear(primerExamen?.fechaCreacion)}
+                  </td>
+                  <td className='px-4 py-3 text-sm text-secondary'>{visita.fecha}</td>
+                  <td className='px-4 py-3'>
+                    <div className='flex items-center gap-2'>
+                      <div className='h-1.5 w-20 overflow-hidden rounded-full bg-gray-200'>
+                        <div
+                          className='h-full rounded-full bg-brand-primary transition-all'
+                          style={{ width: `${porcentaje}%` }}
+                        />
                       </div>
-                      <span className="text-xs text-secondary">{`${completados}/${total}`}</span>
+                      <span className='text-xs text-secondary'>{`${completados}/${total}`}</span>
                     </div>
                   </td>
 
-                  <td className="px-4 py-3">
+                  <td className='px-4 py-3'>
                     {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
                   </td>
 
-                  <td className="text-right">
-                    <img src="/svg/arrow-up-2.svg" alt="" />
+                  <td className='text-right'>
+                    <img src='/svg/arrow-up-2.svg' alt='' />
                   </td>
                 </tr>
-              );
+              )
             })}
           </tbody>
         </table>
 
         {historialVisitas.length === 0 && (
-          <div className="p-8 text-center text-gray-500">No hay exámenes registrados.</div>
+          <div className='p-8 text-center text-gray-500'>No hay exámenes registrados.</div>
         )}
       </div>
     </div>
-  );
+  )
 }

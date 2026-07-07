@@ -2,32 +2,6 @@
 
 import ExamenTabs from '@/components/ExamenTabs'
 import DynamicExamForm from '@/components/forms/DynamicExamForm'
-import FormDengue from '@/components/forms/FormDengue'
-import FormFrotisSangre from '@/components/forms/FormFrotisSangre'
-import FormGlicemia from '@/components/forms/FormGlicemia'
-import FormHeces from '@/components/forms/FormHeces'
-import FormHelicobacterPylori from '@/components/forms/FormHelicobacterPylori'
-import FormHematologia from '@/components/forms/FormHematologia'
-import FormHematologiaQuimica from '@/components/forms/FormHematologiaQuimica'
-import FormHematologiaSerologia from '@/components/forms/FormHematologiaSerologia'
-import FormHemoglobinaHematocritos from '@/components/forms/FormHemoglobinaHematocritos'
-import FormHemoparasitos from '@/components/forms/FormHemoparasitos'
-import FormNuevoCompleto from '@/components/forms/FormNuevoCompleto'
-import FormOrina from '@/components/forms/FormOrina'
-import FormOrinaHeces from '@/components/forms/FormOrinaHeces'
-import FormPruebaEmbarazo from '@/components/forms/FormPruebaEmbarazo'
-import FormQuimica from '@/components/forms/FormQuimica'
-import FormQuimicaColinesterasa from '@/components/forms/FormQuimicaColinesterasa'
-import FormQuimicaCorta from '@/components/forms/FormQuimicaCorta'
-import FormQuimicaHeces from '@/components/forms/FormQuimicaHeces'
-import FormQuimicaOrina from '@/components/forms/FormQuimicaOrina'
-import FormQuimicaSerologia from '@/components/forms/FormQuimicaSerologia'
-import FormSerologia from '@/components/forms/FormSerologia'
-import FormSerologiaAstoPsaPylori from '@/components/forms/FormSerologiaAstoPsaPylori'
-import FormSerologiaHeces from '@/components/forms/FormSerologiaHeces'
-import FormSerologiaOrina from '@/components/forms/FormSerologiaOrina'
-import FormTipoSangre from '@/components/forms/FormTipoSangre'
-import FormVDRLHepatitis from '@/components/forms/FormVDRLHepatitis'
 import { Button } from '@/components/ui/Button'
 import {
   createOrderExamResult,
@@ -48,38 +22,13 @@ import {
   EstadoExamen,
   Examen,
   Paciente,
-  ResultadosDengue,
   ResultadosExamen,
-  ResultadosFrotisSangre,
-  ResultadosGlicemia,
-  ResultadosHeces,
-  ResultadosHelicobacterPylori,
   ResultadosHematologia,
-  ResultadosHematologiaQuimica,
-  ResultadosHematologiaSerologia,
-  ResultadosHemoglobinaHematocritos,
-  ResultadosHemoparasitos,
-  ResultadosNuevoCompleto,
-  ResultadosOrina,
-  ResultadosOrinaHeces,
-  ResultadosPruebaEmbarazo,
-  ResultadosQuimica,
-  ResultadosQuimicaColinesterasa,
-  ResultadosQuimicaCorta,
-  ResultadosQuimicaHeces,
-  ResultadosQuimicaOrina,
-  ResultadosQuimicaSerologia,
-  ResultadosSerologia,
-  ResultadosSerologiaAstoPsaPylori,
-  ResultadosSerologiaHeces,
-  ResultadosSerologiaOrina,
-  ResultadosTipoSangre,
-  ResultadosVDRLHepatitis,
   TipoExamen,
 } from '@/types'
 import { ExamTemplateSection } from '@/types/exam-template'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Calendar, FileText, IdCard, Mail, MapPin, Phone } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, IdCard, Mail, MapPin, Pencil, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -527,7 +476,7 @@ export default function ExamenPage() {
 
       await createOrderExamResult(orderId, examen.id, {
         result_payload: normalizedPayload,
-        ...(bioanalystName ? { doctor_name: bioanalystName } : {}),
+        doctor_name: bioanalystName,
       })
 
       if (examen.templateSections.length > 0) {
@@ -553,14 +502,6 @@ export default function ExamenPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo guardar el resultado')
     }
-  }
-
-  const handleCancelEdit = () => {
-    setDoctorOrdenanteByExam(prev => {
-      const next = { ...prev }
-      delete next[examen.id]
-      return next
-    })
   }
 
   const handleSendEmail = async () => {
@@ -614,198 +555,6 @@ export default function ExamenPage() {
           readOnly={readOnly}
         />
       )
-    }
-
-    switch (examen.tipo) {
-      case 'orina':
-        return (
-          <FormOrina
-            resultados={examen.resultados as ResultadosOrina}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'heces':
-        return (
-          <FormHeces
-            resultados={examen.resultados as ResultadosHeces}
-            onChange={handleResultadosChange}
-            onValidChange={setIsFormValid}
-          />
-        )
-      case 'hematologia':
-        return (
-          <FormHematologia
-            resultados={examen.resultados as ResultadosHematologia}
-            onChange={handleResultadosChange}
-            onValidChange={setIsFormValid}
-            readOnly={readOnly}
-          />
-        )
-      case 'dengue':
-        return (
-          <FormDengue
-            resultados={examen.resultados as ResultadosDengue}
-            onChange={handleResultadosChange}
-            onValidChange={setIsFormValid}
-            readOnly={readOnly}
-          />
-        )
-      case 'quimica':
-        return (
-          <FormQuimica
-            resultados={examen.resultados as ResultadosQuimica}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'glicemia_pre_post':
-        return (
-          <FormGlicemia
-            resultados={examen.resultados as ResultadosGlicemia}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'hemoglobina_hematocritos':
-        return (
-          <FormHemoglobinaHematocritos
-            resultados={examen.resultados as ResultadosHemoglobinaHematocritos}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'hemoparasitos':
-        return (
-          <FormHemoparasitos
-            resultados={examen.resultados as ResultadosHemoparasitos}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'tipo_sangre':
-        return (
-          <FormTipoSangre
-            resultados={examen.resultados as ResultadosTipoSangre}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'prueba_embarazo':
-        return (
-          <FormPruebaEmbarazo
-            resultados={examen.resultados as ResultadosPruebaEmbarazo}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'frotis_sangre':
-        return (
-          <FormFrotisSangre
-            resultados={examen.resultados as ResultadosFrotisSangre}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'helicobacter_pylori':
-        return (
-          <FormHelicobacterPylori
-            resultados={examen.resultados as ResultadosHelicobacterPylori}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'serologia':
-        return (
-          <FormSerologia
-            resultados={examen.resultados as ResultadosSerologia}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'serologia_asto_psa_pylori':
-        return (
-          <FormSerologiaAstoPsaPylori
-            resultados={examen.resultados as ResultadosSerologiaAstoPsaPylori}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'vdrl_hepatitis':
-        return (
-          <FormVDRLHepatitis
-            resultados={examen.resultados as ResultadosVDRLHepatitis}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'quimica_colinesterasa':
-        return (
-          <FormQuimicaColinesterasa
-            resultados={examen.resultados as ResultadosQuimicaColinesterasa}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'quimica_corta':
-        return (
-          <FormQuimicaCorta
-            resultados={examen.resultados as ResultadosQuimicaCorta}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'quimica_heces':
-        return (
-          <FormQuimicaHeces
-            resultados={examen.resultados as ResultadosQuimicaHeces}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'quimica_orina':
-        return (
-          <FormQuimicaOrina
-            resultados={examen.resultados as ResultadosQuimicaOrina}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'quimica_serologia':
-        return (
-          <FormQuimicaSerologia
-            resultados={examen.resultados as ResultadosQuimicaSerologia}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'serologia_heces':
-        return (
-          <FormSerologiaHeces
-            resultados={examen.resultados as ResultadosSerologiaHeces}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'serologia_orina':
-        return (
-          <FormSerologiaOrina
-            resultados={examen.resultados as ResultadosSerologiaOrina}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'orina_heces':
-        return (
-          <FormOrinaHeces
-            resultados={examen.resultados as ResultadosOrinaHeces}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'hematologia_quimica':
-        return (
-          <FormHematologiaQuimica
-            resultados={examen.resultados as ResultadosHematologiaQuimica}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'hematologia_serologia':
-        return (
-          <FormHematologiaSerologia
-            resultados={examen.resultados as ResultadosHematologiaSerologia}
-            onChange={handleResultadosChange}
-          />
-        )
-      case 'nuevo_completo':
-        return (
-          <FormNuevoCompleto
-            resultados={examen.resultados as ResultadosNuevoCompleto}
-            onChange={handleResultadosChange}
-          />
-        )
-      default:
-        return <p>Tipo de examen no soportado</p>
     }
   }
 
@@ -862,20 +611,21 @@ export default function ExamenPage() {
             </div>
 
             <div className='flex flex-wrap gap-3 lg:justify-end'>
-              <button
+              <Button
                 type='button'
                 onClick={handleSendEmail}
-                className='flex h-12 items-center gap-2 rounded-2xl border border-primary px-4 text-base font-medium text-primary transition-colors hover:bg-primary hover:text-white'
+                variant='outline'
+                icon={<Mail className='h-5 w-5' />}
               >
-                <Mail className='h-5 w-5' /> Enviar al correo
-              </button>
-              <button
+                Enviar al correo
+              </Button>
+              <Button
                 type='button'
                 onClick={handlePrintPdf}
-                className='flex h-12 items-center gap-2 rounded-2xl bg-primary px-4 text-base font-medium text-white transition-colors hover:bg-primary/90'
+                icon={<FileText className='h-5 w-5' />}
               >
-                <FileText className='h-5 w-5' /> Imprimir
-              </button>
+                Imprimir
+              </Button>
             </div>
           </div>
         </header>
@@ -893,9 +643,9 @@ export default function ExamenPage() {
                     key={ex.id}
                     href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
                     scroll={false}
-                    className={`flex min-w-[188px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${
+                    className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${
                       isActive
-                        ? 'border-[#2563eb] bg-[#f1f5fe] shadow-[inset_3px_0_0_#2563eb]'
+                        ? 'border-[#2563eb] bg-[#f1f5fe]'
                         : 'border-border-default bg-white hover:bg-surface-muted'
                     }`}
                   >
@@ -908,7 +658,9 @@ export default function ExamenPage() {
                       >
                         {ex.templateName || examLabels[ex.tipo]}
                       </span>
-                      <span className='block text-sm font-medium text-secondary'>{status.label}</span>
+                      <span className='block text-sm font-medium text-secondary'>
+                        {status.label}
+                      </span>
                     </span>
                   </Link>
                 )
@@ -923,25 +675,29 @@ export default function ExamenPage() {
               {examen.templateName || examLabels[examen.tipo]}
             </h1>
             <Button
-              onClick={handleCompletar}
-              disabled={!isCurrentTemplateValid || readOnly}
-              variant='primary'
+              onClick={() => {
+                if (readOnly) {
+                  setCurrentReadOnly(false)
+                  return
+                }
+
+                void handleCompletar()
+              }}
+              disabled={!readOnly && !isCurrentTemplateValid}
+              variant={readOnly ? 'outline' : 'primary'}
               size='md'
-              className='h-12 cursor-pointer rounded-2xl bg-[#2563eb] px-4 text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50'
+              icon={readOnly ? <Pencil className='h-4 w-4' /> : undefined}
             >
-              Guardar resultado
+              {readOnly ? 'Editar resultado' : 'Guardar resultado'}
             </Button>
           </div>
 
           <ExamenTabs
             readOnly={readOnly}
-            setCurrentReadOnly={setCurrentReadOnly}
             examen={examen}
             examenNombre={examen.templateName || examLabels[examen.tipo]}
             examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
             examenActualId={examen.id}
-            onPrint={handlePrintPdf}
-            onSendEmail={handleSendEmail}
             doctorOrdenante={doctorOrdenanteInput}
             onDoctorOrdenanteChange={value => {
               setDoctorOrdenanteByExam(prev => ({
@@ -949,7 +705,6 @@ export default function ExamenPage() {
                 [examen.id]: value,
               }))
             }}
-            onCancelEdit={handleCancelEdit}
           />
 
           <div ref={formContainerRef}>

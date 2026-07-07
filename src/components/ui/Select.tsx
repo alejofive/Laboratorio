@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { ChevronDown, Check, Pencil, X } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { FieldLabel, TextInput } from './FormField';
 
 interface SelectOption {
   value: string;
@@ -75,14 +76,14 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
         <div className="flex items-center gap-1 mb-1">
           {isEditingLabel ? (
             <div className="flex items-center gap-1 flex-1">
-              <input
+              <TextInput
                 ref={labelInputRef}
                 type="text"
                 value={labelEditValue}
                 onChange={e => setLabelEditValue(e.target.value)}
                 onKeyDown={handleLabelKeyDown}
                 onBlur={handleLabelSave}
-                className="text-sm font-medium text-gray-700 border border-cyan-500 rounded px-1 py-0.5 w-full"
+                className="h-9 text-sm"
               />
               <button type="button" onClick={handleLabelSave} className="text-green-600 hover:text-green-700">
                 <Check className="w-3 h-3" />
@@ -93,14 +94,14 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
             </div>
           ) : (
             <div className="flex items-center gap-1 flex-1">
-              <label 
-                className={`text-sm font-medium ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-cyan-600' : 'text-gray-700'}`}
+              <FieldLabel 
+                className={`mb-0 ${!readOnly && onLabelChange ? 'cursor-pointer hover:text-brand-primary' : ''}`}
                 onClick={handleLabelClick}
               >
                 {label}
-              </label>
+              </FieldLabel>
               {!readOnly && onLabelChange && (
-                <Pencil className="w-3 h-3 text-gray-400 cursor-pointer hover:text-cyan-600" onClick={handleLabelClick} />
+                <Pencil className="w-3 h-3 text-secondary cursor-pointer hover:text-brand-primary" onClick={handleLabelClick} />
               )}
             </div>
           )}
@@ -108,7 +109,7 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
       )}
       <SelectPrimitive.Root value={value || '__clear__'} onValueChange={handleValueChange} disabled={readOnly}>
         <SelectPrimitive.Trigger 
-          className="flex items-center justify-between w-full px-3 py-2 text-sm border rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent data-[placeholder]:text-gray-400 bg-gray-50 border-gray-300 disabled:opacity-100 disabled:cursor-default"
+          className="flex min-h-12 w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-3 py-2 text-base text-primary outline-none transition-colors hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 data-[placeholder]:text-secondary/70 disabled:cursor-not-allowed disabled:opacity-100"
         >
           <SelectPrimitive.Value placeholder={placeholder} />
           <SelectPrimitive.Icon>
@@ -117,7 +118,7 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
         </SelectPrimitive.Trigger>
 
         <SelectPrimitive.Portal>
-          <SelectPrimitive.Content className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <SelectPrimitive.Content className="z-50 overflow-hidden rounded-xl border border-border-default bg-white">
             <SelectPrimitive.Viewport className="p-1">
               <SelectPrimitive.Item
                 value="__clear__"
@@ -129,11 +130,11 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar...
                 <SelectPrimitive.Item
                   key={option.value}
                   value={option.value}
-                  className="relative flex items-center px-3 py-2 text-sm rounded-sm cursor-pointer select-none outline-none hover:bg-cyan-50 hover:text-cyan-700 data-[highlighted]:bg-cyan-50 data-[highlighted]:text-cyan-700"
+                  className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm outline-none hover:bg-brand-active hover:text-brand-primary data-[highlighted]:bg-brand-active data-[highlighted]:text-brand-primary"
                 >
                   <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                   <SelectPrimitive.ItemIndicator className="absolute right-2">
-                    <Check className="w-4 h-4 text-cyan-600" />
+                    <Check className="w-4 h-4 text-brand-primary" />
                   </SelectPrimitive.ItemIndicator>
                 </SelectPrimitive.Item>
               ))}

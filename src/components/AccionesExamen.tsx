@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import EstadoBadge from './EstadoBadge'
 import { Button } from './ui/Button'
+import { TextInput } from './ui/FormField'
 
 interface AccionesExamenProps {
   examen: Examen
@@ -114,26 +115,26 @@ export default function AccionesExamen({
           <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
             <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
               <h3 className='text-lg font-medium text-gray-900 mb-4'>Enviar por Email</h3>
-              <input
+              <TextInput
                 type='email'
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder='correo@ejemplo.com'
-                className='w-full px-3 py-2 border border-gray-300 rounded-md mb-4 '
+                className='mb-4'
               />
               <div className='flex gap-2'>
-                <button
+                <Button
                   onClick={handleEnviarEmail}
-                  className='flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md'
+                  className='flex-1'
                 >
                   Enviar
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setShowEmailModal(false)}
-                  className='px-4 py-2 border border-gray-300 rounded-md'
+                  variant='outline'
                 >
                   Cancelar
-                </button>
+                </Button>
               </div>
             </div>
           </div>

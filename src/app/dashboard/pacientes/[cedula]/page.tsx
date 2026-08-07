@@ -1,67 +1,62 @@
 'use client'
 
 import EstadoBadge from '@/components/EstadoBadge'
-import { useLab } from '@/context/LabContext'
-import { TipoExamen } from '@/types'
+import { useOrders, usePatients } from '@/data/createPatients'
+import { OrderStatusApi } from '@/types/create'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 
-const examLabels: Record<TipoExamen, string> = {
-  dengue: 'Dengue',
-  frotis_sangre: 'Frotis de sangre periferica',
-  glicemia_pre_post: 'GLICEMIA PRE POST',
-  heces: 'Heces',
-  heces_hematologia: 'Heces y Hematologia',
-  hematologia: 'Hematología',
-  hematologia_orina: 'Hematología y Orina',
-  helicobacter_pylori: 'Helicobacter Pylori',
-  hematologia_quimica: 'Hematología y Química',
-  hematologia_serologia: 'Hematología y Serología',
-  hemoglobina_hematocritos: 'Hemoglobina Hematocritos',
-  hemoparasitos: 'Hemoparasitos',
-  nuevo_completo: 'Nuevo Completo',
-  orina_heces: 'Orina y Heces',
-  orina: 'Orina',
-  prueba_embarazo: 'PRUEBA DE EMBARAZO',
-  quimica_colinesterasa: 'Química Colinesterasa',
-  quimica_corta: 'QUIMICA SANGUINEA MAS CORTA',
-  quimica_heces: 'Química y Heces',
-  quimica_orina: 'Química y Orina',
-  quimica_serologia: 'Química y Serología',
-  quimica: 'Química Sanguínea',
-  serologia_asto_psa_pylori: 'Serologia ASTO PSA Pylori',
-  serologia_heces: 'Serología y Heces',
-  serologia_orina: 'Serología y Orina',
-  serologia: 'Serología',
-  tipo_sangre: 'Tipo de sangre',
-  vdrl_hepatitis: 'VDRL Hepatitis y demas',
+const getEstadoSolicitud = (status: OrderStatusApi) => {
+  if (status === 'completed' || status === 'sent') return 'completo'
+  if (status === 'in_progress') return 'en_proceso'
+  return 'pendiente'
 }
 
 export default function PacienteHistorialPage() {
   const router = useRouter()
   const params = useParams()
-  const cedula = params.cedula as string
-  const { pacientes, examenes } = useLab()
+  const cedula = decodeURIComponent(params.cedula as string)
 
-  const parseFechaPaciente = (fecha: string) => {
-    const [dia, mes, anio] = fecha.split('/').map(Number)
-    return new Date(anio, (mes || 1) - 1, dia || 1).getTime()
+  const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
+    page: 1,
+    limit: 1,
+    search: cedula,
+  })
+  const { data: orders = [], isLoading: isLoadingOrders, error } = useOrders({
+    page: 1,
+    limit: 100,
+    search: cedula,
+  })
+
+  const pacienteData = patientsData?.data.find(patient => patient.document_number === cedula)
+  const historialSolicitudes = orders
+    .filter(order => order.patient.document_number === cedula)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const isLoading = isLoadingPatients || isLoadingOrders
+
+  const handleVolver = () => {
+    router.push('/dashboard/pacientes')
   }
 
-  const pacientesDelHistorial = pacientes
-    .filter(p => p.cedula === cedula)
-    .sort((a, b) => parseFechaPaciente(b.fecha) - parseFechaPaciente(a.fecha))
-
-  const pacienteData = pacientesDelHistorial[0]
+  if (isLoading) {
+    return (
+      <div className='p-9 w-full min-h-screen'>
+        <Link href='/dashboard/pacientes' className='inline-flex items-center gap-1 hover:underline mb-4'>
+          <ArrowLeft className='w-4 h-4' />
+          Volver
+        </Link>
+        <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
+          <p className='text-gray-500'>Cargando historial del paciente...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!pacienteData) {
     return (
       <div className='p-9 w-full min-h-screen'>
-        <Link
-          href='/dashboard/pacientes'
-          className='inline-flex items-center gap-1hover:underline mb-4'
-        >
+        <Link href='/dashboard/pacientes' className='inline-flex items-center gap-1 hover:underline mb-4'>
           <ArrowLeft className='w-4 h-4' />
           Volver
         </Link>
@@ -72,68 +67,38 @@ export default function PacienteHistorialPage() {
     )
   }
 
-  const isExamenCompleto = (estado: string) => estado === 'completo' || estado === 'enviado'
-
-  const historialVisitas = pacientesDelHistorial.map(visita => {
-    const examenesVisita = examenes
-      .filter(examen => examen.pacienteId === visita.id)
-      .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime())
-
-    return { visita, examenesVisita }
-  })
-
-  const handleVolver = () => {
-    router.push(`/dashboard/pacientes`)
-  }
-
-  const formatDateToDayOfYear = (isoDate: string) => {
-    const date = new Date(isoDate)
-    const year = date.getFullYear()
-
-    // Calcular el día del año
-    const startOfYear = new Date(year, 0, 1)
-    const diff = date.getTime() - startOfYear.getTime()
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1
-
-    // Formatear con ceros a la izquierda (3 dígitos)
-    const dayFormatted = String(dayOfYear).padStart(3, '0')
-
-    return `${year}-${dayFormatted}`
-  }
-
   return (
     <div className='p-9 w-full min-h-screen'>
       <div className='flex items-center mb-4 gap-4'>
-        <button onClick={handleVolver} className='cursor-pointer'>
+        <button type='button' onClick={handleVolver} className='cursor-pointer'>
           <ArrowLeft className='text-gray-700' />
         </button>
         <p className='text-primary text-2xl font-semibold'>Paciente</p>
       </div>
 
       <div className='bg-white rounded-3xl border border-gray-200 p-6 mb-5'>
-        <div className=' md:items-center md:justify-between gap-4 '>
+        <div className='md:items-center md:justify-between gap-4'>
           <div className='flex justify-between mb-4'>
             <span className='text-xl text-secondary'>Paciente</span>
-            <div className='flex items-center gap-2'></div>
           </div>
 
           <div className='flex justify-between items-end'>
             <div>
-              <div className='flex items-center justify-between'>
-                <p className='text-xl font-semibold'>{pacienteData.nombre}</p>
-              </div>
-              <p className='text-secondary text-base  flex items-center gap-3 mt-4'>
+              <p className='text-xl font-semibold'>
+                {`${pacienteData.first_name} ${pacienteData.last_name}`.trim()}
+              </p>
+              <p className='text-secondary text-base flex items-center gap-3 mt-4'>
                 <span className='flex items-center gap-2'>
-                  <img src='/svg/paciente/cedula.svg' alt='' /> {pacienteData.cedula}
+                  <img src='/svg/paciente/cedula.svg' alt='' /> {pacienteData.document_number}
                 </span>
                 <span className='flex items-center gap-2'>
-                  <img src='/svg/paciente/phone.svg' alt='' /> {pacienteData.telefono}
+                  <img src='/svg/paciente/phone.svg' alt='' /> {pacienteData.phone || '-'}
                 </span>
                 <span className='flex items-center gap-2'>
-                  <img src='/svg/paciente/calendar.svg' alt='' /> {pacienteData.edad} años
+                  <img src='/svg/paciente/calendar.svg' alt='' /> {pacienteData.age ?? '-'} años
                 </span>
                 <span className='flex items-center gap-2'>
-                  <img src='/svg/paciente/location.svg' alt='' /> {pacienteData.direccion}
+                  <img src='/svg/paciente/location.svg' alt='' /> {pacienteData.address || '-'}
                 </span>
               </p>
             </div>
@@ -142,60 +107,50 @@ export default function PacienteHistorialPage() {
       </div>
 
       <h1 className='text-2xl font-bold text-gray-900 mb-2 mt-5'>Historial de solicitudes</h1>
+
+      {error ? (
+        <div className='mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700'>
+          No se pudo cargar el historial. {error instanceof Error ? error.message : null}
+        </div>
+      ) : null}
+
       <div className='mt-4 overflow-hidden rounded-3xl border border-border-default bg-surface'>
         <table className='w-full'>
           <thead className='border-b border-border-default bg-surface-muted'>
             <tr>
-              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>
-                # Solicitud
-              </th>
+              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'># Solicitud</th>
               <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Fecha</th>
               <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Exámenes</th>
               <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Estado</th>
-              <th className='px-4 py-3 text-left text-sm font-medium text-secondary'></th>
+              <th className='px-4 py-3 text-right text-sm font-medium text-secondary'></th>
             </tr>
           </thead>
           <tbody className='divide-y divide-border-default'>
-            {historialVisitas.map(({ visita, examenesVisita }) => {
-              const examenesVisibles = examenesVisita.slice(0, 2)
-              const examenesRestantes = examenesVisita.length - examenesVisibles.length
-              const primerExamen = examenesVisita[0]
-              const completados = examenesVisita.filter(examen =>
-                isExamenCompleto(examen.estado),
-              ).length
-              const total = examenesVisita.length
+            {historialSolicitudes.map(order => {
+              const completados = order.exams.completed
+              const total = order.exams.total
               const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0
-              const todosCompletos =
-                examenesVisita.length > 0 &&
-                examenesVisita.every(
-                  examen => examen.estado === 'completo' || examen.estado === 'enviado',
-                )
-              const estadoMostrado: 'pendiente' | 'completo' = todosCompletos
-                ? 'completo'
-                : 'pendiente'
+              const estadoMostrado = getEstadoSolicitud(order.status)
 
               return (
                 <tr
-                  key={visita.id}
-                  onClick={() => {
-                    if (primerExamen) {
-                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`)
-                    }
-                  }}
+                  key={order.id}
+                  onClick={() => router.push(`/dashboard/examen/${order.id}?cedula=${cedula}`)}
                   onKeyDown={event => {
-                    if (!primerExamen) return
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault()
-                      router.push(`/dashboard/examen/${primerExamen.id}?cedula=${cedula}`)
+                      router.push(`/dashboard/examen/${order.id}?cedula=${cedula}`)
                     }
                   }}
-                  tabIndex={primerExamen ? 0 : -1}
-                  className={`hover:bg-surface-muted ${primerExamen ? 'cursor-pointer' : ''}`}
+                  tabIndex={0}
+                  className='cursor-pointer hover:bg-surface-muted'
                 >
                   <td className='px-4 py-3 text-sm font-medium text-tertiary'>
-                    {formatDateToDayOfYear(primerExamen?.fechaCreacion)}
+                    {order.order_number}
                   </td>
-                  <td className='px-4 py-3 text-sm text-secondary'>{visita.fecha}</td>
+                  <td className='px-4 py-3 text-sm text-secondary'>
+                    {new Date(order.created_at).toLocaleDateString('es-VE')}
+                  </td>
                   <td className='px-4 py-3'>
                     <div className='flex items-center gap-2'>
                       <div className='h-1.5 w-20 overflow-hidden rounded-full bg-gray-200'>
@@ -207,12 +162,10 @@ export default function PacienteHistorialPage() {
                       <span className='text-xs text-secondary'>{`${completados}/${total}`}</span>
                     </div>
                   </td>
-
                   <td className='px-4 py-3'>
-                    {examenesVisita.length > 0 && <EstadoBadge estado={estadoMostrado} />}
+                    <EstadoBadge estado={estadoMostrado} />
                   </td>
-
-                  <td className='text-right'>
+                  <td className='px-4 py-3 text-right'>
                     <img src='/svg/arrow-up-2.svg' alt='' />
                   </td>
                 </tr>
@@ -221,9 +174,9 @@ export default function PacienteHistorialPage() {
           </tbody>
         </table>
 
-        {historialVisitas.length === 0 && (
-          <div className='p-8 text-center text-gray-500'>No hay exámenes registrados.</div>
-        )}
+        {historialSolicitudes.length === 0 ? (
+          <div className='p-8 text-center text-gray-500'>No hay solicitudes registradas.</div>
+        ) : null}
       </div>
     </div>
   )

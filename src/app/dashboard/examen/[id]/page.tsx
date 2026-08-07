@@ -13,11 +13,13 @@ import {
 import {
   buildInitialValuesFromTemplate,
   extractTemplatePayload,
+  getTemplateValidationErrors,
   normalizePayloadAliases,
   normalizeTemplateSections,
   TemplateFormValues,
   validateTemplateValues,
 } from '@/lib/examTemplate'
+import { emailSchema } from '@/lib/validations/email'
 import {
   EstadoExamen,
   Examen,
@@ -472,6 +474,13 @@ export default function ExamenPage() {
       const fallbackPayload = mapExamToPayload(examen.tipo, resultados)
 
       const rawPayload = examen.templateSections.length > 0 ? payloadByTemplate : fallbackPayload
+      const validationErrors = getTemplateValidationErrors(examen.templateSections, templateValues)
+
+      if (validationErrors.length > 0) {
+        toast.error(validationErrors[0])
+        return
+      }
+
       const normalizedPayload = normalizePayloadForApi(rawPayload) as Record<string, unknown>
 
       await createOrderExamResult(orderId, examen.id, {
@@ -509,8 +518,14 @@ export default function ExamenPage() {
     const email = window.prompt('Ingresa el correo de destino', defaultEmail)
     if (!email?.trim()) return
 
+    const validation = emailSchema.safeParse(email)
+    if (!validation.success) {
+      toast.error(validation.error.issues[0]?.message ?? 'Correo invalido')
+      return
+    }
+
     try {
-      await sendOrderExamEmail(orderId, examen.id, email.trim())
+      await sendOrderExamEmail(orderId, examen.id, validation.data)
       alert('Email enviado')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo enviar el email')

@@ -5,11 +5,13 @@ import { TextInput } from '@/components/ui/FormField'
 import { usePatients } from '@/data/createPatients'
 import { Search } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 const PATIENTS_PER_PAGE = 10
 
 export default function PacientesPage() {
+  const router = useRouter()
   const [busqueda, setBusqueda] = useState('')
   const [page, setPage] = useState(1)
   const { data, isLoading, error } = usePatients({
@@ -106,7 +108,18 @@ export default function PacientesPage() {
           </thead>
           <tbody className='divide-y divide-border-default'>
             {pacientes.map(paciente => (
-              <tr key={paciente._id} className='hover:bg-surface-muted'>
+              <tr
+                key={paciente._id}
+                onClick={() => router.push(`/dashboard/pacientes/${paciente.document_number}`)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    router.push(`/dashboard/pacientes/${paciente.document_number}`)
+                  }
+                }}
+                tabIndex={0}
+                className='cursor-pointer hover:bg-surface-muted'
+              >
                 <td className='px-4 py-3'>
                   <p className='font-medium text-tertiary'>
                     {`${paciente.first_name} ${paciente.last_name}`.trim()}

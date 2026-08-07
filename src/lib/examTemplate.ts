@@ -1,4 +1,5 @@
 import { ExamTemplateSection } from '@/types/exam-template';
+import { z } from 'zod';
 
 export type TemplateFormValues = Record<string, string | boolean>;
 
@@ -65,9 +66,58 @@ export function buildInitialValuesFromTemplate(
 }
 
 export function validateTemplateValues(sections: ExamTemplateSection[], values: TemplateFormValues): boolean {
-  void sections;
-  void values;
-  return true;
+  return buildTemplateValuesSchema(sections).safeParse(values).success;
+}
+
+export function getTemplateValidationErrors(sections: ExamTemplateSection[], values: TemplateFormValues): string[] {
+  const result = buildTemplateValuesSchema(sections).safeParse(values);
+  if (result.success) return [];
+
+  return result.error.issues.map((issue) => issue.message);
+}
+
+function buildTemplateValuesSchema(sections: ExamTemplateSection[]) {
+  const shape: Record<string, z.ZodType<string | boolean>> = {};
+
+  sections.forEach((section) => {
+    section.fields.forEach((field) => {
+      const label = field.label || field.key;
+
+      if (field.type === 'checkbox') {
+        shape[field.key] = z.boolean();
+        return;
+      }
+
+      if (field.type === 'number') {
+        shape[field.key] = z.string().refine(
+          (value) => !value.trim() || /^-?\d*([.,]\d*)?$/.test(value),
+          `${label} debe ser un numero valido.`,
+        );
+        return;
+      }
+
+      if (field.type === 'date') {
+        shape[field.key] = z.string().refine((value) => {
+          if (!value.trim()) return true;
+          const date = new Date(`${value}T00:00:00`);
+          return !Number.isNaN(date.getTime());
+        }, `${label} debe ser una fecha valida.`);
+        return;
+      }
+
+      if (field.type === 'select' || field.type === 'radio') {
+        shape[field.key] = z.string().refine(
+          (value) => !value.trim() || field.options.includes(value),
+          `${label} debe tener una opcion valida.`,
+        );
+        return;
+      }
+
+      shape[field.key] = z.string();
+    });
+  });
+
+  return z.object(shape);
 }
 
 export function extractTemplatePayload(sections: ExamTemplateSection[], values: TemplateFormValues): Record<string, unknown> {

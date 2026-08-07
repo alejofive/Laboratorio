@@ -1,6 +1,7 @@
 'use client'
 
 import { Examen, Paciente } from '@/types'
+import { emailSchema } from '@/lib/validations/email'
 import { ArrowLeft, FileText, Mail } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
@@ -42,12 +43,16 @@ export default function AccionesExamen({
   }
 
   const handleEnviarEmail = async () => {
-    if (email) {
-      await onEnviarEmail(email)
-      setShowEmailModal(false)
-      setEmail('')
-      alert('Email enviado')
+    const validation = emailSchema.safeParse(email)
+    if (!validation.success) {
+      alert(validation.error.issues[0]?.message ?? 'Correo invalido')
+      return
     }
+
+    await onEnviarEmail(validation.data)
+    setShowEmailModal(false)
+    setEmail('')
+    alert('Email enviado')
   }
 
   return (

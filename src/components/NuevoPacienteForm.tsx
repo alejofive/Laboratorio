@@ -10,6 +10,8 @@ import {
   usePatientById,
   usePatients,
 } from '@/data/createPatients'
+import { newPatientRequestSchema, NewPatientRequestValues } from '@/lib/validations/patient'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -127,28 +129,18 @@ const birthMonths = [
 
 const getDaysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate()
 
-interface FormValues {
-  nombre: string
-  fechaNacimiento: string
-  sexo: string
-  telefono: string
-  cedula: string
-  direccion: string
-  apellido: string
-  observaciones: string
-  examenes: TipoExamen[]
-}
-
 export default function NuevoPacienteForm() {
   const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
+    getValues,
     reset,
     setValue,
     watch,
     formState: { errors, isValid },
-  } = useForm<FormValues>({
+  } = useForm<NewPatientRequestValues>({
+    resolver: zodResolver(newPatientRequestSchema),
     mode: 'onChange',
     defaultValues: {
       nombre: '',
@@ -235,7 +227,7 @@ export default function NuevoPacienteForm() {
   useEffect(() => {
     if (!selectedPatientDetail) return
 
-    setValue('cedula', selectedPatientDetail.document_number ?? '')
+    setValue('cedula', selectedPatientDetail.document_number ?? '', { shouldValidate: true })
     setValue('nombre', selectedPatientDetail.first_name ?? '')
     setValue('apellido', selectedPatientDetail.last_name ?? '')
     setValue('telefono', selectedPatientDetail.phone ?? '')
@@ -327,7 +319,7 @@ export default function NuevoPacienteForm() {
   }
 
   const onSelectPatient = (patient: (typeof results)[number]) => {
-    setValue('cedula', patient.document_number)
+    setValue('cedula', patient.document_number, { shouldValidate: true })
     setValue('nombre', patient.first_name)
     setValue('apellido', patient.last_name)
     setValue('telefono', patient.phone)
@@ -369,6 +361,7 @@ export default function NuevoPacienteForm() {
       telefono: '',
       cedula: '',
       direccion: '',
+      observaciones: '',
       examenes: [],
     })
     setSelectedPatientId(null)
@@ -424,7 +417,7 @@ export default function NuevoPacienteForm() {
     setValue('examenes', newExamenes, { shouldValidate: true })
   }
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: NewPatientRequestValues) => {
     try {
       const selectedTemplates = allExams
         .filter(exam => selectedExams.includes(exam.value))
@@ -461,6 +454,41 @@ export default function NuevoPacienteForm() {
       const observaciones = data.observaciones.trim()
       const orderPayload = {
         patient_id: patientId,
+        exam_template_ids: selectedTemplates,
+        ...(observaciones ? { notes: observaciones } : {}),
+      }
+
+      await createOrderMutation.mutateAsync(orderPayload)
+
+      await queryClient.invalidateQueries({ queryKey: ['orders-api'] })
+
+      onClearPatient()
+      reset()
+      toast.success('Solicitud creada exitosamente')
+    } catch {
+      toast.error('No se pudo crear la solicitud')
+    }
+  }
+
+  const onSubmitExistingPatient = async () => {
+    try {
+      if (!selectedPatientId) {
+        toast.error('No se encontro el paciente en API para crear la orden')
+        return
+      }
+
+      const selectedTemplates = allExams
+        .filter(exam => selectedExams.includes(exam.value))
+        .map(exam => exam.templateId)
+
+      if (selectedTemplates.length === 0) {
+        toast.error('Debes seleccionar al menos un examen valido')
+        return
+      }
+
+      const observaciones = getValues('observaciones').trim()
+      const orderPayload = {
+        patient_id: selectedPatientId,
         exam_template_ids: selectedTemplates,
         ...(observaciones ? { notes: observaciones } : {}),
       }
@@ -584,7 +612,11 @@ export default function NuevoPacienteForm() {
                     type='text'
                     inputMode='numeric'
                     value={cedulaValue}
-                    onChange={e => setValue('cedula', e.target.value)}
+                    onChange={e =>
+                      setValue('cedula', e.target.value.replace(/\D/g, ''), {
+                        shouldValidate: true,
+                      })
+                    }
                     error={Boolean(errors.cedula)}
                     placeholder='Ingrese cédula'
                   />
@@ -597,7 +629,7 @@ export default function NuevoPacienteForm() {
                   <FieldLabel>Nombres</FieldLabel>
                   <TextInput
                     type='text'
-                    {...register('nombre', { required: 'El nombre es requerido' })}
+                    {...register('nombre')}
                     error={Boolean(errors.nombre)}
                     placeholder='Ingrese nombres'
                   />
@@ -610,7 +642,7 @@ export default function NuevoPacienteForm() {
                   <FieldLabel>Apellidos</FieldLabel>
                   <TextInput
                     type='text'
-                    {...register('apellido', { required: 'El apellido es requerido' })}
+                    {...register('apellido')}
                     error={Boolean(errors.apellido)}
                     placeholder='Ingrese apellidos'
                   />
@@ -623,9 +655,7 @@ export default function NuevoPacienteForm() {
                   <FieldLabel>Fecha de nacimiento</FieldLabel>
                   <input
                     type='hidden'
-                    {...register('fechaNacimiento', {
-                      required: 'La fecha de nacimiento es requerida',
-                    })}
+                    {...register('fechaNacimiento')}
                   />
                   <div ref={birthDatePickerRef} className='relative'>
                     <button
@@ -730,7 +760,7 @@ export default function NuevoPacienteForm() {
                 <div>
                   <FieldLabel>Sexo</FieldLabel>
                   <SelectInput
-                    {...register('sexo', { required: 'El sexo es requerido' })}
+                    {...register('sexo')}
                     error={Boolean(errors.sexo)}
                     defaultValue=''
                   >
@@ -750,7 +780,13 @@ export default function NuevoPacienteForm() {
                   <FieldLabel>Teléfono</FieldLabel>
                   <TextInput
                     type='tel'
-                    {...register('telefono', { required: 'El teléfono es requerido' })}
+                    inputMode='numeric'
+                    value={watch('telefono')}
+                    onChange={e =>
+                      setValue('telefono', e.target.value.replace(/\D/g, ''), {
+                        shouldValidate: true,
+                      })
+                    }
                     error={Boolean(errors.telefono)}
                     placeholder='Ingrese número de teléfono'
                   />
@@ -763,7 +799,7 @@ export default function NuevoPacienteForm() {
                   <FieldLabel>Dirección</FieldLabel>
                   <TextInput
                     type='text'
-                    {...register('direccion', { required: 'La dirección es requerida' })}
+                    {...register('direccion')}
                     error={Boolean(errors.direccion)}
                     placeholder='Av. / Urb / Calle'
                   />
@@ -806,7 +842,7 @@ export default function NuevoPacienteForm() {
         </div>
         <input
           type='hidden'
-          {...register('examenes', { validate: value => value.length > 0 || '' })}
+          {...register('examenes')}
         />
         <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-5'>
           {visibleExams.map(exam => {
@@ -867,7 +903,7 @@ export default function NuevoPacienteForm() {
       <div className='flex items-center justify-end gap-4 mt-6'>
         <Button
           type='button'
-          onClick={handleSubmit(onSubmit)}
+          onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
           disabled={
             isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending
           }

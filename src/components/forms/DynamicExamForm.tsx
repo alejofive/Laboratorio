@@ -458,8 +458,6 @@ export default function DynamicExamForm({
                   labelBase,
                   value,
                   field.reference_value,
-                  '',
-                  field.type === 'multiselect' ? field.value_options : undefined,
                 )
               }
 

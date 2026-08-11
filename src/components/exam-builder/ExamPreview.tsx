@@ -26,6 +26,18 @@ function PreviewControl({ field, label }: { field: ExamTemplateField; label: str
     );
   }
 
+  if (field.type === 'multiselect') {
+    return (
+      <div className="space-y-2 text-sm text-tertiary">
+        {(field.options ?? []).length === 0 ? <span>Opciones</span> : null}
+        {(field.options ?? []).map((option) => (
+          <CheckboxInput key={option} disabled label={option} />
+        ))}
+        <p className="text-xs">Cada opcion marcada abre un campo de texto editable.</p>
+      </div>
+    );
+  }
+
   if (field.type === 'radio') {
     return (
       <div className="flex flex-wrap gap-4 text-sm text-tertiary">
@@ -70,7 +82,10 @@ export function ExamPreview({ template }: { template: ExamTemplate }) {
 
               {section.fields.map((field, fieldIndex) => {
                 const label = `${field.label || `Campo ${fieldIndex + 1}`}${field.unit ? ` (${field.unit})` : ''}`;
-                const className = field.type === 'textarea' ? 'col-span-6' : 'col-span-2';
+                const className =
+                  field.type === 'textarea' || field.type === 'multiselect'
+                    ? 'col-span-6'
+                    : 'col-span-2';
 
                 return (
                 <div key={field._id ?? fieldIndex} className={className}>

@@ -7,6 +7,7 @@ export interface ExamTemplatePayloadField {
   options?: string[];
   unit?: string;
   reference_value?: string;
+  value_options?: string[];
 }
 
 export interface ExamTemplatePayloadSection {
@@ -30,9 +31,10 @@ export const FIELD_TYPES: { label: string; value: ExamTemplateFieldType }[] = [
   { label: 'Numero', value: 'number' },
   { label: 'Area de texto', value: 'textarea' },
   { label: 'Seleccion', value: 'select' },
+  { label: 'Seleccion multiple', value: 'multiselect' },
   { label: 'Radio', value: 'radio' },
   { label: 'Fecha', value: 'date' },
-  { label: 'Checkbox', value: 'checkbox' },
+  { label: 'SI/NO', value: 'checkbox' },
 ];
 
 export const initialExamTemplate: ExamTemplate = {
@@ -100,7 +102,10 @@ export function validateExamTemplate(template: ExamTemplate) {
         keys.add(key);
       }
 
-      if ((field.type === 'select' || field.type === 'radio') && (field.options ?? []).filter(Boolean).length === 0) {
+      if (
+        (field.type === 'select' || field.type === 'multiselect' || field.type === 'radio') &&
+        (field.options ?? []).filter(Boolean).length === 0
+      ) {
         errors.push(`${fieldLabel}: ${field.type} debe tener al menos una opcion.`);
       }
     });
@@ -140,8 +145,12 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
           payloadField.reference_value = field.reference_value.trim();
         }
 
-        if (field.type === 'select' || field.type === 'radio') {
+        if (field.type === 'select' || field.type === 'multiselect' || field.type === 'radio') {
           payloadField.options = field.options.map((option) => option.trim()).filter(Boolean);
+        }
+
+        if (field.value_options?.length) {
+          payloadField.value_options = field.value_options;
         }
 
         return payloadField;

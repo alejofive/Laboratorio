@@ -1,4 +1,12 @@
-export type ExamTemplateFieldType = 'number' | 'text' | 'textarea' | 'select' | 'date' | 'checkbox' | 'radio';
+export type ExamTemplateFieldType =
+  | 'number'
+  | 'text'
+  | 'textarea'
+  | 'select'
+  | 'multiselect'
+  | 'date'
+  | 'checkbox'
+  | 'radio';
 
 export interface ExamTemplate {
   _id?: string;
@@ -22,6 +30,7 @@ export interface ExamTemplateField {
   options: string[];
   unit?: string;
   reference_value?: string;
+  value_options?: string[];
 }
 
 export interface ExamTemplateSection {

@@ -1,7 +1,5 @@
 'use client'
 
-import { TipoExamen } from '@/types'
-
 import {
   useCreateOrder,
   useCreatePatient,
@@ -30,11 +28,11 @@ import {
 import SvgIcon from './ui/SvgIcon'
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles'
+type FiltroExamen = 'todos' | GrupoExamen
 
 type ExamItem = {
   templateId: string
   label: string
-  value: TipoExamen
   group: GrupoExamen
 }
 
@@ -51,40 +49,6 @@ const categoryToGroup: Record<string, GrupoExamen> = {
   'inmunologia y serologia': 'serologia',
   'coprologia y uroanalisis': 'orina_heces',
   'perfiles combinados': 'paneles',
-}
-
-const examNameToTipo: Record<string, TipoExamen> = {
-  'frotisde sangre periferica': 'frotis_sangre',
-  hematologia: 'hematologia',
-  'hemoglomina hematocritos': 'hemoglobina_hematocritos',
-  hemoparasitos: 'hemoparasitos',
-  'tipo de sangre': 'tipo_sangre',
-  glicemia: 'glicemia_pre_post',
-  'glicemia pre post': 'glicemia_pre_post',
-  'quimica sanguinea': 'quimica',
-  'quimica sanguinea mas corta': 'quimica_corta',
-  quimica: 'quimica',
-  'quimica colinesterasa': 'quimica_colinesterasa',
-  'quimica colinesteraza': 'quimica_colinesterasa',
-  dengue: 'dengue',
-  'helicobacter pylori': 'helicobacter_pylori',
-  'prueba de embarazo': 'prueba_embarazo',
-  serologia: 'serologia',
-  'serologia asto psa pylori': 'serologia_asto_psa_pylori',
-  'vdrl hepatitis y demas': 'vdrl_hepatitis',
-  heces: 'heces',
-  orina: 'orina',
-  'heces y hematologia': 'heces_hematologia',
-  'hematologia y orina': 'hematologia_orina',
-  'hematologia y quimica': 'hematologia_quimica',
-  'hematologia y serologia': 'hematologia_serologia',
-  'nuevo completo': 'nuevo_completo',
-  'orina y heces': 'orina_heces',
-  'quimica y heces': 'quimica_heces',
-  'quimica y orina': 'quimica_orina',
-  'quimica y serologia': 'quimica_serologia',
-  'serologia y heces': 'serologia_heces',
-  'serologia y orina': 'serologia_orina',
 }
 
 const toApiDate = (date: Date) => {
@@ -158,7 +122,7 @@ export default function NuevoPacienteForm() {
   const examenesSeleccionados = watch('examenes')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchExam, setSearchExam] = useState('')
-  const [activeCategory, setActiveCategory] = useState<GrupoExamen>('hematologia')
+  const [activeCategory, setActiveCategory] = useState<FiltroExamen>('todos')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
@@ -240,7 +204,8 @@ export default function NuevoPacienteForm() {
 
   const selectedPatientCard = selectedPatientDetail ?? selectedPatient
 
-  const EXAM_CATEGORIES: { key: GrupoExamen; label: string; iconSrc: string }[] = [
+  const EXAM_CATEGORIES: { key: FiltroExamen; label: string; iconSrc?: string }[] = [
+    { key: 'todos', label: 'Todos' },
     { key: 'hematologia', label: 'Hematología', iconSrc: '/svg/examenes/hematologia.svg' },
     { key: 'quimica', label: 'Química', iconSrc: '/svg/examenes/quimica.svg' },
     { key: 'serologia', label: 'Serología e Infecciosos', iconSrc: '/svg/examenes/serologia.svg' },
@@ -256,25 +221,16 @@ export default function NuevoPacienteForm() {
       const normalizedCategoryName = normalizeText(category.name)
       const group = categoryToGroup[normalizedCategoryName] ?? 'perfiles'
 
-      return category.exams
-        .map(exam => {
-          const normalizedExamName = normalizeText(exam.name)
-          const tipo = examNameToTipo[normalizedExamName]
-
-          if (!tipo) return null
-
-          return {
-            templateId: exam.id,
-            label: exam.name,
-            value: tipo,
-            group,
-          }
-        })
-        .filter((item): item is ExamItem => item !== null)
+      return category.exams.map(exam => ({
+        templateId: exam.id,
+        label: exam.name,
+        group,
+      }))
     })
   }, [examsData])
 
-  const examCountByCategory: Record<GrupoExamen, number> = {
+  const examCountByCategory: Record<FiltroExamen, number> = {
+    todos: allExams.length,
     hematologia: allExams.filter(exam => exam.group === 'hematologia').length,
     quimica: allExams.filter(exam => exam.group === 'quimica').length,
     serologia: allExams.filter(exam => exam.group === 'serologia').length,
@@ -284,7 +240,7 @@ export default function NuevoPacienteForm() {
   }
 
   const visibleExams = allExams.filter(exam => {
-    const byCategory = exam.group === activeCategory
+    const byCategory = activeCategory === 'todos' || exam.group === activeCategory
     const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase())
     return byCategory && byText
   })
@@ -409,19 +365,17 @@ export default function NuevoPacienteForm() {
     setBirthDateDraft({ day: '', month: '', year: '' })
   }
 
-  const toggleExamen = (tipo: TipoExamen) => {
+  const toggleExamen = (templateId: string) => {
     const current = examenesSeleccionados || []
-    const newExamenes = current.includes(tipo)
-      ? current.filter(e => e !== tipo)
-      : [...current, tipo]
+    const newExamenes = current.includes(templateId)
+      ? current.filter(id => id !== templateId)
+      : [...current, templateId]
     setValue('examenes', newExamenes, { shouldValidate: true })
   }
 
   const onSubmit = async (data: NewPatientRequestValues) => {
     try {
-      const selectedTemplates = allExams
-        .filter(exam => selectedExams.includes(exam.value))
-        .map(exam => exam.templateId)
+      const selectedTemplates = selectedExams
 
       if (selectedTemplates.length === 0) {
         toast.error('Debes seleccionar al menos un examen valido')
@@ -477,9 +431,7 @@ export default function NuevoPacienteForm() {
         return
       }
 
-      const selectedTemplates = allExams
-        .filter(exam => selectedExams.includes(exam.value))
-        .map(exam => exam.templateId)
+      const selectedTemplates = selectedExams
 
       if (selectedTemplates.length === 0) {
         toast.error('Debes seleccionar al menos un examen valido')
@@ -846,11 +798,11 @@ export default function NuevoPacienteForm() {
         />
         <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-5'>
           {visibleExams.map(exam => {
-            const isChecked = selectedExams.includes(exam.value)
+            const isChecked = selectedExams.includes(exam.templateId)
 
             return (
               <label
-                key={exam.value}
+                key={exam.templateId}
                 className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${
                   isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
                 }`}
@@ -859,7 +811,7 @@ export default function NuevoPacienteForm() {
                   type='checkbox'
                   className='size-5 shrink-0 cursor-pointer'
                   checked={isChecked}
-                  onChange={() => toggleExamen(exam.value)}
+                  onChange={() => toggleExamen(exam.templateId)}
                 />
                 <span>{exam.label}</span>
               </label>
@@ -876,7 +828,7 @@ export default function NuevoPacienteForm() {
             </h4>
             <div className='mt-3 flex flex-wrap gap-3'>
               {selectedExams.map(exam => {
-                const examLabel = allExams.find(item => item.value === exam)?.label ?? exam
+                const examLabel = allExams.find(item => item.templateId === exam)?.label ?? exam
                 return (
                   <PillFilter
                     selected

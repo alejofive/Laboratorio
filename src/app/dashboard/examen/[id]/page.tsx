@@ -211,29 +211,28 @@ function mapExamToPayload(
   }
 }
 
-function normalizePayloadForApi(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(item => normalizePayloadForApi(item))
-  }
+function normalizePayloadForApi(
+  payload: Record<string, unknown>,
+  sections: ExamTemplateSection[],
+): Record<string, unknown> {
+  const fieldTypes = new Map(
+    sections.flatMap(section => section.fields.map(field => [field.key, field.type] as const)),
+  )
 
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, normalizePayloadForApi(nestedValue)]),
-    )
-  }
+  return Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => {
+      if (fieldTypes.get(key) !== 'number' || typeof value !== 'string') {
+        return [key, value]
+      }
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (trimmed === '') return value
+      const normalizedDecimal = value.trim().replace(',', '.')
+      if (normalizedDecimal === '' || !/^-?\d+(\.\d+)?$/.test(normalizedDecimal)) {
+        return [key, value]
+      }
 
-    const normalizedDecimal = trimmed.replace(',', '.')
-    if (/^-?\d+(\.\d+)?$/.test(normalizedDecimal)) {
-      const parsed = Number(normalizedDecimal)
-      if (!Number.isNaN(parsed)) return parsed
-    }
-  }
-
-  return value
+      return [key, Number(normalizedDecimal)]
+    }),
+  )
 }
 
 interface ExamenView extends Examen {
@@ -481,7 +480,7 @@ export default function ExamenPage() {
         return
       }
 
-      const normalizedPayload = normalizePayloadForApi(rawPayload) as Record<string, unknown>
+      const normalizedPayload = normalizePayloadForApi(rawPayload, examen.templateSections)
 
       await createOrderExamResult(orderId, examen.id, {
         result_payload: normalizedPayload,

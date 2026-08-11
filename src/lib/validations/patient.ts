@@ -1,4 +1,3 @@
-import { TipoExamen } from '@/types'
 import { z } from 'zod'
 
 const today = new Date()
@@ -29,7 +28,7 @@ export const newPatientRequestSchema = z.object({
     .regex(/^\d+$/, 'La cedula debe contener solo numeros'),
   direccion: z.string().trim().min(1, 'La direccion es requerida'),
   observaciones: z.string(),
-  examenes: z.array(z.custom<TipoExamen>()).min(1, 'Debes seleccionar al menos un examen'),
+  examenes: z.array(z.string()).min(1, 'Debes seleccionar al menos un examen'),
 })
 
 export type NewPatientRequestValues = z.infer<typeof newPatientRequestSchema>

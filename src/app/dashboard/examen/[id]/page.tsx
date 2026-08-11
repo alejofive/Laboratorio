@@ -111,8 +111,8 @@ function mapResultStatus(status?: string): EstadoExamen {
   }
 }
 
-function getExamMenuStatus(exam: Examen, isActive: boolean, activeReadOnly: boolean) {
-  if (isActive && !activeReadOnly) {
+function getExamMenuStatus(exam: Examen, examReadOnly: boolean) {
+  if (!examReadOnly) {
     return {
       label: 'En edición',
       dotClassName: 'bg-[#f59e0b]',
@@ -252,11 +252,11 @@ function mapPatient(apiPatient: {
 }): Paciente {
   const age = apiPatient.birth_date
     ? Math.max(
-        0,
-        Math.floor(
-          (Date.now() - new Date(apiPatient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
-        ),
-      )
+      0,
+      Math.floor(
+        (Date.now() - new Date(apiPatient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+      ),
+    )
     : 0
 
   return {
@@ -330,9 +330,9 @@ export default function ExamenPage() {
   const examenBase = examenesPaciente.find(e => e.id === selectedExamId) ?? null
   const examen = examenBase
     ? {
-        ...examenBase,
-        resultados: draftResultadosByExam[examenBase.id] ?? examenBase.resultados,
-      }
+      ...examenBase,
+      resultados: draftResultadosByExam[examenBase.id] ?? examenBase.resultados,
+    }
     : null
 
   const paciente = patientData ? mapPatient(patientData) : null
@@ -575,13 +575,13 @@ export default function ExamenPage() {
   const isCurrentTemplateValid =
     examen.useDynamicForm && examen.templateSections.length > 0
       ? validateTemplateValues(
+        examen.templateSections,
+        draftTemplateValuesByExam[examen.id] ??
+        buildInitialValuesFromTemplate(
           examen.templateSections,
-          draftTemplateValuesByExam[examen.id] ??
-            buildInitialValuesFromTemplate(
-              examen.templateSections,
-              mapExamToPayload(examen.tipo, examen.resultados),
-            ),
-        )
+          mapExamToPayload(examen.tipo, examen.resultados),
+        ),
+      )
       : isFormValid
 
   return (
@@ -628,6 +628,7 @@ export default function ExamenPage() {
               <Button
                 type='button'
                 onClick={handleSendEmail}
+                disabled={!readOnly}
                 variant='outline'
                 icon={<Mail className='h-5 w-5' />}
               >
@@ -636,6 +637,7 @@ export default function ExamenPage() {
               <Button
                 type='button'
                 onClick={handlePrintPdf}
+                disabled={!readOnly}
                 icon={<FileText className='h-5 w-5' />}
               >
                 Imprimir
@@ -650,25 +652,25 @@ export default function ExamenPage() {
             <div className='flex gap-3 overflow-x-auto pb-1'>
               {examenesPaciente.map(ex => {
                 const isActive = ex.id === examen.id
-                const status = getExamMenuStatus(ex, isActive, readOnly)
+                const initialExamReadOnly = ex.estado === 'completo' || ex.estado === 'enviado'
+                const examReadOnly = readOnlyByExam[ex.id] ?? initialExamReadOnly
+                const status = getExamMenuStatus(ex, examReadOnly)
 
                 return (
                   <Link
                     key={ex.id}
                     href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
                     scroll={false}
-                    className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${
-                      isActive
+                    className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive
                         ? 'border-[#2563eb] bg-[#f1f5fe]'
                         : 'border-border-default bg-white hover:bg-surface-muted'
-                    }`}
+                      }`}
                   >
                     <span className={`h-2 w-2 shrink-0 rounded-full ${status.dotClassName}`} />
                     <span className='min-w-0'>
                       <span
-                        className={`block truncate text-base font-semibold ${
-                          isActive ? 'text-[#2563eb]' : 'text-primary'
-                        }`}
+                        className={`block truncate text-base font-semibold ${isActive ? 'text-[#2563eb]' : 'text-primary'
+                          }`}
                       >
                         {ex.templateName || examLabels[ex.tipo]}
                       </span>

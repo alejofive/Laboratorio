@@ -390,6 +390,45 @@ export default function DynamicExamForm({
     </div>
   )
 
+  const renderReadOnlyMultiSelectValue = (
+    key: string,
+    label: string,
+    value: TemplateFormValue | undefined,
+    referenceValue?: string,
+    valueOptions?: string[],
+  ) => {
+    const entries = toMultiSelectEntries(value)
+      .map(entry => ({ name: (entry.option || entry.text).trim(), value: entry.value?.trim() }))
+      .filter(entry => entry.name)
+
+    if (!valueOptions?.length) {
+      return renderReadOnlyValue(key, label, value, referenceValue)
+    }
+
+    return (
+      <div key={key} className='grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4'>
+        {entries.length > 0 ? (
+          entries.map((entry, index) => (
+            <div key={`${entry.name}-${index}`}>
+              <FieldLabel className='font-medium'>Cristales: {entry.name}</FieldLabel>
+              <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
+                {entry.value || '-'}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div>
+            <FieldLabel className='font-medium'>{label}</FieldLabel>
+            <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>-</p>
+          </div>
+        )}
+        {referenceValue ? (
+          <div className='md:col-span-2 lg:col-span-4'>{renderReference(referenceValue)}</div>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <div className='space-y-6'>
       {sections.map((section, idx) => (
@@ -404,6 +443,16 @@ export default function DynamicExamForm({
               const value = values[field.key]
 
               if (readOnly) {
+                if (field.type === 'multiselect') {
+                  return renderReadOnlyMultiSelectValue(
+                    field._id ?? field.key,
+                    labelBase,
+                    value,
+                    field.reference_value,
+                    field.value_options,
+                  )
+                }
+
                 return renderReadOnlyValue(
                   field._id ?? field.key,
                   labelBase,

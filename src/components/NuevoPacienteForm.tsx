@@ -239,10 +239,16 @@ export default function NuevoPacienteForm() {
     perfiles: allExams.filter(exam => exam.group === 'perfiles').length,
   }
 
+  const normalizedSearchExam = normalizeText(searchExam)
+
   const visibleExams = allExams.filter(exam => {
-    const byCategory = activeCategory === 'todos' || exam.group === activeCategory
-    const byText = exam.label.toLowerCase().includes(searchExam.toLowerCase())
-    return byCategory && byText
+    const byText = normalizeText(exam.label).includes(normalizedSearchExam)
+
+    if (normalizedSearchExam) {
+      return byText
+    }
+
+    return activeCategory === 'todos' || exam.group === activeCategory
   })
 
   const selectedExams = examenesSeleccionados || []
@@ -388,7 +394,7 @@ export default function NuevoPacienteForm() {
         const created = await createPatientMutation.mutateAsync({
           first_name: data.nombre.trim(),
           last_name: data.apellido.trim(),
-          document_number: data.cedula.trim(),
+          document_number: `V-${data.cedula.trim()}`,
           birth_date: data.fechaNacimiento,
           sex: data.sexo,
           phone: data.telefono.trim(),
@@ -843,13 +849,13 @@ export default function NuevoPacienteForm() {
         ) : null}
         {errors.examenes && <p className='text-red-500 text-xs mt-2'>{errors.examenes.message}</p>}
 
-        <div className='mt-6'>
+        {/* <div className='mt-6'>
           <FieldLabel>Observaciones</FieldLabel>
           <TextareaInput
             {...register('observaciones')}
             placeholder='Agregar observaciones de la solicitud'
           />
-        </div>
+        </div> */}
       </section>
 
       <div className='flex items-center justify-end gap-4 mt-6'>

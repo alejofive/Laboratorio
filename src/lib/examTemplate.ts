@@ -284,7 +284,21 @@ function buildTemplateValuesSchema(sections: ExamTemplateSection[]) {
         return;
       }
 
-      if (field.type === 'select' || field.type === 'radio') {
+      if (field.type === 'select') {
+        shape[field.key] = z.string().refine((value) => {
+          if (!value.trim()) return true;
+          if (field.options.includes(value)) return true;
+
+          const decoded = decodeFlexibleSelectValue(value);
+          if (decoded?.mode === 'custom') return Boolean(decoded.customValue.trim());
+          if (decoded?.mode === 'preset') return field.options.includes(decoded.option);
+
+          return false;
+        }, `${label} debe tener una opcion valida.`);
+        return;
+      }
+
+      if (field.type === 'radio') {
         shape[field.key] = z.string().refine(
           (value) => !value.trim() || field.options.includes(value),
           `${label} debe tener una opcion valida.`,

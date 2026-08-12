@@ -289,6 +289,9 @@ export default function ExamenPage() {
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({})
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
   const [isSavingResult, setIsSavingResult] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailInput, setEmailInput] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [draftResultadosByExam, setDraftResultadosByExam] = useState<
     Record<string, ResultadosExamen>
   >({})
@@ -520,22 +523,35 @@ export default function ExamenPage() {
     }
   }
 
-  const handleSendEmail = async () => {
-    const defaultEmail = examen.emailEnviado || ''
-    const email = window.prompt('Ingresa el correo de destino', defaultEmail)
-    if (!email?.trim()) return
+  const openEmailModal = () => {
+    setEmailInput(examen.emailEnviado || '')
+    setIsEmailModalOpen(true)
+  }
 
-    const validation = emailSchema.safeParse(email)
+  const closeEmailModal = () => {
+    if (isSendingEmail) return
+    setIsEmailModalOpen(false)
+  }
+
+  const handleSendEmail = async () => {
+    if (isSendingEmail) return
+
+    const validation = emailSchema.safeParse(emailInput)
     if (!validation.success) {
       toast.error(validation.error.issues[0]?.message ?? 'Correo invalido')
       return
     }
 
+    setIsSendingEmail(true)
+
     try {
       await sendOrderExamEmail(orderId, examen.id, validation.data)
-      alert('Email enviado')
+      setIsEmailModalOpen(false)
+      toast.success('Email enviado exitosamente')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo enviar el email')
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -635,8 +651,8 @@ export default function ExamenPage() {
             <div className='flex flex-wrap gap-3 lg:justify-end'>
               <Button
                 type='button'
-                onClick={handleSendEmail}
-                disabled={!readOnly}
+                onClick={openEmailModal}
+                disabled={!readOnly || isSendingEmail}
                 variant='outline'
                 icon={<Mail className='h-5 w-5' />}
               >
@@ -653,6 +669,63 @@ export default function ExamenPage() {
             </div>
           </div>
         </header>
+
+        {isEmailModalOpen ? (
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 no-print'>
+            <div className='w-full max-w-md rounded-3xl border border-border-default bg-white p-6 shadow-2xl'>
+              <div className='mb-5'>
+                <h2 className='text-xl font-semibold text-primary'>Enviar resultado por email</h2>
+                <p className='mt-2 text-sm text-secondary'>
+                  Ingresa el correo donde se enviara el PDF del resultado.
+                </p>
+              </div>
+
+              <label className='block'>
+                <span className='mb-2 block text-sm font-medium text-secondary'>Correo electronico</span>
+                <input
+                  type='email'
+                  value={emailInput}
+                  onChange={event => setEmailInput(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') void handleSendEmail()
+                    if (event.key === 'Escape') closeEmailModal()
+                  }}
+                  disabled={isSendingEmail}
+                  autoFocus
+                  placeholder='correo@ejemplo.com'
+                  className='h-12 w-full rounded-xl border border-border-input px-4 text-primary outline-none transition-colors placeholder:text-secondary focus:border-brand-primary disabled:cursor-not-allowed disabled:opacity-60'
+                />
+              </label>
+
+              <div className='mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={closeEmailModal}
+                  disabled={isSendingEmail}
+                  className='disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type='button'
+                  onClick={handleSendEmail}
+                  disabled={isSendingEmail}
+                  className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  {isSendingEmail ? (
+                    <>
+                      <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+                      Enviando email...
+                    </>
+                  ) : (
+                    'Enviar PDF'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {examenesPaciente.length > 1 && (
           <nav className='mb-6 flex flex-col gap-4 no-print'>

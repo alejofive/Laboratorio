@@ -401,18 +401,16 @@ export default function DynamicExamForm({
       .map(entry => ({ name: (entry.option || entry.text).trim(), value: entry.value?.trim() }))
       .filter(entry => entry.name)
 
-    if (!valueOptions?.length) {
-      return renderReadOnlyValue(key, label, value, referenceValue)
-    }
-
     return (
       <div key={key} className='grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4'>
         {entries.length > 0 ? (
           entries.map((entry, index) => (
             <div key={`${entry.name}-${index}`}>
-              <FieldLabel className='font-medium'>Cristales: {entry.name}</FieldLabel>
+              <FieldLabel className='font-medium'>
+                {valueOptions?.length ? `Cristales: ${entry.name}` : `Reporte ${index + 1}`}
+              </FieldLabel>
               <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
-                {entry.value || '-'}
+                {valueOptions?.length ? entry.value || '-' : entry.name}
               </p>
             </div>
           ))

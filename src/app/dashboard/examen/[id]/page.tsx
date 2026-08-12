@@ -112,14 +112,16 @@ function mapResultStatus(status?: string): EstadoExamen {
 }
 
 function getExamMenuStatus(exam: Examen, examReadOnly: boolean) {
-  if (!examReadOnly) {
+  const isCompleted = exam.estado === 'completo' || exam.estado === 'enviado'
+
+  if (isCompleted && !examReadOnly) {
     return {
       label: 'En edición',
       dotClassName: 'bg-[#f59e0b]',
     }
   }
 
-  if (exam.estado === 'completo' || exam.estado === 'enviado') {
+  if (isCompleted) {
     return {
       label: 'Completado ✓',
       dotClassName: 'bg-[#10b981]',
@@ -286,6 +288,7 @@ export default function ExamenPage() {
   const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({})
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({})
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
+  const [isSavingResult, setIsSavingResult] = useState(false)
   const [draftResultadosByExam, setDraftResultadosByExam] = useState<
     Record<string, ResultadosExamen>
   >({})
@@ -458,7 +461,10 @@ export default function ExamenPage() {
   }
 
   const handleCompletar = async () => {
+    if (isSavingResult) return
+
     const bioanalystName = doctorOrdenanteInput.trim()
+    setIsSavingResult(true)
 
     try {
       const resultados = draftResultadosByExam[examen.id] ?? examen.resultados
@@ -509,6 +515,8 @@ export default function ExamenPage() {
       toast.success('Resultado guardado exitosamente')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo guardar el resultado')
+    } finally {
+      setIsSavingResult(false)
     }
   }
 
@@ -662,8 +670,8 @@ export default function ExamenPage() {
                     href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
                     scroll={false}
                     className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive
-                        ? 'border-[#2563eb] bg-[#f1f5fe]'
-                        : 'border-border-default bg-white hover:bg-surface-muted'
+                      ? 'border-[#2563eb] bg-[#f1f5fe]'
+                      : 'border-border-default bg-white hover:bg-surface-muted'
                       }`}
                   >
                     <span className={`h-2 w-2 shrink-0 rounded-full ${status.dotClassName}`} />
@@ -699,12 +707,22 @@ export default function ExamenPage() {
 
                 void handleCompletar()
               }}
-              disabled={!readOnly && !isCurrentTemplateValid}
+              disabled={isSavingResult || (!readOnly && !isCurrentTemplateValid)}
               variant={readOnly ? 'outline' : 'primary'}
               size='md'
               icon={readOnly ? <Pencil className='h-4 w-4' /> : undefined}
+              className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
             >
-              {readOnly ? 'Editar resultado' : 'Guardar resultado'}
+              {isSavingResult ? (
+                <>
+                  <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+                  Guardando resultado...
+                </>
+              ) : readOnly ? (
+                'Editar resultado'
+              ) : (
+                'Guardar resultado'
+              )}
             </Button>
           </div>
 

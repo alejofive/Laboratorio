@@ -274,6 +274,7 @@ export default function NuevoPacienteForm() {
   const shouldShowSelected = selectedExams.length > 0
   const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0
   const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0
+  const isSubmittingRequest = createPatientMutation.isPending || createOrderMutation.isPending
   const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm)
 
   const onSearchTermChange = (value: string) => {
@@ -862,12 +863,17 @@ export default function NuevoPacienteForm() {
         <Button
           type='button'
           onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
-          disabled={
-            isSubmitDisabled || createPatientMutation.isPending || createOrderMutation.isPending
-          }
-          className='disabled:cursor-not-allowed disabled:opacity-60'
+          disabled={isSubmitDisabled || isSubmittingRequest}
+          className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
         >
-          Guardar y crear solicitud
+          {isSubmittingRequest ? (
+            <>
+              <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+              Creando solicitud...
+            </>
+          ) : (
+            'Guardar y crear solicitud'
+          )}
         </Button>
       </div>
     </div>

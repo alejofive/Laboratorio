@@ -5,7 +5,6 @@ import DynamicExamForm from '@/components/forms/DynamicExamForm'
 import { Button } from '@/components/ui/Button'
 import {
   createOrderExamResult,
-  getOrderExamPdf,
   sendOrderExamEmail,
   useOrderById,
   usePatientById,
@@ -587,7 +586,7 @@ export default function ExamenPage() {
     }
   }
 
-  const handlePrintPdf = async () => {
+  const handlePrintPdf = () => {
     const pdfWindow = window.open('', '_blank')
 
     if (!pdfWindow) {
@@ -595,16 +594,7 @@ export default function ExamenPage() {
       return
     }
 
-    try {
-      const pdfBlob = await getOrderExamPdf(orderId, examen.id)
-      const pdfUrl = URL.createObjectURL(pdfBlob)
-
-      pdfWindow.location.href = pdfUrl
-      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 60_000)
-    } catch (error) {
-      pdfWindow.close()
-      toast.error(error instanceof Error ? error.message : 'No se pudo generar el PDF')
-    }
+    pdfWindow.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/exams/${examen.id}/pdf`
   }
 
   const renderForm = () => {

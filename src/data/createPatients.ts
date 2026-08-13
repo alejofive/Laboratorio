@@ -230,17 +230,6 @@ export async function createOrderExamResult(orderId: string, examId: string, pay
     return res.json().catch(() => null);
 }
 
-export async function getOrderExamPdf(orderId: string, examId: string) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/exams/${examId}/pdf`);
-
-    if (!res.ok) {
-        const errorBody = await res.json().catch(() => null);
-        throw new Error(errorBody?.message || `Error ${res.status}: ${res.statusText}`);
-    }
-
-    return res.blob();
-}
-
 export async function saveOrderExamResult(orderId: string, examId: string, payload: SaveOrderExamPayload) {
     const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/exams/${examId}`;
     const headers = {

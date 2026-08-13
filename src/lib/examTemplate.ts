@@ -262,7 +262,7 @@ function buildTemplateValuesSchema(sections: ExamTemplateSection[]) {
                 entry.option || entry.text.trim() ? Boolean(entry.value?.trim()) : true,
               );
             },
-            `${label}: selecciona una cantidad para cada elemento agregado.`,
+            `${label}: ingresa una cantidad para cada elemento agregado.`,
           );
         return;
       }

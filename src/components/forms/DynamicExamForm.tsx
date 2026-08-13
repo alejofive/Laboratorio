@@ -4,7 +4,6 @@ import {
   CheckboxInput,
   FieldLabel,
   RadioInput,
-  SelectInput,
   TextareaInput,
   TextInput,
 } from '@/components/ui/FormField'
@@ -179,19 +178,14 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
               options={options}
               onChange={inputValue => updateEntryName(index, inputValue)}
             />
-            <SelectInput
-              aria-label={`Cantidad de ${entry.option || entry.text || 'cristal'}`}
-              value={entry.value ?? ''}
-              onChange={event => updateEntryValue(index, event.target.value)}
-              className='col-start-2 h-12 sm:col-start-3'
-            >
-              <option value=''>Selecciona</option>
-              {valueOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </SelectInput>
+            <div className='col-start-2 sm:col-start-3'>
+              <EditableSelectInput
+                id={`${id}-entry-${index}-value`}
+                value={entry.value ?? ''}
+                options={valueOptions}
+                onChange={inputValue => updateEntryValue(index, inputValue)}
+              />
+            </div>
             <button
               type='button'
               aria-label='Quitar cristal'

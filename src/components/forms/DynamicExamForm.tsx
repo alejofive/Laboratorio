@@ -166,17 +166,94 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
   if (valueOptions?.length) {
     return (
       <div className='space-y-3'>
+        <div
+          className='relative'
+          onBlur={event => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
+          }}
+        >
+          <button
+            type='button'
+            id={id}
+            aria-haspopup='listbox'
+            aria-controls={listId}
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen(open => !open)}
+            className='flex h-12 w-full items-center justify-between rounded-xl border border-border-input px-3 text-left text-sm text-primary transition-colors hover:border-brand-primary focus:outline-none'
+          >
+            <span className={selectedOptions.size === 0 ? 'text-secondary' : undefined}>
+              {selectedOptions.size === 0
+                ? 'Selecciona los cristales'
+                : `${selectedOptions.size} seleccionado${selectedOptions.size === 1 ? '' : 's'}`}
+            </span>
+            <ChevronDown className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isOpen ? (
+            <div
+              id={listId}
+              role='listbox'
+              aria-multiselectable
+              className='absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-border-default bg-white p-1 shadow-lg'
+            >
+              <button
+                type='button'
+                onMouseDown={event => event.preventDefault()}
+                onClick={toggleAllOptions}
+                className='mb-1 flex w-full items-center gap-2 border-b border-border-default px-3 py-2 text-left text-sm font-medium text-brand-primary transition-colors hover:bg-brand-active'
+              >
+                <span
+                  aria-hidden
+                  className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+                    areAllSelected
+                      ? 'border-brand-primary bg-brand-primary text-white'
+                      : 'border-border-input'
+                  }`}
+                >
+                  {areAllSelected ? '✓' : null}
+                </span>
+                {areAllSelected ? 'Quitar todos' : 'Seleccionar todos'}
+              </button>
+              {options.map(option => (
+                <button
+                  key={option}
+                  type='button'
+                  role='option'
+                  aria-selected={selectedOptions.has(option)}
+                  onMouseDown={event => event.preventDefault()}
+                  onClick={() => toggleOption(option)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-brand-active hover:text-brand-primary ${
+                    selectedOptions.has(option) ? 'bg-brand-active text-brand-primary' : 'text-primary'
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+                      selectedOptions.has(option)
+                        ? 'border-brand-primary bg-brand-primary text-white'
+                        : 'border-border-input'
+                    }`}
+                  >
+                    {selectedOptions.has(option) ? '✓' : null}
+                  </span>
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
         {entries.map((entry, index) => (
           <div
             key={`entry-${index}`}
-            className='grid grid-cols-[auto_1fr] items-center gap-2 sm:grid-cols-[auto_1fr_10rem_auto]'
+            className='grid grid-cols-[auto_1fr] items-center gap-2 sm:grid-cols-[auto_3fr_2fr_auto]'
           >
             <span className='shrink-0 text-sm font-medium text-secondary/70'>Cristales:</span>
-            <EditableSelectInput
+            <TextInput
               id={`${id}-entry-${index}`}
               value={entry.option || entry.text}
-              options={options}
-              onChange={inputValue => updateEntryName(index, inputValue)}
+              onChange={event => updateEntryName(index, event.target.value)}
+              placeholder='Nombre del cristal'
+              className='h-12'
             />
             <div className='col-start-2 sm:col-start-3'>
               <EditableSelectInput
@@ -190,7 +267,7 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
               type='button'
               aria-label='Quitar cristal'
               onClick={() => removeEntry(index)}
-              className='col-start-2 flex size-9 shrink-0 items-center justify-self-end rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary sm:col-start-4 sm:justify-self-auto'
+              className='col-start-2 flex size-9 shrink-0 cursor-pointer items-center justify-center justify-self-end rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary sm:col-start-4 sm:justify-self-auto'
             >
               <X className='size-4' />
             </button>

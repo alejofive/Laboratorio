@@ -539,5 +539,7 @@ export interface Examen {
   doctorOrdenante?: string;
   fechaCreacion: string;
   fechaActualizacion: string;
+  fechaExamen?: string;
+  horaExamen?: string;
   emailEnviado?: string;
 }

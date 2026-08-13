@@ -103,8 +103,12 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
               nextField.key = generateKeyFromLabel(data.label);
             }
 
-            if (data.type && data.type !== 'select' && data.type !== 'radio') {
+            if (data.type && data.type !== 'select' && data.type !== 'radio' && data.type !== 'multiselect') {
               nextField.options = [];
+            }
+
+            if (data.type && data.type !== 'multiselect') {
+              nextField.value_options = [];
             }
 
             return nextField;
@@ -130,6 +134,25 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
     const field = template.sections[sectionIndex].fields[fieldIndex];
     updateField(sectionIndex, fieldIndex, {
       options: (field.options ?? []).filter((_option, index) => index !== optionIndex),
+    });
+  };
+
+  const updateValueOption = (sectionIndex: number, fieldIndex: number, optionIndex: number, value: string) => {
+    const field = template.sections[sectionIndex].fields[fieldIndex];
+    const valueOptions = [...(field.value_options ?? [])];
+    valueOptions[optionIndex] = value;
+    updateField(sectionIndex, fieldIndex, { value_options: valueOptions });
+  };
+
+  const addValueOption = (sectionIndex: number, fieldIndex: number) => {
+    const field = template.sections[sectionIndex].fields[fieldIndex];
+    updateField(sectionIndex, fieldIndex, { value_options: [...(field.value_options ?? []), ''] });
+  };
+
+  const removeValueOption = (sectionIndex: number, fieldIndex: number, optionIndex: number) => {
+    const field = template.sections[sectionIndex].fields[fieldIndex];
+    updateField(sectionIndex, fieldIndex, {
+      value_options: (field.value_options ?? []).filter((_option, index) => index !== optionIndex),
     });
   };
 
@@ -257,7 +280,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                       </Button>
                     </div>
 
-                    {field.type === 'select' || field.type === 'radio' ? (
+                    {field.type === 'select' || field.type === 'radio' || field.type === 'multiselect' ? (
                       <div className="mt-4 rounded-2xl border border-dashed border-border-input p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-bold text-tertiary">Opciones</p>
@@ -268,6 +291,26 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
                             <div key={optionIndex} className="flex gap-2">
                               <TextInput value={option} onChange={(event) => updateOption(sectionIndex, fieldIndex, optionIndex, event.target.value)} placeholder="A+" />
                               <Button type="button" onClick={() => removeOption(sectionIndex, fieldIndex, optionIndex)} variant="outline" size="sm">Quitar</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {field.type === 'multiselect' ? (
+                      <div className="mt-4 rounded-2xl border border-dashed border-border-input p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-bold text-tertiary">Valores secundarios (opcional)</p>
+                          <Button type="button" onClick={() => addValueOption(sectionIndex, fieldIndex)} variant="link" size="sm">+ Agregar valor</Button>
+                        </div>
+                        <p className="mt-1 text-xs text-secondary">
+                          Si defines valores aqui, cada elemento agregado pedira ademas una cantidad de esta lista (ej. Escasos/c, Moderados/c, Abundantes/c).
+                        </p>
+                        <div className="mt-3 space-y-2">
+                          {(field.value_options ?? []).map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex gap-2">
+                              <TextInput value={option} onChange={(event) => updateValueOption(sectionIndex, fieldIndex, optionIndex, event.target.value)} placeholder="Escasos/c" />
+                              <Button type="button" onClick={() => removeValueOption(sectionIndex, fieldIndex, optionIndex)} variant="outline" size="sm">Quitar</Button>
                             </div>
                           ))}
                         </div>

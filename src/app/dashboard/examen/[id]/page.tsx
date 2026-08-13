@@ -87,6 +87,18 @@ const examTypeAlias: Record<string, TipoExamen> = {
   serologia_y_orina: 'serologia_orina',
 }
 
+const VENEZUELA_UTC_OFFSET_HOURS = 4
+
+function toVenezuelaDateOnly(isoDate: string): string {
+  const venezuelaTime = new Date(
+    new Date(isoDate).getTime() - VENEZUELA_UTC_OFFSET_HOURS * 60 * 60 * 1000,
+  )
+  const year = venezuelaTime.getUTCFullYear()
+  const month = String(venezuelaTime.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(venezuelaTime.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function normalizeExamType(rawName?: string): TipoExamen | null {
   if (!rawName) return null
   const normalized = rawName
@@ -287,6 +299,8 @@ export default function ExamenPage() {
   const [isFormValid, setIsFormValid] = useState(false)
   const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({})
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({})
+  const [examDateByExam, setExamDateByExam] = useState<Record<string, string>>({})
+  const [examTimeByExam, setExamTimeByExam] = useState<Record<string, string>>({})
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
   const [isSavingResult, setIsSavingResult] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -323,6 +337,12 @@ export default function ExamenPage() {
         doctorOrdenante: doctorOrdenanteByExam[exam._id] ?? exam.doctor_name ?? '',
         fechaCreacion: exam.created_at ?? order.created_at,
         fechaActualizacion: exam.updated_at ?? order.updated_at ?? order.created_at,
+        fechaExamen:
+          examDateByExam[exam._id] ??
+          (exam.exam_date
+            ? exam.exam_date.slice(0, 10)
+            : toVenezuelaDateOnly(exam.created_at ?? order.created_at)),
+        horaExamen: examTimeByExam[exam._id] ?? exam.exam_time ?? '',
         templateSections,
         templateName: exam.template_snapshot?.name || 'Examen',
         useDynamicForm,
@@ -330,7 +350,7 @@ export default function ExamenPage() {
     }
 
     return mapped
-  }, [order, doctorOrdenanteByExam, estadoByExam])
+  }, [order, doctorOrdenanteByExam, examDateByExam, examTimeByExam, estadoByExam])
 
   const selectedExamId = examIdFromQuery ?? examenesPaciente[0]?.id
   const examenBase = examenesPaciente.find(e => e.id === selectedExamId) ?? null
@@ -427,6 +447,8 @@ export default function ExamenPage() {
   const doctorExamenActual = examen.doctorOrdenante?.trim() || ''
   const doctorOrdenanteInput =
     doctorOrdenanteByExam[examen.id] ?? (doctorExamenActual || doctorOrdenanteHistorico)
+  const examDateInput = examen.fechaExamen ?? ''
+  const examTimeInput = examen.horaExamen ?? ''
   const estadoLabel =
     examen.estado === 'en_proceso'
       ? 'En Proceso'
@@ -494,6 +516,8 @@ export default function ExamenPage() {
       await createOrderExamResult(orderId, examen.id, {
         result_payload: normalizedPayload,
         doctor_name: bioanalystName,
+        exam_date: examDateInput || undefined,
+        exam_time: examTimeInput || undefined,
       })
 
       if (examen.templateSections.length > 0) {
@@ -511,6 +535,14 @@ export default function ExamenPage() {
       setDoctorOrdenanteByExam(prev => ({
         ...prev,
         [examen.id]: bioanalystName,
+      }))
+      setExamDateByExam(prev => ({
+        ...prev,
+        [examen.id]: examDateInput,
+      }))
+      setExamTimeByExam(prev => ({
+        ...prev,
+        [examen.id]: examTimeInput,
       }))
       setEstadoByExam(prev => ({ ...prev, [examen.id]: 'completo' }))
       setCurrentReadOnly(true)
@@ -609,165 +641,167 @@ export default function ExamenPage() {
       : isFormValid
 
   return (
-    <div className='flex min-h-full flex-col px-4 py-8 md:px-8'>
-      <div className='mx-auto flex w-full flex-col'>
-        <header className='mb-6 border-b border-border-default pb-4 no-print'>
-          <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-            <div className='min-w-0'>
-              <div className='flex flex-wrap items-center gap-3'>
-                <button
-                  type='button'
-                  onClick={handleVolver}
-                  aria-label='Volver'
-                  className='flex h-7 w-7 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-muted'
-                >
-                  <ArrowLeft className='h-5 w-5' />
-                </button>
-                <p className='text-xl font-bold text-primary'>
-                  # Solicitud: {examen.orderNumber ?? examen.id}
-                </p>
-                <span className='rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-secondary'>
-                  {estadoLabel}
-                </span>
-              </div>
-
-              <div className='mt-3 ml-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-secondary'>
-                <span className='text-primary text-xl'>{paciente.nombre}</span>
-                <span className='flex items-center gap-1.5'>
-                  <IdCard className='h-4 w-4' /> {paciente.cedula}
-                </span>
-                <span className='flex items-center gap-1.5'>
-                  <Phone className='h-4 w-4' /> {paciente.telefono || '-'}
-                </span>
-                <span className='flex items-center gap-1.5'>
-                  <Calendar className='h-4 w-4' /> {paciente.edad} años
-                </span>
-                <span className='flex items-center gap-1.5'>
-                  <MapPin className='h-4 w-4' /> {paciente.direccion || '-'}
-                </span>
-              </div>
-            </div>
-
-            <div className='flex flex-wrap gap-3 lg:justify-end'>
-              <Button
-                type='button'
-                onClick={openEmailModal}
-                disabled={!readOnly || isSendingEmail}
-                variant='outline'
-                icon={<Mail className='h-5 w-5' />}
-              >
-                Enviar al correo
-              </Button>
-              <Button
-                type='button'
-                onClick={handlePrintPdf}
-                disabled={!readOnly}
-                icon={<FileText className='h-5 w-5' />}
-              >
-                Imprimir
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {isEmailModalOpen ? (
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 no-print'>
-            <div className='w-full max-w-md rounded-3xl border border-border-default bg-white p-6 shadow-2xl'>
-              <div className='mb-5'>
-                <h2 className='text-xl font-semibold text-primary'>Enviar resultado por email</h2>
-                <p className='mt-2 text-sm text-secondary'>
-                  Ingresa el correo donde se enviara el PDF del resultado.
-                </p>
-              </div>
-
-              <label className='block'>
-                <span className='mb-2 block text-sm font-medium text-secondary'>Correo electronico</span>
-                <input
-                  type='email'
-                  value={emailInput}
-                  onChange={event => setEmailInput(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter') void handleSendEmail()
-                    if (event.key === 'Escape') closeEmailModal()
-                  }}
-                  disabled={isSendingEmail}
-                  autoFocus
-                  placeholder='correo@ejemplo.com'
-                  className='h-12 w-full rounded-xl border border-border-input px-4 text-primary outline-none transition-colors placeholder:text-secondary focus:border-brand-primary disabled:cursor-not-allowed disabled:opacity-60'
-                />
-              </label>
-
-              <div className='mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={closeEmailModal}
-                  disabled={isSendingEmail}
-                  className='disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type='button'
-                  onClick={handleSendEmail}
-                  disabled={isSendingEmail}
-                  className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                  {isSendingEmail ? (
-                    <>
-                      <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
-                      Enviando email...
-                    </>
-                  ) : (
-                    'Enviar PDF'
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {examenesPaciente.length > 1 && (
-          <nav className='mb-6 flex flex-col gap-4 no-print'>
-            <span className='text-md text-secondary'>Exámenes ({examenesPaciente.length})</span>
-            <div className='flex gap-3 overflow-x-auto pb-1'>
-              {examenesPaciente.map(ex => {
-                const isActive = ex.id === examen.id
-                const initialExamReadOnly = ex.estado === 'completo' || ex.estado === 'enviado'
-                const examReadOnly = readOnlyByExam[ex.id] ?? initialExamReadOnly
-                const status = getExamMenuStatus(ex, examReadOnly)
-
-                return (
-                  <Link
-                    key={ex.id}
-                    href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
-                    scroll={false}
-                    className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive
-                      ? 'border-[#2563eb] bg-[#f1f5fe]'
-                      : 'border-border-default bg-white hover:bg-surface-muted'
-                      }`}
+    <div className='flex h-screen flex-col overflow-hidden px-4 md:px-8'>
+      <div className='mx-auto flex w-full min-h-0 flex-1 flex-col overflow-hidden'>
+        <div className='shrink-0 pt-8'>
+          <header className='mb-6 border-b border-border-default pb-4 no-print'>
+            <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+              <div className='min-w-0'>
+                <div className='flex flex-wrap items-center gap-3'>
+                  <button
+                    type='button'
+                    onClick={handleVolver}
+                    aria-label='Volver'
+                    className='flex h-7 w-7 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-muted'
                   >
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${status.dotClassName}`} />
-                    <span className='min-w-0'>
-                      <span
-                        className={`block truncate text-base font-semibold ${isActive ? 'text-[#2563eb]' : 'text-primary'
-                          }`}
-                      >
-                        {ex.templateName || examLabels[ex.tipo]}
-                      </span>
-                      <span className='block text-sm font-medium text-secondary'>
-                        {status.label}
-                      </span>
-                    </span>
-                  </Link>
-                )
-              })}
-            </div>
-          </nav>
-        )}
+                    <ArrowLeft className='h-5 w-5' />
+                  </button>
+                  <p className='text-xl font-bold text-primary'>
+                    # Solicitud: {examen.orderNumber ?? examen.id}
+                  </p>
+                  <span className='rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-secondary'>
+                    {estadoLabel}
+                  </span>
+                </div>
 
-        <div className='print-area flex flex-col gap-6'>
-          <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+                <div className='mt-3 ml-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-secondary'>
+                  <span className='text-primary text-xl'>{paciente.nombre}</span>
+                  <span className='flex items-center gap-1.5'>
+                    <IdCard className='h-4 w-4' /> {paciente.cedula}
+                  </span>
+                  <span className='flex items-center gap-1.5'>
+                    <Phone className='h-4 w-4' /> {paciente.telefono || '-'}
+                  </span>
+                  <span className='flex items-center gap-1.5'>
+                    <Calendar className='h-4 w-4' /> {paciente.edad} años
+                  </span>
+                  <span className='flex items-center gap-1.5'>
+                    <MapPin className='h-4 w-4' /> {paciente.direccion || '-'}
+                  </span>
+                </div>
+              </div>
+
+              <div className='flex flex-wrap gap-3 lg:justify-end'>
+                <Button
+                  type='button'
+                  onClick={openEmailModal}
+                  disabled={!readOnly || isSendingEmail}
+                  variant='outline'
+                  icon={<Mail className='h-5 w-5' />}
+                >
+                  Enviar al correo
+                </Button>
+                <Button
+                  type='button'
+                  onClick={handlePrintPdf}
+                  disabled={!readOnly}
+                  icon={<FileText className='h-5 w-5' />}
+                >
+                  Imprimir
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          {isEmailModalOpen ? (
+            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 no-print'>
+              <div className='w-full max-w-md rounded-3xl border border-border-default bg-white p-6 shadow-2xl'>
+                <div className='mb-5'>
+                  <h2 className='text-xl font-semibold text-primary'>Enviar resultado por email</h2>
+                  <p className='mt-2 text-sm text-secondary'>
+                    Ingresa el correo donde se enviara el PDF del resultado.
+                  </p>
+                </div>
+
+                <label className='block'>
+                  <span className='mb-2 block text-sm font-medium text-secondary'>Correo electronico</span>
+                  <input
+                    type='email'
+                    value={emailInput}
+                    onChange={event => setEmailInput(event.target.value)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter') void handleSendEmail()
+                      if (event.key === 'Escape') closeEmailModal()
+                    }}
+                    disabled={isSendingEmail}
+                    autoFocus
+                    placeholder='correo@ejemplo.com'
+                    className='h-12 w-full rounded-xl border border-border-input px-4 text-primary outline-none transition-colors placeholder:text-secondary focus:border-brand-primary disabled:cursor-not-allowed disabled:opacity-60'
+                  />
+                </label>
+
+                <div className='mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={closeEmailModal}
+                    disabled={isSendingEmail}
+                    className='disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type='button'
+                    onClick={handleSendEmail}
+                    disabled={isSendingEmail}
+                    className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    {isSendingEmail ? (
+                      <>
+                        <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+                        Enviando email...
+                      </>
+                    ) : (
+                      'Enviar PDF'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {examenesPaciente.length > 1 && (
+            <nav className='mb-6 flex flex-col gap-4 no-print'>
+              <span className='text-md text-secondary'>Exámenes ({examenesPaciente.length})</span>
+              <div className='flex gap-3 overflow-x-auto pb-1'>
+                {examenesPaciente.map(ex => {
+                  const isActive = ex.id === examen.id
+                  const initialExamReadOnly = ex.estado === 'completo' || ex.estado === 'enviado'
+                  const examReadOnly = readOnlyByExam[ex.id] ?? initialExamReadOnly
+                  const status = getExamMenuStatus(ex, examReadOnly)
+
+                  return (
+                    <Link
+                      key={ex.id}
+                      href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
+                      scroll={false}
+                      className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive
+                        ? 'border-[#2563eb] bg-[#f1f5fe]'
+                        : 'border-border-default bg-white hover:bg-surface-muted'
+                        }`}
+                    >
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${status.dotClassName}`} />
+                      <span className='min-w-0'>
+                        <span
+                          className={`block truncate text-base font-semibold ${isActive ? 'text-[#2563eb]' : 'text-primary'
+                            }`}
+                        >
+                          {ex.templateName || examLabels[ex.tipo]}
+                        </span>
+                        <span className='block text-sm font-medium text-secondary'>
+                          {status.label}
+                        </span>
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </nav>
+          )}
+        </div>
+
+        <div className='print-area flex min-h-0 flex-1 flex-col gap-6'>
+          <div className='shrink-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
             <h1 className='text-xl font-semibold uppercase text-primary'>
               {examen.templateName || examLabels[examen.tipo]}
             </h1>
@@ -799,28 +833,46 @@ export default function ExamenPage() {
             </Button>
           </div>
 
-          <ExamenTabs
-            readOnly={readOnly}
-            examen={examen}
-            examenNombre={examen.templateName || examLabels[examen.tipo]}
-            examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
-            examenActualId={examen.id}
-            doctorOrdenante={doctorOrdenanteInput}
-            onDoctorOrdenanteChange={value => {
-              setDoctorOrdenanteByExam(prev => ({
-                ...prev,
-                [examen.id]: value,
-              }))
-            }}
-          />
+          <div className='flex-1 min-h-0 overflow-y-auto pb-8'>
+            <div className='flex flex-col gap-6'>
+              <ExamenTabs
+                readOnly={readOnly}
+                examen={examen}
+                examenNombre={examen.templateName || examLabels[examen.tipo]}
+                examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
+                examenActualId={examen.id}
+                doctorOrdenante={doctorOrdenanteInput}
+                onDoctorOrdenanteChange={value => {
+                  setDoctorOrdenanteByExam(prev => ({
+                    ...prev,
+                    [examen.id]: value,
+                  }))
+                }}
+                examDate={examDateInput}
+                onExamDateChange={value => {
+                  setExamDateByExam(prev => ({
+                    ...prev,
+                    [examen.id]: value,
+                  }))
+                }}
+                examTime={examTimeInput}
+                onExamTimeChange={value => {
+                  setExamTimeByExam(prev => ({
+                    ...prev,
+                    [examen.id]: value,
+                  }))
+                }}
+              />
 
-          <div ref={formContainerRef}>
-            <fieldset
-              disabled={readOnly}
-              className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"
-            >
-              {renderForm()}
-            </fieldset>
+              <div ref={formContainerRef}>
+                <fieldset
+                  disabled={readOnly}
+                  className="[&_input:disabled]:opacity-100 [&_textarea:disabled]:opacity-100 [&_select:disabled]:opacity-100 [&_input:disabled]:bg-white [&_textarea:disabled]:bg-white [&_select:disabled]:bg-white [&_input:disabled]:text-gray-900 [&_textarea:disabled]:text-gray-900 [&_select:disabled]:text-gray-900 [&_input:disabled]:border-gray-300 [&_textarea:disabled]:border-gray-300 [&_select:disabled]:border-gray-300 [&_input[type='radio']:disabled]:opacity-100 [&_input[type='checkbox']:disabled]:opacity-100 [&_input[type='radio']:disabled]:accent-cyan-600 [&_input[type='checkbox']:disabled]:accent-cyan-600"
+                >
+                  {renderForm()}
+                </fieldset>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,9 +1,6 @@
 'use client'
 
-import { useLab } from '@/context/LabContext'
-import { useRouter } from 'next/navigation'
 import { useMemo } from 'react'
-import { Button } from './ui/Button'
 
 interface TopResumenProps {
   solicitudes?: boolean
@@ -12,14 +9,7 @@ interface TopResumenProps {
   totalParaImprimir?: number
 }
 
-export default function TopResumen({
-  solicitudes,
-  filtroEstado,
-  totalSolicitudes,
-  totalParaImprimir,
-}: TopResumenProps) {
-  const router = useRouter()
-  const { pacientes, examenes } = useLab()
+export default function TopResumen({ solicitudes }: TopResumenProps) {
   const fechaActual = useMemo(() => {
     const formatter = new Intl.DateTimeFormat('es-ES', {
       weekday: 'long',
@@ -33,40 +23,6 @@ export default function TopResumen({
     return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${rest}`
   }, [])
 
-  const { pendientes, completos } = useMemo(() => {
-    const hoy = new Date()
-    const fechaHoy = `${hoy.getDate()}/${hoy.getMonth() + 1}/${hoy.getFullYear()}`
-    let pendientesCount = 0
-    let completosCount = 0
-
-    pacientes
-      .filter(paciente => paciente.fecha === fechaHoy)
-      .forEach(paciente => {
-        const examenesPaciente = examenes.filter(examen => examen.pacienteId === paciente.id)
-
-        if (examenesPaciente.length === 0) return
-
-        const todosCompletos = examenesPaciente.every(
-          examen => examen.estado === 'completo' || examen.estado === 'enviado',
-        )
-
-        if (todosCompletos) {
-          completosCount += 1
-        } else {
-          pendientesCount += 1
-        }
-      })
-
-    return { pendientes: pendientesCount, completos: completosCount }
-  }, [pacientes, examenes])
-
-  const solicitudesMostradas = totalSolicitudes ?? (solicitudes ? 0 : pendientes)
-
-  const paraImprimirMostradas = totalParaImprimir ?? (solicitudes ? 0 : completos)
-
-  const labelSolicitudes =
-    solicitudes && filtroEstado === 'completo' ? 'Para imprimir' : 'Solicitudes'
-
   return (
     <div className='flex flex-wrap items-start justify-between gap-4'>
       {solicitudes ? (
@@ -79,20 +35,6 @@ export default function TopResumen({
           <p className='text-secondary text-lg font-normal'>{fechaActual}</p>
         </div>
       )}
-      <div className='flex items-center gap-3'>
-        <Button
-          onClick={() => router.push('/dashboard/solicitudes?estado=pendiente')}
-          variant='outline'
-        >
-          <strong>{solicitudesMostradas}</strong> {labelSolicitudes}
-        </Button>
-        <Button
-          onClick={() => router.push('/dashboard/solicitudes?estado=completo')}
-          variant='outline'
-        >
-          <strong>{paraImprimirMostradas}</strong> para Imprimir
-        </Button>
-      </div>
     </div>
   )
 }

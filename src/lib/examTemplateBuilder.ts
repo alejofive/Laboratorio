@@ -149,8 +149,11 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
           payloadField.options = field.options.map((option) => option.trim()).filter(Boolean);
         }
 
-        if (field.value_options?.length) {
-          payloadField.value_options = field.value_options;
+        if (field.type === 'multiselect') {
+          const valueOptions = (field.value_options ?? []).map((option) => option.trim()).filter(Boolean);
+          if (valueOptions.length) {
+            payloadField.value_options = valueOptions;
+          }
         }
 
         return payloadField;

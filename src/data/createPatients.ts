@@ -209,6 +209,8 @@ interface SaveOrderExamPayload {
 interface CreateOrderExamResultPayload {
     result_payload: Record<string, unknown>;
     doctor_name?: string;
+    exam_date?: string;
+    exam_time?: string;
 }
 
 export async function createOrderExamResult(orderId: string, examId: string, payload: CreateOrderExamResultPayload) {

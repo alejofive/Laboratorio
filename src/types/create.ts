@@ -92,6 +92,8 @@ export interface OrderExamDetail {
     exam_template_id: string;
     result_status: string;
     doctor_name?: string;
+    exam_date?: string;
+    exam_time?: string;
     template_snapshot?: ExamTemplateSnapshot;
     result_payload?: Record<string, unknown>;
     created_at?: string;

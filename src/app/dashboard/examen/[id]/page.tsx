@@ -631,8 +631,8 @@ export default function ExamenPage() {
       : isFormValid
 
   return (
-    <div className='flex h-screen flex-col overflow-hidden px-4 md:px-8'>
-      <div className='mx-auto flex w-full min-h-0 flex-1 flex-col overflow-hidden'>
+    <div className='flex min-h-screen flex-col px-4 md:px-8'>
+      <div className='mx-auto flex w-full flex-1 flex-col'>
         <div className='shrink-0 pt-8'>
           <header className='mb-6 border-b border-border-default pb-4 no-print'>
             <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
@@ -790,8 +790,13 @@ export default function ExamenPage() {
           )}
         </div>
 
-        <div className='print-area flex min-h-0 flex-1 flex-col gap-6'>
-          <div className='shrink-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+        <div className='print-area flex flex-1 flex-col gap-6'>
+          <div
+            className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${readOnly
+              ? ''
+              : 'sticky top-0 z-20 -mx-4 border-b border-border-default bg-canvas px-4 py-4 md:-mx-8 md:px-8'
+              }`}
+          >
             <h1 className='text-xl font-semibold uppercase text-primary'>
               {examen.templateName || examLabels[examen.tipo]}
             </h1>
@@ -823,7 +828,7 @@ export default function ExamenPage() {
             </Button>
           </div>
 
-          <div className='flex-1 min-h-0 overflow-y-auto pb-8'>
+          <div className='flex-1 pb-8'>
             <div className='flex flex-col gap-6'>
               <ExamenTabs
                 readOnly={readOnly}

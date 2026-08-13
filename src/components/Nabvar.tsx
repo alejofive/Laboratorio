@@ -22,7 +22,7 @@ export default function Navbar() {
     return (
 
         <aside
-            className={`min-h-screen bg-white border-r border-slate-200 flex flex-col  min-w-[218px]
+            className={`sticky top-0 h-screen shrink-0 overflow-y-auto bg-white border-r border-slate-200 flex flex-col min-w-[218px]
       ${collapsed ? 'w-20' : ''}
     `}
         >

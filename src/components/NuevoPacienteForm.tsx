@@ -18,13 +18,7 @@ import DetallePaciente from './DetallePaciente'
 import { PillFilter } from './PillFilter'
 import TopResumen from './TopResumen'
 import { Button } from './ui/Button'
-import {
-  FieldLabel,
-  getFieldButtonClass,
-  SelectInput,
-  TextareaInput,
-  TextInput,
-} from './ui/FormField'
+import { FieldLabel, getFieldButtonClass, SelectInput, TextInput } from './ui/FormField'
 import SvgIcon from './ui/SvgIcon'
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles'
@@ -484,7 +478,7 @@ export default function NuevoPacienteForm() {
               </div>
             ) : (
               <div className='w-full'>
-                <h2 className='mb-3 text-xl font-semibold leading-none'>
+                <h2 className='mb-3 text-xl font-semibold leading-none text-primary'>
                   Buscar un paciente o crear solicitud
                 </h2>
                 <div className='flex items-center gap-3 justify-between'>
@@ -612,10 +606,7 @@ export default function NuevoPacienteForm() {
 
                 <div>
                   <FieldLabel>Fecha de nacimiento</FieldLabel>
-                  <input
-                    type='hidden'
-                    {...register('fechaNacimiento')}
-                  />
+                  <input type='hidden' {...register('fechaNacimiento')} />
                   <div ref={birthDatePickerRef} className='relative'>
                     <button
                       type='button'
@@ -718,11 +709,7 @@ export default function NuevoPacienteForm() {
 
                 <div>
                   <FieldLabel>Sexo</FieldLabel>
-                  <SelectInput
-                    {...register('sexo')}
-                    error={Boolean(errors.sexo)}
-                    defaultValue=''
-                  >
+                  <SelectInput {...register('sexo')} error={Boolean(errors.sexo)} defaultValue=''>
                     <option value='' disabled>
                       Seleccionar
                     </option>
@@ -773,19 +760,21 @@ export default function NuevoPacienteForm() {
       </section>
 
       <section className='bg-surface border border-border-default rounded-3xl p-4 pb-10'>
-        <div className='mb-3 flex flex-wrap items-start justify-between gap-3'>
+        <div className='mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
           <div>
-            <h3 className='text-xl font-semibold leading-none'>Exámenes a realizar</h3>
+            <h2 className='text-xl font-semibold leading-none text-primary'>Exámenes a realizar</h2>
             <p className='text-secondary text-base mt-2'>
               Selecciona uno o varios exámenes para esta solicitud.
             </p>
           </div>
-          <TextInput
-            className='text-secondary'
-            placeholder='Buscar examen'
-            value={searchExam}
-            onChange={event => setSearchExam(event.target.value)}
-          />
+          <div className='w-full shrink-0 md:w-80 lg:w-96'>
+            <TextInput
+              className='text-secondary'
+              placeholder='Buscar examen'
+              value={searchExam}
+              onChange={event => setSearchExam(event.target.value)}
+            />
+          </div>
         </div>
         <div className='mb-4 flex flex-wrap gap-2'>
           {EXAM_CATEGORIES.map(category => (
@@ -799,10 +788,7 @@ export default function NuevoPacienteForm() {
             />
           ))}
         </div>
-        <input
-          type='hidden'
-          {...register('examenes')}
-        />
+        <input type='hidden' {...register('examenes')} />
         <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-5'>
           {visibleExams.map(exam => {
             const isChecked = selectedExams.includes(exam.templateId)

@@ -238,12 +238,12 @@ function normalizePayloadForApi(
         return [key, value]
       }
 
-      const normalizedDecimal = value.trim().replace(',', '.')
-      if (normalizedDecimal === '' || !/^-?\d+(\.\d+)?$/.test(normalizedDecimal)) {
+      const numericValue = value.trim()
+      if (numericValue === '' || !/^-?\d+([.,]\d+)?$/.test(numericValue)) {
         return [key, value]
       }
 
-      return [key, Number(normalizedDecimal)]
+      return [key, numericValue]
     }),
   )
 }

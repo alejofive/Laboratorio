@@ -518,11 +518,12 @@ export default function DynamicExamForm({
     label: string,
     value: TemplateFormValue | undefined,
     referenceValue?: string,
+    hideLabel = false,
     className = '',
     valueOptions?: string[],
   ) => (
     <div key={key} className={className}>
-      <FieldLabel className='font-medium'>{label}</FieldLabel>
+      {!hideLabel ? <FieldLabel className='font-medium'>{label}</FieldLabel> : null}
       <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
         {formatTemplateValue(value, valueOptions) || '-'}
       </p>
@@ -582,6 +583,9 @@ export default function DynamicExamForm({
             {section.fields.map(field => {
               const labelBase = field.unit ? `${field.label} (${field.unit})` : field.label
               const value = values[field.key]
+              const hidesRepeatedObservationLabel =
+                section.title.trim().toLocaleLowerCase('es') === 'observaciones' &&
+                field.label.trim().toLocaleLowerCase('es') === 'observación'
 
               if (readOnly) {
                 if (field.type === 'multiselect') {
@@ -599,6 +603,7 @@ export default function DynamicExamForm({
                   labelBase,
                   value,
                   field.reference_value,
+                  hidesRepeatedObservationLabel,
                 )
               }
 
@@ -712,8 +717,11 @@ export default function DynamicExamForm({
               if (field.type === 'textarea') {
                 return (
                   <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
-                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    {!hidesRepeatedObservationLabel ? (
+                      <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    ) : null}
                     <TextareaInput
+                      aria-label={labelBase}
                       value={String(value ?? '')}
                       onChange={event => updateValue(field.key, event.target.value)}
                       rows={3}

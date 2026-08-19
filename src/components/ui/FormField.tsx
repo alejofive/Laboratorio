@@ -26,7 +26,7 @@ type RadioInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
 }
 
 const fieldBaseClass =
-  'w-full rounded-xl border bg-white px-3 py-2 text-base text-primary outline-none transition-colors placeholder:text-secondary/70 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 disabled:cursor-not-allowed disabled:bg-white disabled:text-primary disabled:opacity-100'
+  'min-h-[42px] w-full rounded-xl border bg-white px-3 py-2 text-base text-primary outline-none transition-colors placeholder:text-secondary/70 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 disabled:cursor-not-allowed disabled:bg-white disabled:text-primary disabled:opacity-100'
 
 const getBorderClass = (error?: FieldError) => (error ? 'border-red-500' : 'border-gray-300')
 
@@ -109,7 +109,7 @@ export const RadioInput = forwardRef<HTMLInputElement, RadioInputProps>(
 )
 
 export const fieldButtonClass =
-  'flex w-full items-center justify-between gap-3 rounded-xl border bg-white px-3 py-2 text-left text-base transition-colors hover:bg-gray-50 focus:outline-none focus:border-brand-soft'
+  'flex min-h-[42px] w-full items-center justify-between gap-3 rounded-xl border bg-white px-3 py-2 text-left text-base transition-colors hover:bg-gray-50 focus:outline-none focus:border-brand-soft'
 
 export const getFieldButtonClass = (error?: FieldError, className = '') =>
   mergeClassName(fieldButtonClass, getBorderClass(error), className)

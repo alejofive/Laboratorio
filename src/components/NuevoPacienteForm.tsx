@@ -122,6 +122,8 @@ export default function NuevoPacienteForm() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [showBirthDatePicker, setShowBirthDatePicker] = useState(false)
   const [birthDateDraft, setBirthDateDraft] = useState({ day: '', month: '', year: '' })
+  const [ageDraft, setAgeDraft] = useState('')
+  const [birthInputMode, setBirthInputMode] = useState<'age' | 'date'>('age')
   const birthDatePickerRef = useRef<HTMLDivElement>(null)
   const cedulaValue = watch('cedula')
   const birthDateValue = watch('fechaNacimiento')
@@ -325,6 +327,8 @@ export default function NuevoPacienteForm() {
     setShowCreateForm(true)
     setShowBirthDatePicker(false)
     setBirthDateDraft({ day: '', month: '', year: '' })
+    setAgeDraft('')
+    setBirthInputMode('age')
     setSearchTerm('')
   }
 
@@ -333,10 +337,14 @@ export default function NuevoPacienteForm() {
     setShowCreateForm(false)
     setShowBirthDatePicker(false)
     setBirthDateDraft({ day: '', month: '', year: '' })
+    setAgeDraft('')
+    setBirthInputMode('age')
     setSearchTerm('')
   }
 
   const onBirthDatePartChange = (part: 'day' | 'month' | 'year', value: string) => {
+    setAgeDraft('')
+
     const nextParts = {
       ...birthDateDraft,
       [part]: value,
@@ -364,6 +372,35 @@ export default function NuevoPacienteForm() {
   const onBirthDateClear = () => {
     setValue('fechaNacimiento', '', { shouldDirty: true, shouldValidate: true })
     setBirthDateDraft({ day: '', month: '', year: '' })
+    setAgeDraft('')
+  }
+
+  const onBirthInputModeChange = (mode: 'age' | 'date') => {
+    if (mode === birthInputMode) return
+
+    onBirthDateClear()
+    setShowBirthDatePicker(false)
+    setBirthInputMode(mode)
+  }
+
+  const onAgeChange = (value: string) => {
+    const age = value.replace(/\D/g, '')
+    const maxAge = currentYear - 1920
+
+    if (!age) {
+      onBirthDateClear()
+      return
+    }
+
+    const normalizedAge = String(Math.min(Number(age), maxAge))
+    const birthYear = currentYear - Number(normalizedAge)
+
+    setAgeDraft(normalizedAge)
+    setBirthDateDraft({ day: '1', month: '1', year: String(birthYear) })
+    setValue('fechaNacimiento', `${birthYear}-01-01`, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   const toggleExamen = (templateId: string) => {
@@ -605,102 +642,156 @@ export default function NuevoPacienteForm() {
                 </div>
 
                 <div>
-                  <FieldLabel>Fecha de nacimiento</FieldLabel>
                   <input type='hidden' {...register('fechaNacimiento')} />
-                  <div ref={birthDatePickerRef} className='relative'>
-                    <button
-                      type='button'
-                      onClick={() => setShowBirthDatePicker(prev => !prev)}
-                      className={getFieldButtonClass(Boolean(errors.fechaNacimiento))}
+                  <div>
+                    <div
+                      className='mb-1 flex min-h-5 items-center gap-4'
+                      role='radiogroup'
+                      aria-label='Forma de ingresar el nacimiento'
                     >
-                      <span className={birthDateValue ? 'text-primary' : 'text-secondary'}>
-                        {birthDateLabel}
-                      </span>
-                      <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
-                    </button>
+                      <label className='flex cursor-pointer items-center gap-2 text-sm font-medium text-tertiary'>
+                        <input
+                          type='radio'
+                          name='birthInputMode'
+                          value='age'
+                          checked={birthInputMode === 'age'}
+                          onChange={() => onBirthInputModeChange('age')}
+                          className='size-5 cursor-pointer accent-[#0058A8]'
+                        />
+                        Edad
+                      </label>
+                      <label className='flex cursor-pointer items-center gap-2 text-sm font-medium text-tertiary'>
+                        <input
+                          type='radio'
+                          name='birthInputMode'
+                          value='date'
+                          checked={birthInputMode === 'date'}
+                          onChange={() => onBirthInputModeChange('date')}
+                          className='size-5 cursor-pointer accent-[#0058A8]'
+                        />
+                        Fecha de nacimiento
+                      </label>
+                    </div>
+                    <div className='min-w-0 flex-1'>
+                      {birthInputMode === 'age' ? (
+                        <div className='relative'>
+                          <TextInput
+                            type='text'
+                            inputMode='numeric'
+                            value={ageDraft}
+                            onChange={event => onAgeChange(event.target.value)}
+                            placeholder='Ingrese la edad'
+                            error={Boolean(errors.fechaNacimiento)}
+                            className='pr-16'
+                          />
+                          <span className='pointer-events-none absolute inset-y-0 right-3 flex items-center text-base text-secondary'>
+                            {Number(ageDraft) === 1 ? 'año' : 'años'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div ref={birthDatePickerRef} className='relative'>
+                          <button
+                            type='button'
+                            onClick={() => setShowBirthDatePicker(prev => !prev)}
+                            className={getFieldButtonClass(Boolean(errors.fechaNacimiento))}
+                          >
+                            <span className={birthDateValue ? 'text-primary' : 'text-secondary'}>
+                              {birthDateLabel}
+                            </span>
+                            <SvgIcon src='/svg/paciente/calendar.svg' size={20} />
+                          </button>
 
-                    {showBirthDatePicker ? (
-                      <div className='absolute left-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3'>
-                        <div className='mb-3'>
-                          <p className='text-sm font-bold text-tertiary'>
-                            Selecciona día, mes y año
-                          </p>
-                          <p className='mt-1 text-xs text-secondary'>
-                            La fecha se guarda al completar los tres campos.
-                          </p>
+                          {showBirthDatePicker ? (
+                            <div className='absolute right-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3'>
+                              <div className='mb-3'>
+                                <p className='text-sm font-bold text-tertiary'>
+                                  Selecciona día, mes y año
+                                </p>
+                                <p className='mt-1 text-xs text-secondary'>
+                                  La fecha se guarda al completar los tres campos.
+                                </p>
+                              </div>
+                              <div className='grid grid-cols-3 gap-2'>
+                                <div>
+                                  <label className='mb-1 block text-xs font-bold text-secondary'>
+                                    Día
+                                  </label>
+                                  <SelectInput
+                                    value={birthDateDraft.day}
+                                    onChange={event =>
+                                      onBirthDatePartChange('day', event.target.value)
+                                    }
+                                    className='rounded-lg px-2 text-sm text-tertiary'
+                                  >
+                                    <option value=''>Día</option>
+                                    {birthDayOptions.map(day => (
+                                      <option key={day} value={day}>
+                                        {day}
+                                      </option>
+                                    ))}
+                                  </SelectInput>
+                                </div>
+                                <div>
+                                  <label className='mb-1 block text-xs font-bold text-secondary'>
+                                    Mes
+                                  </label>
+                                  <SelectInput
+                                    value={birthDateDraft.month}
+                                    onChange={event =>
+                                      onBirthDatePartChange('month', event.target.value)
+                                    }
+                                    className='rounded-lg px-2 text-sm text-tertiary'
+                                  >
+                                    <option value=''>Mes</option>
+                                    {birthMonthOptions.map((month, index) => (
+                                      <option key={month} value={index + 1}>
+                                        {month}
+                                      </option>
+                                    ))}
+                                  </SelectInput>
+                                </div>
+                                <div>
+                                  <label className='mb-1 block text-xs font-bold text-secondary'>
+                                    Año
+                                  </label>
+                                  <SelectInput
+                                    value={birthDateDraft.year}
+                                    onChange={event =>
+                                      onBirthDatePartChange('year', event.target.value)
+                                    }
+                                    className='rounded-lg px-2 text-sm text-tertiary'
+                                  >
+                                    <option value=''>Año</option>
+                                    {birthYearOptions.map(year => (
+                                      <option key={year} value={year}>
+                                        {year}
+                                      </option>
+                                    ))}
+                                  </SelectInput>
+                                </div>
+                              </div>
+                              <div className='mt-2 flex justify-between border-t border-gray-100 pt-2'>
+                                <button
+                                  type='button'
+                                  className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
+                                  onClick={onBirthDateClear}
+                                  disabled={!birthDateValue}
+                                >
+                                  Limpiar
+                                </button>
+                                <button
+                                  type='button'
+                                  className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200'
+                                  onClick={() => setShowBirthDatePicker(false)}
+                                >
+                                  Cerrar
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
-                        <div className='grid grid-cols-3 gap-2'>
-                          <div>
-                            <label className='mb-1 block text-xs font-bold text-secondary'>
-                              Día
-                            </label>
-                            <SelectInput
-                              value={birthDateDraft.day}
-                              onChange={event => onBirthDatePartChange('day', event.target.value)}
-                              className='rounded-lg px-2 text-sm text-tertiary'
-                            >
-                              <option value=''>Día</option>
-                              {birthDayOptions.map(day => (
-                                <option key={day} value={day}>
-                                  {day}
-                                </option>
-                              ))}
-                            </SelectInput>
-                          </div>
-                          <div>
-                            <label className='mb-1 block text-xs font-bold text-secondary'>
-                              Mes
-                            </label>
-                            <SelectInput
-                              value={birthDateDraft.month}
-                              onChange={event => onBirthDatePartChange('month', event.target.value)}
-                              className='rounded-lg px-2 text-sm text-tertiary'
-                            >
-                              <option value=''>Mes</option>
-                              {birthMonthOptions.map((month, index) => (
-                                <option key={month} value={index + 1}>
-                                  {month}
-                                </option>
-                              ))}
-                            </SelectInput>
-                          </div>
-                          <div>
-                            <label className='mb-1 block text-xs font-bold text-secondary'>
-                              Año
-                            </label>
-                            <SelectInput
-                              value={birthDateDraft.year}
-                              onChange={event => onBirthDatePartChange('year', event.target.value)}
-                              className='rounded-lg px-2 text-sm text-tertiary'
-                            >
-                              <option value=''>Año</option>
-                              {birthYearOptions.map(year => (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              ))}
-                            </SelectInput>
-                          </div>
-                        </div>
-                        <div className='mt-2 flex justify-between border-t border-gray-100 pt-2'>
-                          <button
-                            type='button'
-                            className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
-                            onClick={onBirthDateClear}
-                            disabled={!birthDateValue}
-                          >
-                            Limpiar
-                          </button>
-                          <button
-                            type='button'
-                            className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200'
-                            onClick={() => setShowBirthDatePicker(false)}
-                          >
-                            Cerrar
-                          </button>
-                        </div>
-                      </div>
-                    ) : null}
+                      )}
+                    </div>
                   </div>
                   {errors.fechaNacimiento && (
                     <p className='text-red-500 text-xs mt-1'>{errors.fechaNacimiento.message}</p>

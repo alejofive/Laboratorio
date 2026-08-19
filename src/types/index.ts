@@ -541,5 +541,6 @@ export interface Examen {
   fechaActualizacion: string;
   fechaExamen?: string;
   horaExamen?: string;
+  horaTomaSangre?: string;
   emailEnviado?: string;
 }

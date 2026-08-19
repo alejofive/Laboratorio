@@ -21,6 +21,8 @@ interface ExamenTabsProps {
   onExamDateChange: (value: string) => void
   examTime: string
   onExamTimeChange: (value: string) => void
+  bloodCollectionTime: string
+  onBloodCollectionTimeChange: (value: string) => void
 }
 
 function parseIsoDateOnly(dateStr: string): Date | null {
@@ -51,6 +53,8 @@ export default function ExamenTabs({
   onExamDateChange,
   examTime,
   onExamTimeChange,
+  bloodCollectionTime,
+  onBloodCollectionTimeChange,
 }: ExamenTabsProps) {
   const doctorOrdenanteMostrado = doctorOrdenante.trim() || 'Sin orden médica'
   const selectedExamDate = examDate ? parseIsoDateOnly(examDate) : null
@@ -60,6 +64,9 @@ export default function ExamenTabs({
     { locale: es },
   )
   const horaExamenMostrada = examTime ? formatTimeDisplay(examTime) : null
+  const horaTomaSangreMostrada = bloodCollectionTime
+    ? formatTimeDisplay(bloodCollectionTime)
+    : null
 
   return (
     <div className='rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5'>
@@ -116,6 +123,21 @@ export default function ExamenTabs({
                 type='time'
                 value={examTime}
                 onChange={event => onExamTimeChange(event.target.value)}
+                className='h-12'
+              />
+            )}
+          </div>
+          <div>
+            <FieldLabel className='font-medium'>Hora de la toma de sangre</FieldLabel>
+            {readOnly ? (
+              <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
+                {horaTomaSangreMostrada ?? 'Sin hora'}
+              </span>
+            ) : (
+              <TextInput
+                type='time'
+                value={bloodCollectionTime}
+                onChange={event => onBloodCollectionTimeChange(event.target.value)}
                 className='h-12'
               />
             )}

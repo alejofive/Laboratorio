@@ -94,6 +94,7 @@ export interface OrderExamDetail {
     doctor_name?: string;
     exam_date?: string;
     exam_time?: string;
+    blood_collection_time?: string;
     template_snapshot?: ExamTemplateSnapshot;
     result_payload?: Record<string, unknown>;
     created_at?: string;

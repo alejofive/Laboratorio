@@ -300,6 +300,9 @@ export default function ExamenPage() {
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({})
   const [examDateByExam, setExamDateByExam] = useState<Record<string, string>>({})
   const [examTimeByExam, setExamTimeByExam] = useState<Record<string, string>>({})
+  const [bloodCollectionTimeByExam, setBloodCollectionTimeByExam] = useState<
+    Record<string, string>
+  >({})
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
   const [isSavingResult, setIsSavingResult] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -342,6 +345,8 @@ export default function ExamenPage() {
             ? exam.exam_date.slice(0, 10)
             : toVenezuelaDateOnly(exam.created_at ?? order.created_at)),
         horaExamen: examTimeByExam[exam._id] ?? exam.exam_time ?? '',
+        horaTomaSangre:
+          bloodCollectionTimeByExam[exam._id] ?? exam.blood_collection_time ?? '',
         templateSections,
         templateName: exam.template_snapshot?.name || 'Examen',
         useDynamicForm,
@@ -349,7 +354,14 @@ export default function ExamenPage() {
     }
 
     return mapped
-  }, [order, doctorOrdenanteByExam, examDateByExam, examTimeByExam, estadoByExam])
+  }, [
+    order,
+    doctorOrdenanteByExam,
+    examDateByExam,
+    examTimeByExam,
+    bloodCollectionTimeByExam,
+    estadoByExam,
+  ])
 
   const selectedExamId = examIdFromQuery ?? examenesPaciente[0]?.id
   const examenBase = examenesPaciente.find(e => e.id === selectedExamId) ?? null
@@ -448,6 +460,7 @@ export default function ExamenPage() {
     doctorOrdenanteByExam[examen.id] ?? (doctorExamenActual || doctorOrdenanteHistorico)
   const examDateInput = examen.fechaExamen ?? ''
   const examTimeInput = examen.horaExamen ?? ''
+  const bloodCollectionTimeInput = examen.horaTomaSangre ?? ''
   const estadoLabel =
     examen.estado === 'en_proceso'
       ? 'En Proceso'
@@ -517,6 +530,7 @@ export default function ExamenPage() {
         doctor_name: bioanalystName,
         exam_date: examDateInput || undefined,
         exam_time: examTimeInput || undefined,
+        blood_collection_time: bloodCollectionTimeInput || undefined,
       })
 
       if (examen.templateSections.length > 0) {
@@ -542,6 +556,10 @@ export default function ExamenPage() {
       setExamTimeByExam(prev => ({
         ...prev,
         [examen.id]: examTimeInput,
+      }))
+      setBloodCollectionTimeByExam(prev => ({
+        ...prev,
+        [examen.id]: bloodCollectionTimeInput,
       }))
       setEstadoByExam(prev => ({ ...prev, [examen.id]: 'completo' }))
       setCurrentReadOnly(true)
@@ -853,6 +871,13 @@ export default function ExamenPage() {
                 examTime={examTimeInput}
                 onExamTimeChange={value => {
                   setExamTimeByExam(prev => ({
+                    ...prev,
+                    [examen.id]: value,
+                  }))
+                }}
+                bloodCollectionTime={bloodCollectionTimeInput}
+                onBloodCollectionTimeChange={value => {
+                  setBloodCollectionTimeByExam(prev => ({
                     ...prev,
                     [examen.id]: value,
                   }))

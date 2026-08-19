@@ -211,6 +211,7 @@ interface CreateOrderExamResultPayload {
     doctor_name?: string;
     exam_date?: string;
     exam_time?: string;
+    blood_collection_time?: string;
 }
 
 export async function createOrderExamResult(orderId: string, examId: string, payload: CreateOrderExamResultPayload) {

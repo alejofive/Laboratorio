@@ -35,6 +35,7 @@ export interface Paciente {
   nombre: string;
   edad: number;
   telefono: string;
+  email?: string;
   fecha: string;
   examenes: TipoExamen[];
   cedula: string;

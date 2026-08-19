@@ -107,6 +107,7 @@ export default function NuevoPacienteForm() {
       telefono: '',
       cedula: '',
       direccion: '',
+      correo: '',
       apellido: '',
       observaciones: '',
       examenes: [],
@@ -192,6 +193,7 @@ export default function NuevoPacienteForm() {
     setValue('apellido', selectedPatientDetail.last_name ?? '')
     setValue('telefono', selectedPatientDetail.phone ?? '')
     setValue('direccion', selectedPatientDetail.address ?? '')
+    setValue('correo', selectedPatientDetail.email ?? '')
 
     if (selectedPatientDetail.birth_date) {
       setValue('fechaNacimiento', selectedPatientDetail.birth_date.split('T')[0])
@@ -283,6 +285,7 @@ export default function NuevoPacienteForm() {
     setValue('apellido', patient.last_name)
     setValue('telefono', patient.phone)
     setValue('direccion', '')
+    setValue('correo', patient.email ?? '')
     setSelectedPatientId(patient._id)
     setShowCreateForm(false)
     setSearchTerm('')
@@ -320,6 +323,7 @@ export default function NuevoPacienteForm() {
       telefono: '',
       cedula: '',
       direccion: '',
+      correo: '',
       observaciones: '',
       examenes: [],
     })
@@ -431,6 +435,7 @@ export default function NuevoPacienteForm() {
           sex: data.sexo,
           phone: data.telefono.trim(),
           address: data.direccion.trim(),
+          ...(data.correo.trim() ? { email: data.correo.trim() } : {}),
         })
 
         patientId = created._id
@@ -832,7 +837,7 @@ export default function NuevoPacienteForm() {
                   )}
                 </div>
 
-                <div className='md:col-span-3'>
+                <div className='md:col-span-2'>
                   <FieldLabel>Dirección</FieldLabel>
                   <TextInput
                     type='text'
@@ -842,6 +847,21 @@ export default function NuevoPacienteForm() {
                   />
                   {errors.direccion && (
                     <p className='text-red-500 text-xs mt-1'>{errors.direccion.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <FieldLabel>Correo electrónico</FieldLabel>
+                  <TextInput
+                    type='email'
+                    inputMode='email'
+                    autoComplete='email'
+                    {...register('correo')}
+                    error={Boolean(errors.correo)}
+                    placeholder='ejemplo@correo.com'
+                  />
+                  {errors.correo && (
+                    <p className='text-red-500 text-xs mt-1'>{errors.correo.message}</p>
                   )}
                 </div>
               </div>

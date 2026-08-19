@@ -27,6 +27,14 @@ export const newPatientRequestSchema = z.object({
     .min(1, 'La cedula es requerida')
     .regex(/^\d+$/, 'La cedula debe contener solo numeros'),
   direccion: z.string().trim().min(1, 'La direccion es requerida'),
+  correo: z
+    .string()
+    .trim()
+    .max(120, 'El correo no puede superar los 120 caracteres')
+    .refine(
+      value => value === '' || z.string().email().safeParse(value).success,
+      'El correo no es valido',
+    ),
   observaciones: z.string(),
   examenes: z.array(z.string()).min(1, 'Debes seleccionar al menos un examen'),
 })

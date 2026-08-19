@@ -6,6 +6,7 @@ export interface CreatePatient {
     sex?: string;
     phone: string;
     address: string;
+    email?: string;
 }
 
 
@@ -31,6 +32,7 @@ export interface PatientApi {
     last_name: string;
     document_number: string;
     phone: string;
+    email?: string;
     age?: number;
     address?: string;
 }
@@ -58,6 +60,7 @@ export interface PatientDetailResponse {
     document_number: string;
     birth_date?: string;
     phone: string;
+    email?: string;
     address?: string;
     created_at?: string;
     updated_at?: string;

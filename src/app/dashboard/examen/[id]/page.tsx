@@ -3,12 +3,8 @@
 import ExamenTabs from '@/components/ExamenTabs'
 import DynamicExamForm from '@/components/forms/DynamicExamForm'
 import { Button } from '@/components/ui/Button'
-import {
-  createOrderExamResult,
-  sendOrderExamEmail,
-  useOrderById,
-  usePatientById,
-} from '@/data/createPatients'
+import SvgIcon from '@/components/ui/SvgIcon'
+import { createOrderExamResult, useOrderById, usePatientById } from '@/data/createPatients'
 import {
   buildInitialValuesFromTemplate,
   extractTemplatePayload,
@@ -18,7 +14,8 @@ import {
   TemplateFormValues,
   validateTemplateValues,
 } from '@/lib/examTemplate'
-import { emailSchema } from '@/lib/validations/email'
+import { buildGmailComposeLink } from '@/lib/gmail'
+import { buildWhatsAppLink } from '@/lib/whatsapp'
 import {
   EstadoExamen,
   Examen,
@@ -29,7 +26,7 @@ import {
 } from '@/types'
 import { ExamTemplateSection } from '@/types/exam-template'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Calendar, FileText, IdCard, Mail, MapPin, Pencil, Phone } from 'lucide-react'
+import { ArrowLeft, Calendar, Download, IdCard, Mail, MapPin, Pencil, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -254,6 +251,24 @@ interface ExamenView extends Examen {
   useDynamicForm: boolean
 }
 
+function getPdfFilename(contentDisposition: string | null): string {
+  const fallback = 'resultado.pdf'
+
+  if (!contentDisposition) return fallback
+
+  const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)
+  if (encodedMatch) {
+    try {
+      return decodeURIComponent(encodedMatch[1].trim())
+    } catch {
+      return fallback
+    }
+  }
+
+  const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i)
+  return plainMatch ? plainMatch[1].trim() : fallback
+}
+
 function mapPatient(apiPatient: {
   _id: string
   first_name: string
@@ -261,15 +276,16 @@ function mapPatient(apiPatient: {
   document_number: string
   birth_date?: string
   phone: string
+  email?: string
   address?: string
 }): Paciente {
   const age = apiPatient.birth_date
     ? Math.max(
-      0,
-      Math.floor(
-        (Date.now() - new Date(apiPatient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
-      ),
-    )
+        0,
+        Math.floor(
+          (Date.now() - new Date(apiPatient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+        ),
+      )
     : 0
 
   return {
@@ -277,6 +293,7 @@ function mapPatient(apiPatient: {
     nombre: `${apiPatient.first_name} ${apiPatient.last_name}`.trim(),
     edad: age,
     telefono: apiPatient.phone,
+    email: apiPatient.email,
     fecha: '',
     examenes: [],
     cedula: apiPatient.document_number,
@@ -305,9 +322,8 @@ export default function ExamenPage() {
   >({})
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
   const [isSavingResult, setIsSavingResult] = useState(false)
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
-  const [emailInput, setEmailInput] = useState('')
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [isPreparingEmail, setIsPreparingEmail] = useState(false)
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [draftResultadosByExam, setDraftResultadosByExam] = useState<
     Record<string, ResultadosExamen>
   >({})
@@ -348,8 +364,7 @@ export default function ExamenPage() {
             ? exam.exam_date.slice(0, 10)
             : toVenezuelaDateOnly(exam.created_at ?? order.created_at)),
         horaExamen: examTimeByExam[exam._id] ?? exam.exam_time ?? '',
-        horaTomaSangre:
-          bloodCollectionTimeByExam[exam._id] ?? exam.blood_collection_time ?? '',
+        horaTomaSangre: bloodCollectionTimeByExam[exam._id] ?? exam.blood_collection_time ?? '',
         templateSections,
         templateName: exam.template_snapshot?.name || 'Examen',
         useDynamicForm,
@@ -370,11 +385,10 @@ export default function ExamenPage() {
   const examenBase = examenesPaciente.find(e => e.id === selectedExamId) ?? null
   const examen = examenBase
     ? {
-      ...examenBase,
-      resultados: draftResultadosByExam[examenBase.id] ?? examenBase.resultados,
-      templateSections:
-        draftTemplateSectionsByExam[examenBase.id] ?? examenBase.templateSections,
-    }
+        ...examenBase,
+        resultados: draftResultadosByExam[examenBase.id] ?? examenBase.resultados,
+        templateSections: draftTemplateSectionsByExam[examenBase.id] ?? examenBase.templateSections,
+      }
     : null
 
   const paciente = patientData ? mapPatient(patientData) : null
@@ -597,47 +611,105 @@ export default function ExamenPage() {
     }
   }
 
-  const openEmailModal = () => {
-    setEmailInput(examen.emailEnviado || '')
-    setIsEmailModalOpen(true)
+  const fetchExamPdf = async () => {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/exams/${examen.id}/pdf`,
+    )
+
+    if (!response.ok) throw new Error('No se pudo generar el PDF')
+
+    const blob = await response.blob()
+
+    return {
+      blobUrl: URL.createObjectURL(blob),
+      filename: getPdfFilename(response.headers.get('content-disposition')),
+    }
   }
 
-  const closeEmailModal = () => {
-    if (isSendingEmail) return
-    setIsEmailModalOpen(false)
+  const triggerBlobDownload = (blobUrl: string, filename: string) => {
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   const handleSendEmail = async () => {
-    if (isSendingEmail) return
+    if (isPreparingEmail) return
 
-    const validation = emailSchema.safeParse(emailInput)
-    if (!validation.success) {
-      toast.error(validation.error.issues[0]?.message ?? 'Correo invalido')
+    const gmailLink = buildGmailComposeLink({
+      to: paciente.email,
+      subject: `Resultado de examen de ${examLabels[examen.tipo]} - ${paciente.nombre}`,
+      body: [
+        `Hola ${paciente.nombre}, te saluda Laboratorio Clínico DOS G.`,
+        '',
+        `Ya tenemos listo el resultado de tu examen de ${examLabels[examen.tipo]}.`,
+        '',
+        'Adjuntamos el archivo con tu resultado.',
+      ].join('\n'),
+    })
+
+    // Gmail se abre de forma sincrona para conservar el gesto del usuario: si se
+    // abriera despues del await, el navegador lo bloquearia como popup.
+    const gmailWindow = window.open(gmailLink, '_blank')
+
+    if (!gmailWindow) {
+      toast.error('El navegador bloqueo la apertura de Gmail')
       return
     }
 
-    setIsSendingEmail(true)
+    gmailWindow.opener = null
+
+    setIsPreparingEmail(true)
 
     try {
-      await sendOrderExamEmail(orderId, examen.id, validation.data)
-      setIsEmailModalOpen(false)
-      toast.success('Email enviado exitosamente')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo enviar el email')
+      // El PDF solo se descarga: Gmail no permite adjuntar archivos desde la URL,
+      // asi que el usuario adjunta manualmente el archivo recien descargado.
+      const { blobUrl, filename } = await fetchExamPdf()
+      triggerBlobDownload(blobUrl, filename)
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+
+      toast.success(`PDF descargado. Adjunta ${filename} en Gmail.`)
+    } catch {
+      toast.error('No se pudo descargar el PDF del resultado')
     } finally {
-      setIsSendingEmail(false)
+      setIsPreparingEmail(false)
     }
   }
 
-  const handlePrintPdf = () => {
-    const pdfWindow = window.open('', '_blank')
+  const handleDownloadPdf = async () => {
+    if (isDownloadingPdf) return
 
-    if (!pdfWindow) {
-      toast.error('El navegador bloqueo la apertura del PDF')
+    setIsDownloadingPdf(true)
+
+    try {
+      const { blobUrl, filename } = await fetchExamPdf()
+      triggerBlobDownload(blobUrl, filename)
+
+      // Se libera el blob luego de que el navegador alcanza a leerlo.
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+    } catch {
+      toast.error('No se pudo descargar el PDF')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
+  }
+
+  const handleSendWhatsapp = () => {
+    const message = [
+      `Hola *${paciente.nombre}*, te saluda *Laboratorio Clínico DOS G.*`,
+      '',
+      `Ya tenemos listo el resultado de tu examen de *${examLabels[examen.tipo]}*.`,
+    ].join('\n')
+    const waLink = buildWhatsAppLink(paciente.telefono, message)
+
+    if (!waLink) {
+      toast.error('El paciente no tiene un número de teléfono válido')
       return
     }
 
-    pdfWindow.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/exams/${examen.id}/pdf`
+    window.open(waLink, '_blank')
   }
 
   const renderForm = () => {
@@ -665,13 +737,13 @@ export default function ExamenPage() {
   const isCurrentTemplateValid =
     examen.useDynamicForm && examen.templateSections.length > 0
       ? validateTemplateValues(
-        examen.templateSections,
-        draftTemplateValuesByExam[examen.id] ??
-        buildInitialValuesFromTemplate(
           examen.templateSections,
-          mapExamToPayload(examen.tipo, examen.resultados),
-        ),
-      )
+          draftTemplateValuesByExam[examen.id] ??
+            buildInitialValuesFromTemplate(
+              examen.templateSections,
+              mapExamToPayload(examen.tipo, examen.resultados),
+            ),
+        )
       : isFormValid
 
   return (
@@ -718,81 +790,33 @@ export default function ExamenPage() {
               <div className='flex flex-wrap gap-3 lg:justify-end'>
                 <Button
                   type='button'
-                  onClick={openEmailModal}
-                  disabled={!readOnly || isSendingEmail}
+                  onClick={() => void handleSendEmail()}
+                  disabled={!readOnly || isPreparingEmail}
                   variant='outline'
                   icon={<Mail className='h-5 w-5' />}
                 >
-                  Enviar al correo
+                  {isPreparingEmail ? 'Preparando...' : 'Enviar al correo'}
                 </Button>
                 <Button
                   type='button'
-                  onClick={handlePrintPdf}
+                  onClick={handleSendWhatsapp}
                   disabled={!readOnly}
-                  icon={<FileText className='h-5 w-5' />}
+                  variant='outline'
+                  icon={<SvgIcon src='/svg/whatsapp.svg' size={20} />}
                 >
-                  Imprimir
+                  Enviar a WhatsApp
+                </Button>
+                <Button
+                  type='button'
+                  onClick={() => void handleDownloadPdf()}
+                  disabled={!readOnly || isDownloadingPdf}
+                  icon={<Download className='h-5 w-5' />}
+                >
+                  {isDownloadingPdf ? 'Descargando...' : 'Descargar'}
                 </Button>
               </div>
             </div>
           </header>
-
-          {isEmailModalOpen ? (
-            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 no-print'>
-              <div className='w-full max-w-md rounded-3xl border border-border-default bg-white p-6 shadow-2xl'>
-                <div className='mb-5'>
-                  <h2 className='text-xl font-semibold text-primary'>Enviar resultado por email</h2>
-                  <p className='mt-2 text-sm text-secondary'>
-                    Ingresa el correo donde se enviara el PDF del resultado.
-                  </p>
-                </div>
-
-                <label className='block'>
-                  <span className='mb-2 block text-sm font-medium text-secondary'>Correo electronico</span>
-                  <input
-                    type='email'
-                    value={emailInput}
-                    onChange={event => setEmailInput(event.target.value)}
-                    onKeyDown={event => {
-                      if (event.key === 'Enter') void handleSendEmail()
-                      if (event.key === 'Escape') closeEmailModal()
-                    }}
-                    disabled={isSendingEmail}
-                    autoFocus
-                    placeholder='correo@ejemplo.com'
-                    className='h-12 w-full rounded-xl border border-border-input px-4 text-primary outline-none transition-colors placeholder:text-secondary focus:border-brand-primary disabled:cursor-not-allowed disabled:opacity-60'
-                  />
-                </label>
-
-                <div className='mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={closeEmailModal}
-                    disabled={isSendingEmail}
-                    className='disabled:cursor-not-allowed disabled:opacity-60'
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type='button'
-                    onClick={handleSendEmail}
-                    disabled={isSendingEmail}
-                    className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
-                  >
-                    {isSendingEmail ? (
-                      <>
-                        <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
-                        Enviando email...
-                      </>
-                    ) : (
-                      'Enviar PDF'
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : null}
 
           {examenesPaciente.length > 1 && (
             <nav className='mb-6 flex flex-col gap-4 no-print'>
@@ -809,16 +833,18 @@ export default function ExamenPage() {
                       key={ex.id}
                       href={`/dashboard/examen/${orderId}?examId=${ex.id}`}
                       scroll={false}
-                      className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive
-                        ? 'border-[#2563eb] bg-[#f1f5fe]'
-                        : 'border-border-default bg-white hover:bg-surface-muted'
-                        }`}
+                      className={`flex min-w-45 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors ${
+                        isActive
+                          ? 'border-[#2563eb] bg-[#f1f5fe]'
+                          : 'border-border-default bg-white hover:bg-surface-muted'
+                      }`}
                     >
                       <span className={`h-2 w-2 shrink-0 rounded-full ${status.dotClassName}`} />
                       <span className='min-w-0'>
                         <span
-                          className={`block truncate text-base font-semibold ${isActive ? 'text-[#2563eb]' : 'text-primary'
-                            }`}
+                          className={`block truncate text-base font-semibold ${
+                            isActive ? 'text-[#2563eb]' : 'text-primary'
+                          }`}
                         >
                           {ex.templateName || examLabels[ex.tipo]}
                         </span>
@@ -836,10 +862,11 @@ export default function ExamenPage() {
 
         <div className='print-area flex flex-1 flex-col gap-6'>
           <div
-            className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${readOnly
-              ? ''
-              : 'sticky top-0 z-20 -mx-4 border-b border-border-default bg-canvas px-4 py-4 md:-mx-8 md:px-8'
-              }`}
+            className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${
+              readOnly
+                ? ''
+                : 'sticky top-0 z-20 -mx-4 border-b border-border-default bg-canvas px-4 py-4 md:-mx-8 md:px-8'
+            }`}
           >
             <h1 className='text-xl font-semibold uppercase text-primary'>
               {examen.templateName || examLabels[examen.tipo]}

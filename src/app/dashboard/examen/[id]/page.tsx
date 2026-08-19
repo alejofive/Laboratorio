@@ -314,6 +314,9 @@ export default function ExamenPage() {
   const [draftTemplateValuesByExam, setDraftTemplateValuesByExam] = useState<
     Record<string, TemplateFormValues>
   >({})
+  const [draftTemplateSectionsByExam, setDraftTemplateSectionsByExam] = useState<
+    Record<string, ExamTemplateSection[]>
+  >({})
   const formContainerRef = useRef<HTMLDivElement | null>(null)
 
   const examenesPaciente = useMemo<ExamenView[]>(() => {
@@ -369,6 +372,8 @@ export default function ExamenPage() {
     ? {
       ...examenBase,
       resultados: draftResultadosByExam[examenBase.id] ?? examenBase.resultados,
+      templateSections:
+        draftTemplateSectionsByExam[examenBase.id] ?? examenBase.templateSections,
     }
     : null
 
@@ -497,6 +502,13 @@ export default function ExamenPage() {
     }))
   }
 
+  const handleTemplateSectionsChange = (sections: ExamTemplateSection[]) => {
+    setDraftTemplateSectionsByExam(prev => ({
+      ...prev,
+      [examen.id]: sections,
+    }))
+  }
+
   const handleCompletar = async () => {
     if (isSavingResult) return
 
@@ -527,6 +539,19 @@ export default function ExamenPage() {
 
       await createOrderExamResult(orderId, examen.id, {
         result_payload: normalizedPayload,
+        custom_fields: examen.templateSections.flatMap((section, sectionIndex) =>
+          section.fields
+            .filter(field => field.is_custom)
+            .map(field => ({
+              section_index: sectionIndex,
+              key: field.key,
+              label: field.label.trim(),
+              ...(field.unit?.trim() ? { unit: field.unit.trim() } : {}),
+              ...(field.reference_value?.trim()
+                ? { reference_value: field.reference_value.trim() }
+                : {}),
+            })),
+        ),
         doctor_name: bioanalystName,
         exam_date: examDateInput || undefined,
         exam_time: examTimeInput || undefined,
@@ -629,6 +654,7 @@ export default function ExamenPage() {
           sections={examen.templateSections}
           values={currentValues}
           onChange={handleTemplateValuesChange}
+          onSectionsChange={handleTemplateSectionsChange}
           onValidChange={setIsFormValid}
           readOnly={readOnly}
         />

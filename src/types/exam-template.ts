@@ -31,6 +31,7 @@ export interface ExamTemplateField {
   unit?: string;
   reference_value?: string;
   value_options?: string[];
+  is_custom?: boolean;
 }
 
 export interface ExamTemplateSection {

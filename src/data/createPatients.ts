@@ -208,6 +208,13 @@ interface SaveOrderExamPayload {
 
 interface CreateOrderExamResultPayload {
     result_payload: Record<string, unknown>;
+    custom_fields?: Array<{
+        section_index: number;
+        key: string;
+        label: string;
+        unit?: string;
+        reference_value?: string;
+    }>;
     doctor_name?: string;
     exam_date?: string;
     exam_time?: string;

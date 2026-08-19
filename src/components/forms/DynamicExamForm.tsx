@@ -19,7 +19,7 @@ import {
   validateTemplateValues,
 } from '@/lib/examTemplate'
 import { ExamTemplateSection } from '@/types/exam-template'
-import { ChevronDown, Plus, X } from 'lucide-react'
+import { Check, ChevronDown, Pencil, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface EditableSelectInputProps {
@@ -111,7 +111,13 @@ interface MultiSelectTextInputsProps {
  * pre-filled with the option name and freely editable so the technician can
  * annotate it (`Quistes de Endolimax nana` -> `Quistes de Endolimax nana: escasos`).
  */
-function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }: MultiSelectTextInputsProps) {
+function MultiSelectTextInputs({
+  id,
+  options,
+  entries,
+  onChange,
+  valueOptions,
+}: MultiSelectTextInputsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const listId = `${id}-options`
   const selectedOptions = new Set(entries.map(entry => entry.option).filter(Boolean))
@@ -141,7 +147,9 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
   }
 
   const updateEntryText = (index: number, text: string) => {
-    onChange(entries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, text } : entry)))
+    onChange(
+      entries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, text } : entry)),
+    )
   }
 
   /** Mirrors the plain `select` field's flexible-value logic: an exact catalog
@@ -156,7 +164,9 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
   }
 
   const updateEntryValue = (index: number, value: string) => {
-    onChange(entries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, value } : entry)))
+    onChange(
+      entries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, value } : entry)),
+    )
   }
 
   const removeEntry = (index: number) => {
@@ -222,7 +232,9 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
                   onMouseDown={event => event.preventDefault()}
                   onClick={() => toggleOption(option)}
                   className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-brand-active hover:text-brand-primary ${
-                    selectedOptions.has(option) ? 'bg-brand-active text-brand-primary' : 'text-primary'
+                    selectedOptions.has(option)
+                      ? 'bg-brand-active text-brand-primary'
+                      : 'text-primary'
                   }`}
                 >
                   <span
@@ -344,7 +356,9 @@ function MultiSelectTextInputs({ id, options, entries, onChange, valueOptions }:
                 onMouseDown={event => event.preventDefault()}
                 onClick={() => toggleOption(option)}
                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-brand-active hover:text-brand-primary ${
-                  selectedOptions.has(option) ? 'bg-brand-active text-brand-primary' : 'text-primary'
+                  selectedOptions.has(option)
+                    ? 'bg-brand-active text-brand-primary'
+                    : 'text-primary'
                 }`}
               >
                 <span
@@ -408,6 +422,7 @@ interface DynamicExamFormProps {
   sections: ExamTemplateSection[]
   values: TemplateFormValues
   onChange: (values: TemplateFormValues) => void
+  onSectionsChange: (sections: ExamTemplateSection[]) => void
   onValidChange?: (isValid: boolean) => void
   readOnly?: boolean
 }
@@ -416,9 +431,12 @@ export default function DynamicExamForm({
   sections,
   values,
   onChange,
+  onSectionsChange,
   onValidChange,
   readOnly = false,
 }: DynamicExamFormProps) {
+  const [editingCustomFieldKey, setEditingCustomFieldKey] = useState<string | null>(null)
+
   useEffect(() => {
     onValidChange?.(validateTemplateValues(sections, values))
   }, [sections, values, onValidChange])
@@ -433,6 +451,57 @@ export default function DynamicExamForm({
   const updateNumericValue = (key: string, value: string) => {
     if (!/^\d*([.,]\d*)?$/.test(value)) return
     updateValue(key, value)
+  }
+
+  const addCustomField = (sectionIndex: number) => {
+    const key = `custom_${crypto.randomUUID().replaceAll('-', '')}`
+    onSectionsChange(
+      sections.map((section, index) =>
+        index === sectionIndex
+          ? {
+              ...section,
+              fields: [
+                ...section.fields,
+                { key, label: '', type: 'text', options: [], is_custom: true },
+              ],
+            }
+          : section,
+      ),
+    )
+    updateValue(key, '')
+    setEditingCustomFieldKey(key)
+  }
+
+  const updateCustomField = (
+    sectionIndex: number,
+    key: string,
+    changes: { label?: string; unit?: string; reference_value?: string },
+  ) => {
+    onSectionsChange(
+      sections.map((section, index) =>
+        index === sectionIndex
+          ? {
+              ...section,
+              fields: section.fields.map(field =>
+                field.key === key ? { ...field, ...changes } : field,
+              ),
+            }
+          : section,
+      ),
+    )
+  }
+
+  const removeCustomField = (sectionIndex: number, key: string) => {
+    onSectionsChange(
+      sections.map((section, index) =>
+        index === sectionIndex
+          ? { ...section, fields: section.fields.filter(field => field.key !== key) }
+          : section,
+      ),
+    )
+    const nextValues = { ...values }
+    delete nextValues[key]
+    onChange(nextValues)
   }
 
   const renderReference = (referenceValue?: string) => {
@@ -473,7 +542,10 @@ export default function DynamicExamForm({
       .filter(entry => entry.name)
 
     return (
-      <div key={key} className='grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4'>
+      <div
+        key={key}
+        className='grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4'
+      >
         {entries.length > 0 ? (
           entries.map((entry, index) => (
             <div key={`${entry.name}-${index}`}>
@@ -530,6 +602,113 @@ export default function DynamicExamForm({
                 )
               }
 
+              if (field.is_custom) {
+                return (
+                  <div key={field.key}>
+                    {editingCustomFieldKey === field.key ? (
+                      <div className='mb-1 grid grid-cols-[minmax(0,13fr)_minmax(0,7fr)_auto_auto] items-center gap-1'>
+                        <TextInput
+                          id={`${field.key}-label`}
+                          type='text'
+                          aria-label='Título del campo adicional'
+                          value={field.label}
+                          onChange={event =>
+                            updateCustomField(idx, field.key, { label: event.target.value })
+                          }
+                          placeholder='Título'
+                          className='h-6 min-h-0! rounded-md px-2 py-0 text-xs font-medium'
+                        />
+                        <TextInput
+                          id={`${field.key}-unit`}
+                          type='text'
+                          aria-label='Unidad del campo adicional'
+                          value={field.unit ?? ''}
+                          onChange={event =>
+                            updateCustomField(idx, field.key, { unit: event.target.value })
+                          }
+                          placeholder='Unidad'
+                          className='h-6 min-h-0! rounded-md px-2 py-0 text-xs'
+                        />
+                        <button
+                          type='button'
+                          aria-label='Terminar edición'
+                          onClick={() => setEditingCustomFieldKey(null)}
+                          className='flex size-5 items-center justify-center text-green-600 transition-colors hover:text-green-700'
+                        >
+                          <Check className='size-3.5' />
+                        </button>
+                        <button
+                          type='button'
+                          aria-label='Eliminar campo adicional'
+                          onClick={() => {
+                            removeCustomField(idx, field.key)
+                            setEditingCustomFieldKey(null)
+                          }}
+                          className='flex size-5 items-center justify-center text-secondary transition-colors hover:text-red-600'
+                        >
+                          <X className='size-3.5' />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className='group mb-1 flex items-center gap-1'>
+                        <FieldLabel className='mb-0 font-medium'>
+                          {labelBase || 'Nuevo campo'}
+                        </FieldLabel>
+                        <button
+                          type='button'
+                          aria-label='Editar título, unidad y referencia'
+                          onClick={() => setEditingCustomFieldKey(field.key)}
+                          className='flex size-4 cursor-pointer items-center justify-center text-secondary opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100'
+                        >
+                          <Pencil className='size-3' />
+                        </button>
+                        <button
+                          type='button'
+                          aria-label='Eliminar campo adicional'
+                          onClick={() => removeCustomField(idx, field.key)}
+                          className='flex size-4 cursor-pointer items-center justify-center text-secondary opacity-0 transition-all group-hover:opacity-100 hover:text-red-600 focus:opacity-100'
+                        >
+                          <X className='size-3.5' />
+                        </button>
+                      </div>
+                    )}
+                    <TextInput
+                      id={field.key}
+                      type='text'
+                      aria-label='Valor del campo adicional'
+                      value={String(value ?? '')}
+                      onChange={event => updateValue(field.key, event.target.value)}
+                      placeholder='Valor'
+                      className='h-12'
+                    />
+                    {editingCustomFieldKey === field.key ? (
+                      <div className='relative mt-1'>
+                        <span className='pointer-events-none absolute left-2 top-1/2 z-10 -translate-y-1/2 text-xs text-secondary'>
+                          Ref:
+                        </span>
+                        <TextInput
+                          id={`${field.key}-reference`}
+                          type='text'
+                          aria-label='Referencia del campo adicional'
+                          value={field.reference_value ?? ''}
+                          onChange={event =>
+                            updateCustomField(idx, field.key, {
+                              reference_value: event.target.value,
+                            })
+                          }
+                          placeholder='-'
+                          className='h-6 min-h-0! rounded-md py-0 pr-2 pl-8 text-xs text-secondary'
+                        />
+                      </div>
+                    ) : (
+                      <p className='mt-1 text-xs text-secondary'>
+                        Ref: {field.reference_value || '-'}
+                      </p>
+                    )}
+                  </div>
+                )
+              }
+
               if (field.type === 'textarea') {
                 return (
                   <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
@@ -558,7 +737,10 @@ export default function DynamicExamForm({
                         const selectedOption = field.options.includes(inputValue) ? inputValue : ''
                         updateValue(
                           field.key,
-                          buildFlexibleSelectValue(selectedOption, selectedOption ? '' : inputValue),
+                          buildFlexibleSelectValue(
+                            selectedOption,
+                            selectedOption ? '' : inputValue,
+                          ),
                         )
                       }}
                     />
@@ -644,6 +826,16 @@ export default function DynamicExamForm({
               )
             })}
           </div>
+          {!readOnly ? (
+            <button
+              type='button'
+              onClick={() => addCustomField(idx)}
+              className='mt-4 flex items-center gap-2 text-sm font-semibold text-brand-primary transition-opacity hover:opacity-80'
+            >
+              <Plus className='size-4' />
+              Añadir otro campo
+            </button>
+          ) : null}
         </section>
       ))}
     </div>

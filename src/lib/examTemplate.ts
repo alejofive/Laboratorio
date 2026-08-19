@@ -230,10 +230,21 @@ export function buildInitialValuesFromTemplate(
 }
 
 export function validateTemplateValues(sections: ExamTemplateSection[], values: TemplateFormValues): boolean {
-  return buildTemplateValuesSchema(sections).safeParse(values).success;
+  return validateCustomTemplateFields(sections) && buildTemplateValuesSchema(sections).safeParse(values).success;
+}
+
+export function validateCustomTemplateFields(sections: ExamTemplateSection[]): boolean {
+  const customFields = sections.flatMap((section) => section.fields.filter((field) => field.is_custom));
+  const keys = customFields.map((field) => field.key);
+
+  return customFields.every((field) => field.label.trim().length > 0) && new Set(keys).size === keys.length;
 }
 
 export function getTemplateValidationErrors(sections: ExamTemplateSection[], values: TemplateFormValues): string[] {
+  if (!validateCustomTemplateFields(sections)) {
+    return ['Cada campo adicional debe tener una etiqueta.'];
+  }
+
   const result = buildTemplateValuesSchema(sections).safeParse(values);
   if (result.success) return [];
 

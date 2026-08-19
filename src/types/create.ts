@@ -94,6 +94,7 @@ export interface OrderExamDetail {
     order_id: string;
     exam_template_id: string;
     result_status: string;
+    order_reference?: string;
     doctor_name?: string;
     exam_date?: string;
     exam_time?: string;

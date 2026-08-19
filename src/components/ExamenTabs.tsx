@@ -15,6 +15,8 @@ interface ExamenTabsProps {
   examen: Examen
   examenNombre: string
   readOnly: boolean
+  numeroOrden: string
+  onNumeroOrdenChange: (value: string) => void
   doctorOrdenante: string
   onDoctorOrdenanteChange: (value: string) => void
   examDate: string
@@ -47,6 +49,8 @@ function formatTimeDisplay(timeStr: string): string {
 export default function ExamenTabs({
   examen,
   readOnly,
+  numeroOrden,
+  onNumeroOrdenChange,
   doctorOrdenante,
   onDoctorOrdenanteChange,
   examDate,
@@ -56,6 +60,7 @@ export default function ExamenTabs({
   bloodCollectionTime,
   onBloodCollectionTimeChange,
 }: ExamenTabsProps) {
+  const numeroOrdenMostrado = numeroOrden.trim() || 'Sin número'
   const doctorOrdenanteMostrado = doctorOrdenante.trim() || 'Sin orden médica'
   const selectedExamDate = examDate ? parseIsoDateOnly(examDate) : null
   const fechaExamenMostrada = format(
@@ -64,15 +69,30 @@ export default function ExamenTabs({
     { locale: es },
   )
   const horaExamenMostrada = examTime ? formatTimeDisplay(examTime) : null
-  const horaTomaSangreMostrada = bloodCollectionTime
-    ? formatTimeDisplay(bloodCollectionTime)
-    : null
+  const horaTomaSangreMostrada = bloodCollectionTime ? formatTimeDisplay(bloodCollectionTime) : null
 
   return (
     <div className='rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5'>
       <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
-        <div className='grid w-full gap-6 grid-cols-1 md:grid-cols-4'>
-          <div>
+        <div className='grid w-full gap-6 grid-cols-1 md:grid-cols-6'>
+          <div className='md:col-span-2'>
+            <FieldLabel className='font-medium'>Número de orden</FieldLabel>
+            {readOnly ? (
+              <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
+                {numeroOrdenMostrado}
+              </span>
+            ) : (
+              <TextInput
+                type='text'
+                value={numeroOrden}
+                onChange={event => onNumeroOrdenChange(event.target.value)}
+                maxLength={40}
+                className='h-12'
+                placeholder='N°'
+              />
+            )}
+          </div>
+          <div className='md:col-span-2'>
             <FieldLabel className='font-medium'>Ordenado por:</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
@@ -89,7 +109,7 @@ export default function ExamenTabs({
               />
             )}
           </div>
-          <div>
+          <div className='md:col-span-2 md:col-start-1'>
             <FieldLabel className='font-medium'>Fecha del examen</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
@@ -99,7 +119,9 @@ export default function ExamenTabs({
               <div className='relative'>
                 <DatePicker
                   selected={selectedExamDate}
-                  onChange={(date: Date | null) => onExamDateChange(date ? formatIsoDateOnly(date) : '')}
+                  onChange={(date: Date | null) =>
+                    onExamDateChange(date ? formatIsoDateOnly(date) : '')
+                  }
                   locale='es'
                   dateFormat='dd/MM/yyyy'
                   placeholderText='dd/mm/aaaa'
@@ -112,7 +134,7 @@ export default function ExamenTabs({
               </div>
             )}
           </div>
-          <div>
+          <div className='md:col-span-2'>
             <FieldLabel className='font-medium'>Hora del examen</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
@@ -127,7 +149,7 @@ export default function ExamenTabs({
               />
             )}
           </div>
-          <div>
+          <div className='md:col-span-2'>
             <FieldLabel className='font-medium'>Hora de la toma de sangre</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>

@@ -314,6 +314,7 @@ export default function ExamenPage() {
 
   const [isFormValid, setIsFormValid] = useState(false)
   const [readOnlyByExam, setReadOnlyByExam] = useState<Record<string, boolean>>({})
+  const [orderReferenceByExam, setOrderReferenceByExam] = useState<Record<string, string>>({})
   const [doctorOrdenanteByExam, setDoctorOrdenanteByExam] = useState<Record<string, string>>({})
   const [examDateByExam, setExamDateByExam] = useState<Record<string, string>>({})
   const [examTimeByExam, setExamTimeByExam] = useState<Record<string, string>>({})
@@ -355,6 +356,7 @@ export default function ExamenPage() {
         resultados: useDynamicForm
           ? (exam.result_payload as ResultadosExamen | undefined)
           : mapExamPayload(tipo, exam.result_payload),
+        numeroOrden: orderReferenceByExam[exam._id] ?? exam.order_reference ?? '',
         doctorOrdenante: doctorOrdenanteByExam[exam._id] ?? exam.doctor_name ?? '',
         fechaCreacion: exam.created_at ?? order.created_at,
         fechaActualizacion: exam.updated_at ?? order.updated_at ?? order.created_at,
@@ -374,6 +376,7 @@ export default function ExamenPage() {
     return mapped
   }, [
     order,
+    orderReferenceByExam,
     doctorOrdenanteByExam,
     examDateByExam,
     examTimeByExam,
@@ -477,6 +480,7 @@ export default function ExamenPage() {
   const doctorExamenActual = examen.doctorOrdenante?.trim() || ''
   const doctorOrdenanteInput =
     doctorOrdenanteByExam[examen.id] ?? (doctorExamenActual || doctorOrdenanteHistorico)
+  const numeroOrdenInput = examen.numeroOrden ?? ''
   const examDateInput = examen.fechaExamen ?? ''
   const examTimeInput = examen.horaExamen ?? ''
   const bloodCollectionTimeInput = examen.horaTomaSangre ?? ''
@@ -566,6 +570,7 @@ export default function ExamenPage() {
                 : {}),
             })),
         ),
+        order_reference: numeroOrdenInput.trim() || undefined,
         doctor_name: bioanalystName,
         exam_date: examDateInput || undefined,
         exam_time: examTimeInput || undefined,
@@ -584,6 +589,10 @@ export default function ExamenPage() {
         }))
       }
 
+      setOrderReferenceByExam(prev => ({
+        ...prev,
+        [examen.id]: numeroOrdenInput.trim(),
+      }))
       setDoctorOrdenanteByExam(prev => ({
         ...prev,
         [examen.id]: bioanalystName,
@@ -907,6 +916,13 @@ export default function ExamenPage() {
                 examenNombre={examen.templateName || examLabels[examen.tipo]}
                 examenes={examenesPaciente.map(e => ({ id: e.id, tipo: e.tipo }))}
                 examenActualId={examen.id}
+                numeroOrden={numeroOrdenInput}
+                onNumeroOrdenChange={value => {
+                  setOrderReferenceByExam(prev => ({
+                    ...prev,
+                    [examen.id]: value,
+                  }))
+                }}
                 doctorOrdenante={doctorOrdenanteInput}
                 onDoctorOrdenanteChange={value => {
                   setDoctorOrdenanteByExam(prev => ({

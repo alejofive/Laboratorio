@@ -215,6 +215,7 @@ interface CreateOrderExamResultPayload {
         unit?: string;
         reference_value?: string;
     }>;
+    order_reference?: string;
     doctor_name?: string;
     exam_date?: string;
     exam_time?: string;

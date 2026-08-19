@@ -8,6 +8,7 @@ export interface ExamTemplatePayloadField {
   unit?: string;
   reference_value?: string;
   value_options?: string[];
+  value_input?: 'text';
 }
 
 export interface ExamTemplatePayloadSection {
@@ -153,6 +154,10 @@ export function cleanExamTemplatePayload(template: ExamTemplate): ExamTemplatePa
           const valueOptions = (field.value_options ?? []).map((option) => option.trim()).filter(Boolean);
           if (valueOptions.length) {
             payloadField.value_options = valueOptions;
+          }
+
+          if (field.value_input === 'text') {
+            payloadField.value_input = 'text';
           }
         }
 

@@ -31,6 +31,7 @@ export interface ExamTemplateField {
   unit?: string;
   reference_value?: string;
   value_options?: string[];
+  value_input?: 'text';
   is_custom?: boolean;
 }
 

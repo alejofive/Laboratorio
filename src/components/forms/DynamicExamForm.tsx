@@ -94,6 +94,7 @@ function EditableSelectInput({ id, value, options, onChange }: EditableSelectInp
 
 interface MultiSelectTextInputsProps {
   id: string
+  label: string
   options: string[]
   entries: MultiSelectEntry[]
   onChange: (entries: MultiSelectEntry[]) => void
@@ -104,6 +105,7 @@ interface MultiSelectTextInputsProps {
    * crystal `select` fields instead of the numbered "Reporte N:" style.
    */
   valueOptions?: string[]
+  valueInput?: 'text'
 }
 
 /**
@@ -113,10 +115,12 @@ interface MultiSelectTextInputsProps {
  */
 function MultiSelectTextInputs({
   id,
+  label,
   options,
   entries,
   onChange,
   valueOptions,
+  valueInput,
 }: MultiSelectTextInputsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const listId = `${id}-options`
@@ -173,7 +177,7 @@ function MultiSelectTextInputs({
     onChange(entries.filter((_, entryIndex) => entryIndex !== index))
   }
 
-  if (valueOptions?.length) {
+  if (valueOptions?.length || valueInput === 'text') {
     return (
       <div className='space-y-3'>
         <div
@@ -193,7 +197,7 @@ function MultiSelectTextInputs({
           >
             <span className={selectedOptions.size === 0 ? 'text-secondary' : undefined}>
               {selectedOptions.size === 0
-                ? 'Selecciona los cristales'
+                ? 'Selecciona las opciones'
                 : `${selectedOptions.size} seleccionado${selectedOptions.size === 1 ? '' : 's'}`}
             </span>
             <ChevronDown className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -257,29 +261,36 @@ function MultiSelectTextInputs({
         {entries.map((entry, index) => (
           <div
             key={`entry-${index}`}
-            className='grid grid-cols-[auto_1fr] items-center gap-2 sm:grid-cols-[auto_3fr_2fr_auto]'
+            className='grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto] items-center gap-2'
           >
-            <span className='shrink-0 text-sm font-medium text-secondary/70'>Cristales:</span>
             <TextInput
               id={`${id}-entry-${index}`}
               value={entry.option || entry.text}
               onChange={event => updateEntryName(index, event.target.value)}
-              placeholder='Nombre del cristal'
+              placeholder='Nombre de la opción'
               className='h-12'
             />
-            <div className='col-start-2 sm:col-start-3'>
+            {valueInput === 'text' ? (
+              <TextInput
+                id={`${id}-entry-${index}-value`}
+                value={entry.value ?? ''}
+                onChange={event => updateEntryValue(index, event.target.value)}
+                placeholder='Ingresa un valor'
+                className='h-12'
+              />
+            ) : (
               <EditableSelectInput
                 id={`${id}-entry-${index}-value`}
                 value={entry.value ?? ''}
-                options={valueOptions}
+                options={valueOptions ?? []}
                 onChange={inputValue => updateEntryValue(index, inputValue)}
               />
-            </div>
+            )}
             <button
               type='button'
-              aria-label='Quitar cristal'
+              aria-label={`Quitar ${label.toLocaleLowerCase('es')}`}
               onClick={() => removeEntry(index)}
-              className='col-start-2 flex size-9 shrink-0 cursor-pointer items-center justify-center justify-self-end rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary sm:col-start-4 sm:justify-self-auto'
+              className='flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary'
             >
               <X className='size-4' />
             </button>
@@ -317,7 +328,7 @@ function MultiSelectTextInputs({
         >
           <span className={selectedOptions.size === 0 ? 'text-secondary' : undefined}>
             {selectedOptions.size === 0
-              ? 'Selecciona los hallazgos'
+              ? 'Selecciona las opciones'
               : `${selectedOptions.size} seleccionado${selectedOptions.size === 1 ? '' : 's'}`}
           </span>
           <ChevronDown className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -387,11 +398,10 @@ function MultiSelectTextInputs({
           {entry.option ? (
             <p className='w-full wrap-break-word text-primary'>{entry.option}</p>
           ) : (
-            // Hand-typed findings still need an input: they have no catalog option to show.
             <TextInput
               value={entry.text}
               onChange={event => updateEntryText(index, event.target.value)}
-              placeholder='Describe el hallazgo'
+              placeholder='Nombre de la opción'
               className='h-10'
             />
           )}
@@ -537,6 +547,7 @@ export default function DynamicExamForm({
     value: TemplateFormValue | undefined,
     referenceValue?: string,
     valueOptions?: string[],
+    valueInput?: 'text',
   ) => {
     const entries = toMultiSelectEntries(value)
       .map(entry => ({ name: (entry.option || entry.text).trim(), value: entry.value?.trim() }))
@@ -551,10 +562,14 @@ export default function DynamicExamForm({
           entries.map((entry, index) => (
             <div key={`${entry.name}-${index}`}>
               <FieldLabel className='font-medium'>
-                {valueOptions?.length ? `Cristales: ${entry.name}` : `Reporte ${index + 1}`}
+                {valueInput === 'text'
+                  ? entry.name
+                  : valueOptions?.length
+                    ? `${label}: ${entry.name}`
+                    : `Reporte ${index + 1}`}
               </FieldLabel>
               <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
-                {valueOptions?.length ? entry.value || '-' : entry.name}
+                {valueOptions?.length || valueInput === 'text' ? entry.value || '-' : entry.name}
               </p>
             </div>
           ))
@@ -595,6 +610,7 @@ export default function DynamicExamForm({
                     value,
                     field.reference_value,
                     field.value_options,
+                    field.value_input,
                   )
                 }
 
@@ -765,10 +781,12 @@ export default function DynamicExamForm({
                     </FieldLabel>
                     <MultiSelectTextInputs
                       id={field.key}
+                      label={field.label}
                       options={field.options}
                       entries={toMultiSelectEntries(value)}
                       onChange={entries => updateValue(field.key, entries)}
                       valueOptions={field.value_options}
+                      valueInput={field.value_input}
                     />
                     {renderReference(field.reference_value)}
                   </div>

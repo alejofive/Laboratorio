@@ -490,7 +490,7 @@ export default function ExamenPage() {
       : examen.estado.charAt(0).toUpperCase() + examen.estado.slice(1)
 
   const handleVolver = () => {
-    const cedulaParam = searchParams.get('cedula') || paciente.cedula
+    const cedulaParam = searchParams.get('cedula')
     if (cedulaParam) {
       router.push(`/dashboard/pacientes/${cedulaParam}`)
       return

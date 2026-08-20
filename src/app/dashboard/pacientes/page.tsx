@@ -10,11 +10,32 @@ import { useState } from 'react'
 
 const PATIENTS_PER_PAGE = 10
 
+const PatientsTableSkeleton = () => (
+  <tbody className='divide-y divide-border-default'>
+    {Array.from({ length: 8 }).map((_, index) => (
+      <tr key={index} className='animate-pulse'>
+        <td className='px-4 py-3'>
+          <div className='space-y-2'>
+            <div className='h-4 w-44 rounded bg-gray-200' />
+            <div className='h-3 w-24 rounded bg-gray-200' />
+          </div>
+        </td>
+        <td className='px-4 py-3'>
+          <div className='h-4 w-28 rounded bg-gray-200' />
+        </td>
+        <td className='px-4 py-3'>
+          <div className='h-4 w-12 rounded bg-gray-200' />
+        </td>
+      </tr>
+    ))}
+  </tbody>
+)
+
 export default function PacientesPage() {
   const router = useRouter()
   const [busqueda, setBusqueda] = useState('')
   const [page, setPage] = useState(1)
-  const { data, isLoading, error } = usePatients({
+  const { data, isLoading, isFetching, error } = usePatients({
     page,
     limit: PATIENTS_PER_PAGE,
     search: busqueda.trim(),
@@ -96,8 +117,6 @@ export default function PacientesPage() {
       ) : null}
 
       <div className='overflow-hidden rounded-3xl border border-border-default bg-surface'>
-        {isLoading ? <p className='p-6 text-sm text-secondary'>Cargando pacientes...</p> : null}
-
         <table className='w-full'>
           <thead className='border-b border-border-default bg-surface-muted'>
             <tr>
@@ -106,35 +125,39 @@ export default function PacientesPage() {
               <th className='px-4 py-3 text-left text-sm font-medium text-secondary'>Edad</th>
             </tr>
           </thead>
-          <tbody className='divide-y divide-border-default'>
-            {pacientes.map(paciente => (
-              <tr
-                key={paciente._id}
-                onClick={() => router.push(`/dashboard/pacientes/${paciente.document_number}`)}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    router.push(`/dashboard/pacientes/${paciente.document_number}`)
-                  }
-                }}
-                tabIndex={0}
-                className='cursor-pointer hover:bg-surface-muted'
-              >
-                <td className='px-4 py-3'>
-                  <p className='font-medium text-tertiary'>
-                    {`${paciente.first_name} ${paciente.last_name}`.trim()}
-                  </p>
-                  <p className='text-xs text-secondary'>{paciente.document_number}</p>
-                </td>
-                <td className='px-4 py-3 text-sm text-tertiary'>{paciente.phone || '-'}</td>
-                <td className='px-4 py-3 text-sm text-tertiary'>{paciente.age ?? '-'}</td>
-              </tr>
-            ))}
-          </tbody>
+          {isFetching ? (
+            <PatientsTableSkeleton />
+          ) : (
+            <tbody className='divide-y divide-border-default'>
+              {pacientes.map(paciente => (
+                <tr
+                  key={paciente._id}
+                  onClick={() => router.push(`/dashboard/pacientes/${paciente.document_number}`)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      router.push(`/dashboard/pacientes/${paciente.document_number}`)
+                    }
+                  }}
+                  tabIndex={0}
+                  className='cursor-pointer hover:bg-surface-muted'
+                >
+                  <td className='px-4 py-3'>
+                    <p className='font-medium text-tertiary'>
+                      {`${paciente.first_name} ${paciente.last_name}`.trim()}
+                    </p>
+                    <p className='text-xs text-secondary'>{paciente.document_number}</p>
+                  </td>
+                  <td className='px-4 py-3 text-sm text-tertiary'>{paciente.phone || '-'}</td>
+                  <td className='px-4 py-3 text-sm text-tertiary'>{paciente.age ?? '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          )}
         </table>
       </div>
 
-      {meta && meta.totalPages > 1 ? (
+      {!isFetching && meta && meta.totalPages > 1 ? (
         <div className='mt-5 flex items-center justify-end gap-3'>
           <Button
             type='button'

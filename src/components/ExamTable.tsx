@@ -2,20 +2,24 @@
 
 import { useOrders } from '@/data/createPatients'
 import { OrderItem } from '@/types/create'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DateRange, DayPicker } from 'react-day-picker'
-import 'react-day-picker/style.css'
+import DatePicker, { registerLocale } from 'react-datepicker'
 import EstadoBadge from './EstadoBadge'
 import { Button } from './ui/Button'
 import { TextInput } from './ui/FormField'
 import SvgIcon from './ui/SvgIcon'
 
+registerLocale('es', es)
+
 const EMPTY_ORDERS: OrderItem[] = []
 const CALENDAR_OPTION_STORAGE_KEY = 'exam-table-calendar-option'
 const DATE_RANGE_STORAGE_KEY = 'exam-table-date-range'
 type CalendarOption = 'hoy' | 'ayer' | 'ultimos7' | 'rango'
+type DateRange = { from?: Date; to?: Date }
 
 const isCalendarOption = (value: string | null): value is CalendarOption => {
   return value === 'hoy' || value === 'ayer' || value === 'ultimos7' || value === 'rango'
@@ -46,10 +50,39 @@ const getStoredDateRange = (): DateRange | undefined => {
 }
 
 const formatRangeDate = (date: Date) => {
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  return `${day}/${month}`
+  return format(date, 'dd/MM')
 }
+
+const ExamTableSkeleton = () => (
+  <tbody className='divide-y divide-border-default'>
+    {Array.from({ length: 8 }).map((_, index) => (
+      <tr key={index} className='animate-pulse'>
+        <td className='px-4 py-3'>
+          <div className='h-4 w-24 rounded bg-gray-200' />
+        </td>
+        <td className='px-4 py-3'>
+          <div className='space-y-2'>
+            <div className='h-4 w-40 rounded bg-gray-200' />
+            <div className='h-3 w-24 rounded bg-gray-200' />
+          </div>
+        </td>
+        <td className='px-4 py-3'>
+          <div className='h-4 w-20 rounded bg-gray-200' />
+        </td>
+        <td className='px-4 py-3'>
+          <div className='flex items-center gap-2'>
+            <div className='h-1.5 w-20 rounded-full bg-gray-200' />
+            <div className='h-3 w-8 rounded bg-gray-200' />
+          </div>
+        </td>
+        <td className='px-4 py-3'>
+          <div className='h-5 w-16 rounded-full bg-gray-200' />
+        </td>
+        <td className='px-4 py-3' />
+      </tr>
+    ))}
+  </tbody>
+)
 
 interface ExamTableProps {
   anterior: boolean
@@ -83,33 +116,6 @@ export default function ExamTable({
     { value: 'ayer', label: 'Ayer' },
     { value: 'ultimos7', label: 'Ultimos 7 dias' },
   ] as const
-
-  const dayPickerClassNames = {
-    months: 'flex flex-col',
-    month: 'space-y-3',
-    caption: 'flex items-center justify-between px-1 py-1',
-    caption_label: 'text-lg font-semibold text-tertiary',
-    nav: 'flex items-center justify-end gap-1',
-    button_previous:
-      'h-8 w-8 rounded-md !text-secondary hover:bg-gray-200 hover:text-tertiary transition-colors',
-    button_next:
-      'h-8 w-8 rounded-md !text-secondary hover:bg-gray-200 hover:text-tertiary transition-colors',
-    chevron: 'text-secondary',
-    month_grid: 'w-full border-collapse',
-    weekdays: 'mb-1',
-    weekday: 'text-[14px] font-medium text-secondary px-1 pb-1',
-    week: 'mt-1',
-    day: 'h-9 w-9 text-sm p-0 text-tertiary  rounded-md transition-colors',
-    day_button:
-      'h-9 w-[42px] rounded-md font-medium hover:bg-gray-200 hover:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft/50',
-    today: 'ring-1 border border-brand-soft/20',
-    selected: 'bg-primary text-white !rounded-md hover:bg-primary hover:text-white',
-    range_start: 'bg-primary text-white !rounded-md  hover:bg-primary',
-    range_middle: 'bg-primary/30 text-tertiary rounded-none hover:bg-primary/20',
-    range_end: 'bg-primary text-white !rounded-md rounded-l-none hover:bg-primary',
-    outside: 'text-gray-300',
-    disabled: 'text-gray-300 opacity-50',
-  }
 
   const getEstadoSolicitud = (status: OrderItem['status']): 'pendiente' | 'completo' => {
     if (status === 'completed' || status === 'sent') return 'completo'
@@ -153,7 +159,7 @@ export default function ExamTable({
     return { startDate: toApiDate(from), endDate: toApiDate(to) }
   }, [activeCalendarOption, dateRange])
 
-  const { data: orders } = useOrders({
+  const { data: orders, isFetching } = useOrders({
     page: 1,
     limit: 100,
     search: busquedaDebounced.trim(),
@@ -279,8 +285,9 @@ export default function ExamTable({
     setPaginaActual(1)
   }
 
-  const handleRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range)
+  const handleRangeChange = (dates: [Date | null, Date | null]) => {
+    const [from, to] = dates
+    setDateRange(from ? { from, to: to ?? undefined } : undefined)
     setActiveCalendarOption('rango')
     setPaginaActual(1)
   }
@@ -303,11 +310,10 @@ export default function ExamTable({
                     type='button'
                     key={option.value}
                     onClick={() => handleCalendarOptionClick(option.value)}
-                    className={`py-2.5 px-6 text-base transition-colors ${
-                      activeCalendarOption === option.value
-                        ? 'bg-brand-primary font-semibold text-white'
-                        : 'cursor-pointer font-medium text-tertiary hover:bg-brand-active hover:text-brand-primary'
-                    }`}
+                    className={`py-2.5 px-6 text-base transition-colors ${activeCalendarOption === option.value
+                      ? 'bg-brand-primary font-semibold text-white'
+                      : 'cursor-pointer font-medium text-tertiary hover:bg-brand-active hover:text-brand-primary'
+                      }`}
                   >
                     {option.label}
                   </button>
@@ -317,11 +323,10 @@ export default function ExamTable({
                 <button
                   type='button'
                   onClick={() => setShowRangePicker(prev => !prev)}
-                  className={`h-10 rounded-lg flex justify-center items-center cursor-pointer transition-colors ${
-                    activeCalendarOption === 'rango'
-                      ? 'min-w-[126px] bg-brand-primary px-4 text-base font-semibold text-white hover:bg-brand-primary/90'
-                      : 'w-[68px] bg-white hover:bg-brand-active'
-                  }`}
+                  className={`h-10 rounded-lg flex justify-center items-center cursor-pointer transition-colors ${activeCalendarOption === 'rango'
+                    ? 'min-w-[126px] bg-brand-primary px-4 text-base font-semibold text-white hover:bg-brand-primary/90'
+                    : 'w-[68px] bg-white hover:bg-brand-active'
+                    }`}
                 >
                   {activeCalendarOption === 'rango' && calendarButtonLabel ? (
                     calendarButtonLabel
@@ -331,13 +336,17 @@ export default function ExamTable({
                 </button>
 
                 {showRangePicker && (
-                  <div className='absolute right-0 left-0  z-20 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white p-3'>
-                    <DayPicker
-                      mode='range'
-                      selected={dateRange}
-                      onSelect={handleRangeChange}
-                      numberOfMonths={1}
-                      classNames={dayPickerClassNames}
+                  <div className='absolute left-0 right-0 z-20 mt-2 w-[280px] rounded-xl border border-gray-200 bg-white p-2.5'>
+                    <DatePicker
+                      selected={dateRange?.from ?? null}
+                      onChange={handleRangeChange}
+                      startDate={dateRange?.from ?? null}
+                      endDate={dateRange?.to ?? null}
+                      selectsRange
+                      inline
+                      locale='es'
+                      dateFormat='dd/MM/yyyy'
+                      calendarClassName='app-datepicker app-datepicker-range app-datepicker-inline'
                     />
                     <div className='mt-2 flex justify-between'>
                       <Button type='button' variant='link' size='sm' onClick={handleClearRange}>
@@ -388,56 +397,60 @@ export default function ExamTable({
               <th className='px-4 py-3 text-right text-sm font-medium text-secondary'></th>
             </tr>
           </thead>
-          <tbody className='divide-y divide-border-default'>
-            {ordersPaginados.map(order => {
-              const estadoMostrado = getEstadoSolicitud(order.status)
-              const completados = order.exams.completed
-              const total = order.exams.total
-              const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0
+          {isFetching ? (
+            <ExamTableSkeleton />
+          ) : (
+            <tbody className='divide-y divide-border-default'>
+              {ordersPaginados.map(order => {
+                const estadoMostrado = getEstadoSolicitud(order.status)
+                const completados = order.exams.completed
+                const total = order.exams.total
+                const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0
 
-              return (
-                <tr
-                  onClick={() => router.push(`/dashboard/examen/${order.id}`)}
-                  key={order.id}
-                  className='cursor-pointer hover:bg-surface-muted'
-                >
-                  <td className='px-4 py-3 text-sm font-medium text-tertiary'>
-                    {order.order_number}
-                  </td>
-                  <td className='px-4 py-3'>
-                    <div className='flex flex-col'>
-                      <span className='font-medium text-tertiary'>{order.patient.name}</span>
-                      <span className='text-[11px] text-secondary'>
-                        {order.patient.document_number}
-                      </span>
-                    </div>
-                  </td>
-                  <td className='px-4 py-3 text-sm text-secondary'>
-                    {new Date(order.created_at).toLocaleDateString('es-VE')}
-                  </td>
-                  <td className='px-4 py-3'>
-                    <div className='flex items-center gap-2'>
-                      <div className='h-1.5 w-20 overflow-hidden rounded-full bg-gray-200'>
-                        <div
-                          className='h-full rounded-full bg-brand-primary transition-all'
-                          style={{ width: `${porcentaje}%` }}
-                        />
+                return (
+                  <tr
+                    onClick={() => router.push(`/dashboard/examen/${order.id}`)}
+                    key={order.id}
+                    className='cursor-pointer hover:bg-surface-muted'
+                  >
+                    <td className='px-4 py-3 text-sm font-medium text-tertiary'>
+                      {order.order_number}
+                    </td>
+                    <td className='px-4 py-3'>
+                      <div className='flex flex-col'>
+                        <span className='font-medium text-tertiary'>{order.patient.name}</span>
+                        <span className='text-[11px] text-secondary'>
+                          {order.patient.document_number}
+                        </span>
                       </div>
-                      <span className='text-xs text-secondary'>{`${completados}/${total}`}</span>
-                    </div>
-                  </td>
-                  <td className='px-4 py-3'>
-                    <EstadoBadge estado={estadoMostrado} />
-                  </td>
-                  <td className='px-4 py-3 text-right'></td>
-                </tr>
-              )
-            })}
-          </tbody>
+                    </td>
+                    <td className='px-4 py-3 text-sm text-secondary'>
+                      {new Date(order.created_at).toLocaleDateString('es-VE')}
+                    </td>
+                    <td className='px-4 py-3'>
+                      <div className='flex items-center gap-2'>
+                        <div className='h-1.5 w-20 overflow-hidden rounded-full bg-gray-200'>
+                          <div
+                            className='h-full rounded-full bg-brand-primary transition-all'
+                            style={{ width: `${porcentaje}%` }}
+                          />
+                        </div>
+                        <span className='text-xs text-secondary'>{`${completados}/${total}`}</span>
+                      </div>
+                    </td>
+                    <td className='px-4 py-3'>
+                      <EstadoBadge estado={estadoMostrado} />
+                    </td>
+                    <td className='px-4 py-3 text-right'></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          )}
         </table>
       </div>
 
-      {sortedOrders.length === 0 && (
+      {!isFetching && sortedOrders.length === 0 && (
         <div className='p-8 text-center text-secondary'>
           {activeCalendarOption === 'hoy'
             ? 'No hay pacientes de hoy.'
@@ -449,7 +462,7 @@ export default function ExamTable({
         </div>
       )}
 
-      {totalPaginas > 1 && (
+      {!isFetching && totalPaginas > 1 && (
         <div className='flex items-center justify-center gap-2 mt-4'>
           <Button
             onClick={() => setPaginaActual(p => Math.max(1, p - 1))}

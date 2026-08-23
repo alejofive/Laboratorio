@@ -871,10 +871,8 @@ export default function ExamenPage() {
 
         <div className='print-area flex flex-1 flex-col gap-6'>
           <div
-            className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${
-              readOnly
-                ? ''
-                : 'sticky top-0 z-20 -mx-4 border-b border-border-default bg-canvas px-4 py-4 md:-mx-8 md:px-8'
+            className={`-mx-4 flex flex-col gap-4 px-4 py-4 md:-mx-8 md:flex-row md:items-center md:justify-between md:px-8 ${
+              readOnly ? '' : 'sticky top-0 z-20 bg-canvas'
             }`}
           >
             <h1 className='text-xl font-semibold uppercase text-primary'>

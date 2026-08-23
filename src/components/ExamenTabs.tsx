@@ -135,7 +135,7 @@ export default function ExamenTabs({
             )}
           </div>
           <div className='md:col-span-2'>
-            <FieldLabel className='font-medium'>Hora del examen</FieldLabel>
+            <FieldLabel className='font-medium'>Hora toma de muestra</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
                 {horaExamenMostrada ?? 'Sin hora'}
@@ -150,7 +150,7 @@ export default function ExamenTabs({
             )}
           </div>
           <div className='md:col-span-2'>
-            <FieldLabel className='font-medium'>Hora de la toma de sangre</FieldLabel>
+            <FieldLabel className='font-medium'>2da hora toma de muestra</FieldLabel>
             {readOnly ? (
               <span className='flex w-full items-center text-primary wrap-break-word font-semibold'>
                 {horaTomaSangreMostrada ?? 'Sin hora'}

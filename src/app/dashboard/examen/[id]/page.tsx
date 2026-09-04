@@ -3,6 +3,7 @@
 import ExamenTabs from '@/components/ExamenTabs'
 import DynamicExamForm from '@/components/forms/DynamicExamForm'
 import { Button } from '@/components/ui/Button'
+import LoadingOverlay from '@/components/ui/LoadingOverlay'
 import SvgIcon from '@/components/ui/SvgIcon'
 import { createOrderExamResult, useOrderById, usePatientById } from '@/data/createPatients'
 import {
@@ -26,7 +27,8 @@ import {
 } from '@/types'
 import { ExamTemplateSection } from '@/types/exam-template'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Calendar, Download, IdCard, Mail, MapPin, Pencil, Phone } from 'lucide-react'
+import { ArrowLeft, Calendar, Download, IdCard, MapPin, Pencil, Phone } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -324,6 +326,7 @@ export default function ExamenPage() {
   const [estadoByExam, setEstadoByExam] = useState<Record<string, EstadoExamen>>({})
   const [isSavingResult, setIsSavingResult] = useState(false)
   const [isPreparingEmail, setIsPreparingEmail] = useState(false)
+  const [isPreparingWhatsapp, setIsPreparingWhatsapp] = useState(false)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [draftResultadosByExam, setDraftResultadosByExam] = useState<
     Record<string, ResultadosExamen>
@@ -644,8 +647,21 @@ export default function ExamenPage() {
     link.remove()
   }
 
+  const downloadExamPdf = async (previewWindow?: Window) => {
+    const { blobUrl, filename } = await fetchExamPdf()
+
+    if (previewWindow) {
+      previewWindow.location.href = blobUrl
+    }
+
+    triggerBlobDownload(blobUrl, filename)
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+
+    return filename
+  }
+
   const handleSendEmail = async () => {
-    if (isPreparingEmail) return
+    if (isPreparingEmail || isPreparingWhatsapp) return
 
     const gmailLink = buildGmailComposeLink({
       to: paciente.email,
@@ -675,9 +691,7 @@ export default function ExamenPage() {
     try {
       // El PDF solo se descarga: Gmail no permite adjuntar archivos desde la URL,
       // asi que el usuario adjunta manualmente el archivo recien descargado.
-      const { blobUrl, filename } = await fetchExamPdf()
-      triggerBlobDownload(blobUrl, filename)
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+      const filename = await downloadExamPdf()
 
       toast.success(`PDF descargado. Adjunta ${filename} en Gmail.`)
     } catch {
@@ -690,22 +704,31 @@ export default function ExamenPage() {
   const handleDownloadPdf = async () => {
     if (isDownloadingPdf) return
 
+    // La pestaña debe abrirse antes del await para que el navegador la considere
+    // parte del gesto del usuario y no la bloquee como popup.
+    const previewWindow = window.open('', '_blank')
+
+    if (!previewWindow) {
+      toast.error('El navegador bloqueo la vista previa del PDF')
+      return
+    }
+
+    previewWindow.opener = null
     setIsDownloadingPdf(true)
 
     try {
-      const { blobUrl, filename } = await fetchExamPdf()
-      triggerBlobDownload(blobUrl, filename)
-
-      // Se libera el blob luego de que el navegador alcanza a leerlo.
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+      await downloadExamPdf(previewWindow)
     } catch {
+      previewWindow.close()
       toast.error('No se pudo descargar el PDF')
     } finally {
       setIsDownloadingPdf(false)
     }
   }
 
-  const handleSendWhatsapp = () => {
+  const handleSendWhatsapp = async () => {
+    if (isPreparingEmail || isPreparingWhatsapp) return
+
     const message = [
       `Hola *${paciente.nombre}*, te saluda *Laboratorio Clínico DOS G.*`,
       '',
@@ -718,7 +741,26 @@ export default function ExamenPage() {
       return
     }
 
-    window.open(waLink, '_blank')
+    // WhatsApp se abre antes del await para conservar el gesto del usuario y
+    // evitar que el navegador bloquee la nueva pestaña.
+    const whatsappWindow = window.open(waLink, '_blank')
+
+    if (!whatsappWindow) {
+      toast.error('El navegador bloqueo la apertura de WhatsApp')
+      return
+    }
+
+    whatsappWindow.opener = null
+    setIsPreparingWhatsapp(true)
+
+    try {
+      const filename = await downloadExamPdf()
+      toast.success(`PDF descargado. Adjunta ${filename} en WhatsApp.`)
+    } catch {
+      toast.error('No se pudo descargar el PDF del resultado')
+    } finally {
+      setIsPreparingWhatsapp(false)
+    }
   }
 
   const renderForm = () => {
@@ -756,7 +798,13 @@ export default function ExamenPage() {
       : isFormValid
 
   return (
-    <div className='flex min-h-screen flex-col px-4 md:px-8'>
+    <div className='flex min-h-screen flex-col px-4 md:px-8' aria-busy={isSavingResult}>
+      <LoadingOverlay
+        isOpen={isSavingResult}
+        title='Guardando resultado...'
+        description='Espera mientras registramos los resultados del examen.'
+      />
+
       <div className='mx-auto flex w-full flex-1 flex-col'>
         <div className='shrink-0 pt-8'>
           <header className='mb-6 border-b border-border-default pb-4 no-print'>
@@ -800,20 +848,21 @@ export default function ExamenPage() {
                 <Button
                   type='button'
                   onClick={() => void handleSendEmail()}
-                  disabled={!readOnly || isPreparingEmail}
+                  disabled={!readOnly || isPreparingEmail || isPreparingWhatsapp}
                   variant='outline'
-                  icon={<Mail className='h-5 w-5' />}
+                  icon={<Image src='/svg/gmail.svg' alt='' width={20} height={20} />}
                 >
                   {isPreparingEmail ? 'Preparando...' : 'Enviar al correo'}
                 </Button>
                 <Button
                   type='button'
-                  onClick={handleSendWhatsapp}
-                  disabled={!readOnly}
+                  onClick={() => void handleSendWhatsapp()}
+                  disabled={!readOnly || isPreparingEmail || isPreparingWhatsapp}
                   variant='outline'
+                  className='enabled:hover:border-[#25D366] enabled:hover:bg-[#25D366] enabled:hover:text-white'
                   icon={<SvgIcon src='/svg/whatsapp.svg' size={20} />}
                 >
-                  Enviar a WhatsApp
+                  {isPreparingWhatsapp ? 'Preparando...' : 'Enviar a WhatsApp'}
                 </Button>
                 <Button
                   type='button'

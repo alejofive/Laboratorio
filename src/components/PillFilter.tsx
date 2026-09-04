@@ -8,6 +8,7 @@ type PillFilterProps = {
     onRemove?: () => void
     iconSrc?: string
     iconAlt?: string
+    disabled?: boolean
 }
 
 export function PillFilter({
@@ -18,6 +19,7 @@ export function PillFilter({
     onRemove,
     iconSrc,
     iconAlt,
+    disabled = false,
 }: PillFilterProps) {
     if (selected) {
         return (
@@ -32,15 +34,16 @@ export function PillFilter({
 
     return (
         <button
-            className={`rounded-full px-2.5 flex items-center gap-2 py-1.5  cursor-pointer text-sm font-medium ${active ? 'bg-primary text-white' : 'bg-surface-muted text-secondary hover:bg-gray-200'}`}
+            className={`rounded-full px-2.5 flex items-center gap-2 py-1.5 text-sm font-medium ${disabled ? 'cursor-not-allowed bg-surface-muted text-secondary opacity-50' : active ? 'cursor-pointer bg-primary text-white' : 'cursor-pointer bg-surface-muted text-secondary hover:bg-gray-200'}`}
             type="button"
             onClick={onClick}
+            disabled={disabled}
         >
             {iconSrc ? (
                 <img
                     src={iconSrc}
                     alt={iconAlt ?? ''}
-                    className={`h-4 w-4 shrink-0 transition duration-200 ${active ? 'brightness-0 invert' : ''}`}
+                    className={`h-4 w-4 shrink-0 transition duration-200 ${active && !disabled ? 'brightness-0 invert' : ''}`}
                 />
             ) : null}
             <span>{label}</span>

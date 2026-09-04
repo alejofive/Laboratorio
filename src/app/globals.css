@@ -114,6 +114,7 @@ body {
 
 .app-datepicker .react-datepicker__day:hover {
   background-color: var(--color-brand-active);
+  color: var(--color-primary);
 }
 
 .app-datepicker .react-datepicker__day--selected,
@@ -129,6 +130,7 @@ body {
 .app-datepicker .react-datepicker__day--range-start:hover,
 .app-datepicker .react-datepicker__day--range-end:hover {
   background-color: var(--color-brand-primary);
+  color: white;
 }
 
 .app-datepicker .react-datepicker__day--in-range,
@@ -137,10 +139,24 @@ body {
   color: var(--color-primary);
 }
 
+.app-datepicker .react-datepicker__day--in-range:hover,
+.app-datepicker .react-datepicker__day--in-selecting-range:hover {
+  background-color: var(--color-brand-active);
+  color: var(--color-primary);
+}
+
 .app-datepicker .react-datepicker__day--range-start,
 .app-datepicker .react-datepicker__day--range-end,
 .app-datepicker .react-datepicker__day--selecting-range-start,
 .app-datepicker .react-datepicker__day--selecting-range-end {
+  background-color: var(--color-brand-primary);
+  color: white;
+}
+
+.app-datepicker .react-datepicker__day--range-start:hover,
+.app-datepicker .react-datepicker__day--range-end:hover,
+.app-datepicker .react-datepicker__day--selecting-range-start:hover,
+.app-datepicker .react-datepicker__day--selecting-range-end:hover {
   background-color: var(--color-brand-primary);
   color: white;
 }

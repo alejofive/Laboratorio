@@ -11,6 +11,7 @@ import {
 import { newPatientRequestSchema, NewPatientRequestValues } from '@/lib/validations/patient'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
+import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
@@ -19,6 +20,7 @@ import { PillFilter } from './PillFilter'
 import TopResumen from './TopResumen'
 import { Button } from './ui/Button'
 import { FieldLabel, getFieldButtonClass, SelectInput, TextInput } from './ui/FormField'
+import LoadingOverlay from './ui/LoadingOverlay'
 import SvgIcon from './ui/SvgIcon'
 
 type GrupoExamen = 'hematologia' | 'quimica' | 'serologia' | 'orina_heces' | 'paneles' | 'perfiles'
@@ -117,6 +119,7 @@ export default function NuevoPacienteForm() {
   const examenesSeleccionados = watch('examenes')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchExam, setSearchExam] = useState('')
+  const [debouncedSearchExam, setDebouncedSearchExam] = useState('')
   const [activeCategory, setActiveCategory] = useState<FiltroExamen>('todos')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
@@ -125,6 +128,7 @@ export default function NuevoPacienteForm() {
   const [birthDateDraft, setBirthDateDraft] = useState({ day: '', month: '', year: '' })
   const [ageDraft, setAgeDraft] = useState('')
   const [birthInputMode, setBirthInputMode] = useState<'age' | 'date'>('age')
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const birthDatePickerRef = useRef<HTMLDivElement>(null)
   const cedulaValue = watch('cedula')
   const birthDateValue = watch('fechaNacimiento')
@@ -157,12 +161,15 @@ export default function NuevoPacienteForm() {
     }
   }, [ordersToday])
 
-  const shouldShowResults = debouncedSearchTerm.trim().length >= 2
-  const isSearching = searchTerm.trim().length > 0
+  const normalizedPatientSearch = searchTerm.trim()
+  const shouldShowResults = normalizedPatientSearch.length >= 2
+  const hasDebouncedSearch = debouncedSearchTerm.length >= 2
+  const isSearchDebouncing = shouldShowResults && normalizedPatientSearch !== debouncedSearchTerm
+  const isSearching = normalizedPatientSearch.length > 0
   const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
     page: 1,
     limit: 10,
-    search: shouldShowResults ? debouncedSearchTerm : '',
+    search: hasDebouncedSearch ? debouncedSearchTerm : '',
   })
   const { data: selectedPatientDetail, isLoading: isLoadingPatientDetail } =
     usePatientById(selectedPatientId)
@@ -173,10 +180,18 @@ export default function NuevoPacienteForm() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim())
-    }, 350)
+    }, 400)
 
     return () => window.clearTimeout(timeoutId)
   }, [searchTerm])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchExam(searchExam.trim())
+    }, 400)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [searchExam])
 
   const results = patientsData?.data ?? []
 
@@ -237,12 +252,17 @@ export default function NuevoPacienteForm() {
     perfiles: allExams.filter(exam => exam.group === 'perfiles').length,
   }
 
-  const normalizedSearchExam = normalizeText(searchExam)
+  const normalizedExamInput = normalizeText(searchExam)
+  const normalizedSearchExam = normalizeText(debouncedSearchExam)
+  const isSearchingExams = normalizedExamInput.length > 0
+  const isExamSearchDebouncing = isSearchingExams && normalizedExamInput !== normalizedSearchExam
 
   const visibleExams = allExams.filter(exam => {
+    if (isExamSearchDebouncing) return false
+
     const byText = normalizeText(exam.label).includes(normalizedSearchExam)
 
-    if (normalizedSearchExam) {
+    if (isSearchingExams && normalizedSearchExam) {
       return byText
     }
 
@@ -272,7 +292,6 @@ export default function NuevoPacienteForm() {
   const shouldShowSelected = selectedExams.length > 0
   const canCreateFromSearch = Boolean(selectedPatientId) && selectedExams.length > 0
   const canCreateFromForm = showCreateForm && isValid && selectedExams.length > 0
-  const isSubmittingRequest = createPatientMutation.isPending || createOrderMutation.isPending
   const isSubmitDisabled = !(canCreateFromSearch || canCreateFromForm)
 
   const onSearchTermChange = (value: string) => {
@@ -416,14 +435,21 @@ export default function NuevoPacienteForm() {
   }
 
   const onSubmit = async (data: NewPatientRequestValues) => {
+    const selectedTemplates = selectedExams
+
+    if (selectedTemplates.length === 0) {
+      toast.error('Debes seleccionar al menos un examen valido')
+      return
+    }
+
+    if (!showCreateForm && !selectedPatientId) {
+      toast.error('No se encontro el paciente en API para crear la orden')
+      return
+    }
+
+    setIsSubmittingRequest(true)
+
     try {
-      const selectedTemplates = selectedExams
-
-      if (selectedTemplates.length === 0) {
-        toast.error('Debes seleccionar al menos un examen valido')
-        return
-      }
-
       let patientId = ''
 
       if (showCreateForm) {
@@ -440,12 +466,7 @@ export default function NuevoPacienteForm() {
 
         patientId = created._id
       } else {
-        if (!selectedPatientId) {
-          toast.error('No se encontro el paciente en API para crear la orden')
-          return
-        }
-
-        patientId = selectedPatientId
+        patientId = selectedPatientId as string
       }
 
       const observaciones = data.observaciones.trim()
@@ -464,23 +485,27 @@ export default function NuevoPacienteForm() {
       toast.success('Solicitud creada exitosamente')
     } catch {
       toast.error('No se pudo crear la solicitud')
+    } finally {
+      setIsSubmittingRequest(false)
     }
   }
 
   const onSubmitExistingPatient = async () => {
+    if (!selectedPatientId) {
+      toast.error('No se encontro el paciente en API para crear la orden')
+      return
+    }
+
+    const selectedTemplates = selectedExams
+
+    if (selectedTemplates.length === 0) {
+      toast.error('Debes seleccionar al menos un examen valido')
+      return
+    }
+
+    setIsSubmittingRequest(true)
+
     try {
-      if (!selectedPatientId) {
-        toast.error('No se encontro el paciente en API para crear la orden')
-        return
-      }
-
-      const selectedTemplates = selectedExams
-
-      if (selectedTemplates.length === 0) {
-        toast.error('Debes seleccionar al menos un examen valido')
-        return
-      }
-
       const observaciones = getValues('observaciones').trim()
       const orderPayload = {
         patient_id: selectedPatientId,
@@ -497,11 +522,19 @@ export default function NuevoPacienteForm() {
       toast.success('Solicitud creada exitosamente')
     } catch {
       toast.error('No se pudo crear la solicitud')
+    } finally {
+      setIsSubmittingRequest(false)
     }
   }
 
   return (
-    <div className='w-full'>
+    <div className='w-full' aria-busy={isSubmittingRequest}>
+      <LoadingOverlay
+        isOpen={isSubmittingRequest}
+        title='Guardando solicitud...'
+        description='Espera mientras registramos la información y los exámenes.'
+      />
+
       <TopResumen
         totalSolicitudes={resumenHoy.totalSolicitudes}
         totalParaImprimir={resumenHoy.totalParaImprimir}
@@ -524,9 +557,11 @@ export default function NuevoPacienteForm() {
                   Buscar un paciente o crear solicitud
                 </h2>
                 <div className='flex items-center gap-3 justify-between'>
-                  <div className='border-border-input relative bg-surface min-w-72 flex-1 rounded-xl border px-5 py-3 leading-none'>
-                    <input
-                      className='text-secondary w-full bg-transparent pr-8 outline-none'
+                  <div className='relative min-w-72 flex-1'>
+                    <Search className='pointer-events-none absolute left-3 top-1/2 z-10 size-5 -translate-y-1/2 text-gray-400' />
+                    <TextInput
+                      type='text'
+                      className='w-full pl-11 pr-10'
                       value={searchTerm}
                       onChange={event => onSearchTermChange(event.target.value)}
                       placeholder='Buscar por cédula, nombre o teléfono...'
@@ -534,16 +569,21 @@ export default function NuevoPacienteForm() {
                     {searchTerm ? (
                       <button
                         type='button'
-                        className='text-secondary absolute right-4 top-2 text-xl'
+                        className='absolute right-3 top-1/2 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-xl text-secondary transition-colors hover:bg-surface-muted'
                         onClick={() => onSearchTermChange('')}
+                        aria-label='Limpiar búsqueda'
                       >
                         ×
                       </button>
                     ) : null}
 
                     {shouldShowResults ? (
-                      <div className='border-border-default bg-white z-20 mt-2 rounded-3xl border absolute top-10 left-0 right-0'>
-                        {results.length > 0 ? (
+                      <div className='absolute left-0 right-0 top-full z-20 mt-2 rounded-3xl border border-border-default bg-white'>
+                        {isSearchDebouncing || isLoadingPatients ? (
+                          <p className='px-4 py-3 text-base text-secondary'>
+                            Buscando pacientes...
+                          </p>
+                        ) : results.length > 0 ? (
                           results.map((result, index) => (
                             <button
                               key={result._id}
@@ -557,10 +597,6 @@ export default function NuevoPacienteForm() {
                               </span>
                             </button>
                           ))
-                        ) : isLoadingPatients ? (
-                          <p className='text-secondary px-4 py-3 text-base'>
-                            Buscando pacientes...
-                          </p>
                         ) : (
                           <p className='text-secondary px-4 py-3 text-base'>
                             No se encontraron pacientes.
@@ -878,9 +914,10 @@ export default function NuevoPacienteForm() {
               Selecciona uno o varios exámenes para esta solicitud.
             </p>
           </div>
-          <div className='w-full shrink-0 md:w-80 lg:w-96'>
+          <div className='relative w-full shrink-0 md:w-80 lg:w-96'>
+            <Search className='pointer-events-none absolute left-3 top-1/2 z-10 size-5 -translate-y-1/2 text-gray-400' />
             <TextInput
-              className='text-secondary'
+              className='pl-11 text-secondary'
               placeholder='Buscar examen'
               value={searchExam}
               onChange={event => setSearchExam(event.target.value)}
@@ -892,10 +929,11 @@ export default function NuevoPacienteForm() {
             <PillFilter
               key={category.key}
               label={`${category.label} (${examCountByCategory[category.key]})`}
-              active={activeCategory === category.key}
+              active={!isSearchingExams && activeCategory === category.key}
               onClick={() => setActiveCategory(category.key)}
               iconSrc={category.iconSrc}
               iconAlt={category.key}
+              disabled={isSearchingExams}
             />
           ))}
         </div>
@@ -922,8 +960,10 @@ export default function NuevoPacienteForm() {
             )
           })}
         </div>
-        {visibleExams.length === 0 ? (
-          <p className='text-secondary mt-3 text-sm'>No hay exámenes para esta búsqueda.</p>
+        {isExamSearchDebouncing ? (
+          <p className='mt-3 text-sm text-secondary'>Buscando exámenes...</p>
+        ) : visibleExams.length === 0 ? (
+          <p className='mt-3 text-sm text-secondary'>No hay exámenes para esta búsqueda.</p>
         ) : null}
         {shouldShowSelected ? (
           <div className='mt-6'>

@@ -533,7 +533,7 @@ export default function DynamicExamForm({
     valueOptions?: string[],
   ) => (
     <div key={key} className={className}>
-      {!hideLabel ? <FieldLabel className='font-medium'>{label}</FieldLabel> : null}
+      {!hideLabel ? <FieldLabel className='flex items-end font-medium'>{label}</FieldLabel> : null}
       <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>
         {formatTemplateValue(value, valueOptions) || '-'}
       </p>
@@ -561,7 +561,7 @@ export default function DynamicExamForm({
         {entries.length > 0 ? (
           entries.map((entry, index) => (
             <div key={`${entry.name}-${index}`}>
-              <FieldLabel className='font-medium'>
+              <FieldLabel className='flex items-end font-medium'>
                 {valueInput === 'text'
                   ? entry.name
                   : valueOptions?.length
@@ -575,7 +575,7 @@ export default function DynamicExamForm({
           ))
         ) : (
           <div>
-            <FieldLabel className='font-medium'>{label}</FieldLabel>
+            <FieldLabel className='flex items-end font-medium'>{label}</FieldLabel>
             <p className='flex w-full items-center text-primary wrap-break-word font-semibold'>-</p>
           </div>
         )}
@@ -594,7 +594,7 @@ export default function DynamicExamForm({
           className='rounded-2xl border border-border-default bg-white px-4 py-4 md:px-5'
         >
           <h3 className='mb-4 text-base font-bold uppercase text-primary'>{section.title}</h3>
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
+          <div className='grid grid-cols-1 gap-x-6 md:grid-cols-2 lg:grid-cols-4 [&>div]:row-span-3 [&>div]:grid [&>div]:grid-rows-subgrid [&>div]:pb-6'>
             {section.fields.map(field => {
               const labelBase = field.unit ? `${field.label} (${field.unit})` : field.label
               const value = values[field.key]
@@ -672,7 +672,7 @@ export default function DynamicExamForm({
                       </div>
                     ) : (
                       <div className='group mb-1 flex items-center gap-1'>
-                        <FieldLabel className='mb-0 font-medium'>
+                        <FieldLabel className='mb-0 flex items-end font-medium'>
                           {labelBase || 'Nuevo campo'}
                         </FieldLabel>
                         <button
@@ -734,7 +734,7 @@ export default function DynamicExamForm({
                 return (
                   <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
                     {!hidesRepeatedObservationLabel ? (
-                      <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                      <FieldLabel className='flex items-end font-medium'>{labelBase}</FieldLabel>
                     ) : null}
                     <TextareaInput
                       aria-label={labelBase}
@@ -750,7 +750,7 @@ export default function DynamicExamForm({
               if (field.type === 'select') {
                 return (
                   <div key={field._id ?? field.key}>
-                    <FieldLabel htmlFor={field.key} className='font-medium'>
+                    <FieldLabel htmlFor={field.key} className='flex items-end font-medium'>
                       {labelBase}
                     </FieldLabel>
                     <EditableSelectInput
@@ -776,7 +776,7 @@ export default function DynamicExamForm({
               if (field.type === 'multiselect') {
                 return (
                   <div key={field._id ?? field.key} className='md:col-span-2 lg:col-span-4'>
-                    <FieldLabel htmlFor={field.key} className='font-medium'>
+                    <FieldLabel htmlFor={field.key} className='flex items-end font-medium'>
                       {labelBase}
                     </FieldLabel>
                     <MultiSelectTextInputs
@@ -796,7 +796,7 @@ export default function DynamicExamForm({
               if (field.type === 'checkbox') {
                 return (
                   <div key={field._id ?? field.key}>
-                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <FieldLabel className='flex items-end font-medium'>{labelBase}</FieldLabel>
                     <CheckboxInput
                       checked={Boolean(value)}
                       onChange={event => updateValue(field.key, event.target.checked)}
@@ -811,7 +811,7 @@ export default function DynamicExamForm({
               if (field.type === 'radio') {
                 return (
                   <div key={field._id ?? field.key}>
-                    <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                    <FieldLabel className='flex items-end font-medium'>{labelBase}</FieldLabel>
                     <div className='flex min-h-12 flex-wrap items-center gap-4'>
                       {field.options.map(option => (
                         <RadioInput
@@ -831,7 +831,7 @@ export default function DynamicExamForm({
 
               return (
                 <div key={field._id ?? field.key}>
-                  <FieldLabel className='font-medium'>{labelBase}</FieldLabel>
+                  <FieldLabel className='flex items-end font-medium'>{labelBase}</FieldLabel>
                   <TextInput
                     type={field.type === 'date' ? 'date' : 'text'}
                     inputMode={field.type === 'number' ? 'decimal' : undefined}

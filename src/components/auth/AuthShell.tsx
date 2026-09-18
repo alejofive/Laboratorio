@@ -63,7 +63,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
       </section>
 
       <section className="flex min-h-[calc(100vh-3rem)] items-start justify-center lg:min-h-screen">
-        <div className="my-auto w-full max-w-md rounded-3xl border border-border-default bg-surface px-6 py-8 sm:px-10 sm:py-10 lg:border-0 lg:bg-transparent">
+        <div className="my-auto w-full max-w-md rounded-3xl border border-border-default bg-surface lg:border-0 lg:bg-transparent">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <Image src="/png/logo.png" alt="Laboratorio Clinico Dos G" width={36} height={43} priority />
             <p className="text-sm font-semibold leading-tight text-brand-logo">

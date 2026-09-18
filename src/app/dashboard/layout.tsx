@@ -4,13 +4,11 @@ import { LabProvider } from "@/context/LabContext";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <LabProvider>
-            <div className='flex'>
-                <div className='w-full flex min-h-screen'>
-                    <Navbar />
-                    <div className="w-full items-center justify-center">
-                        {children}
-                    </div>
-                </div>
+            <div className='min-h-screen lg:flex'>
+                <Navbar />
+                <main className="min-w-0 flex-1 pt-16 lg:pt-0">
+                    {children}
+                </main>
             </div>
         </LabProvider>
     )

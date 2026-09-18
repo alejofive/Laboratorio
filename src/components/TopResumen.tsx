@@ -31,7 +31,7 @@ export default function TopResumen({ solicitudes }: TopResumenProps) {
         </div>
       ) : (
         <div className='flex flex-wrap items-baseline gap-x-4 gap-y-1'>
-          <h1 className='text-xl font-semibold text-secondary'>{fechaActual}</h1>
+          <h1 className='text-lg font-semibold text-secondary sm:text-xl'>{fechaActual}</h1>
         </div>
       )}
     </div>

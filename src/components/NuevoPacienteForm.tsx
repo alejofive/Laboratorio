@@ -12,7 +12,7 @@ import { newPatientRequestSchema, NewPatientRequestValues } from '@/lib/validati
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import DetallePaciente from './DetallePaciente'
@@ -129,7 +129,11 @@ export default function NuevoPacienteForm() {
   const [ageDraft, setAgeDraft] = useState('')
   const [birthInputMode, setBirthInputMode] = useState<'age' | 'date'>('age')
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
+  const [isPatientResultsOpen, setIsPatientResultsOpen] = useState(false)
+  const [activePatientIndex, setActivePatientIndex] = useState(-1)
+  const patientSearchRef = useRef<HTMLDivElement>(null)
   const birthDatePickerRef = useRef<HTMLDivElement>(null)
+  const birthDateTriggerRef = useRef<HTMLButtonElement>(null)
   const cedulaValue = watch('cedula')
   const birthDateValue = watch('fechaNacimiento')
 
@@ -162,7 +166,7 @@ export default function NuevoPacienteForm() {
   }, [ordersToday])
 
   const normalizedPatientSearch = searchTerm.trim()
-  const shouldShowResults = normalizedPatientSearch.length >= 2
+  const shouldShowResults = normalizedPatientSearch.length >= 2 && isPatientResultsOpen
   const hasDebouncedSearch = debouncedSearchTerm.length >= 2
   const isSearchDebouncing = shouldShowResults && normalizedPatientSearch !== debouncedSearchTerm
   const isSearching = normalizedPatientSearch.length > 0
@@ -193,7 +197,7 @@ export default function NuevoPacienteForm() {
     return () => window.clearTimeout(timeoutId)
   }, [searchExam])
 
-  const results = patientsData?.data ?? []
+  const results = useMemo(() => patientsData?.data ?? [], [patientsData?.data])
 
   const selectedPatient = useMemo(
     () => results.find(patient => patient._id === selectedPatientId) ?? null,
@@ -296,6 +300,8 @@ export default function NuevoPacienteForm() {
 
   const onSearchTermChange = (value: string) => {
     setSearchTerm(value)
+    setIsPatientResultsOpen(value.trim().length >= 2)
+    setActivePatientIndex(-1)
   }
 
   const onSelectPatient = (patient: (typeof results)[number]) => {
@@ -308,9 +314,23 @@ export default function NuevoPacienteForm() {
     setSelectedPatientId(patient._id)
     setShowCreateForm(false)
     setSearchTerm('')
+    setIsPatientResultsOpen(false)
+    setActivePatientIndex(-1)
 
     toast.success(`Se cargaron los datos de ${patient.first_name} ${patient.last_name}`)
   }
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!patientSearchRef.current?.contains(event.target as Node)) {
+        setIsPatientResultsOpen(false)
+        setActivePatientIndex(-1)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [])
 
   useEffect(() => {
     if (!showBirthDatePicker) return
@@ -323,15 +343,47 @@ export default function NuevoPacienteForm() {
       })
     }
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: PointerEvent) => {
       if (!birthDatePickerRef.current?.contains(event.target as Node)) {
         setShowBirthDatePicker(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      setShowBirthDatePicker(false)
+      birthDateTriggerRef.current?.focus()
+    }
+
+    document.addEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [selectedBirthDate, showBirthDatePicker])
+
+  const onPatientSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (!shouldShowResults || results.length === 0) {
+      if (event.key === 'Escape') setIsPatientResultsOpen(false)
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActivePatientIndex(current => (current + 1) % results.length)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActivePatientIndex(current => (current <= 0 ? results.length - 1 : current - 1))
+    } else if (event.key === 'Enter' && activePatientIndex >= 0) {
+      event.preventDefault()
+      onSelectPatient(results[activePatientIndex])
+    } else if (event.key === 'Escape') {
+      setIsPatientResultsOpen(false)
+      setActivePatientIndex(-1)
+    }
+  }
 
   const onCreatePatient = () => {
     reset({
@@ -353,6 +405,8 @@ export default function NuevoPacienteForm() {
     setAgeDraft('')
     setBirthInputMode('age')
     setSearchTerm('')
+    setIsPatientResultsOpen(false)
+    setActivePatientIndex(-1)
   }
 
   const onClearPatient = () => {
@@ -363,6 +417,8 @@ export default function NuevoPacienteForm() {
     setAgeDraft('')
     setBirthInputMode('age')
     setSearchTerm('')
+    setIsPatientResultsOpen(false)
+    setActivePatientIndex(-1)
   }
 
   const onBirthDatePartChange = (part: 'day' | 'month' | 'year', value: string) => {
@@ -528,7 +584,7 @@ export default function NuevoPacienteForm() {
   }
 
   return (
-    <div className='w-full' aria-busy={isSubmittingRequest}>
+    <div className='w-full pb-24 lg:pb-0' aria-busy={isSubmittingRequest}>
       <LoadingOverlay
         isOpen={isSubmittingRequest}
         title='Guardando solicitud...'
@@ -540,7 +596,7 @@ export default function NuevoPacienteForm() {
         totalParaImprimir={resumenHoy.totalParaImprimir}
       />
 
-      <section className='bg-surface border-border-default border rounded-3xl p-4 mt-6 mb-4'>
+      <section className='mt-5 mb-4 rounded-3xl border border-border-default bg-surface p-4 sm:mt-6 sm:p-5'>
         {!showCreateForm ? (
           <div className='flex flex-wrap items-center gap-4'>
             {selectedPatientCard || isLoadingPatientDetail ? (
@@ -556,20 +612,29 @@ export default function NuevoPacienteForm() {
                 <h2 className='mb-3 text-xl font-semibold leading-none text-primary'>
                   Buscar un paciente o crear solicitud
                 </h2>
-                <div className='flex items-center gap-3 justify-between'>
-                  <div className='relative min-w-72 flex-1'>
+                <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                  <div ref={patientSearchRef} className='relative min-w-0 flex-1'>
                     <Search className='pointer-events-none absolute left-3 top-1/2 z-10 size-5 -translate-y-1/2 text-gray-400' />
                     <TextInput
                       type='text'
                       className='w-full pl-11 pr-10'
                       value={searchTerm}
                       onChange={event => onSearchTermChange(event.target.value)}
+                      onFocus={() => {
+                        if (normalizedPatientSearch.length >= 2) setIsPatientResultsOpen(true)
+                      }}
+                      onKeyDown={onPatientSearchKeyDown}
                       placeholder='Buscar por cédula, nombre o teléfono...'
+                      role='combobox'
+                      aria-autocomplete='list'
+                      aria-expanded={shouldShowResults}
+                      aria-controls='patient-search-results'
+                      aria-activedescendant={activePatientIndex >= 0 ? `patient-option-${activePatientIndex}` : undefined}
                     />
                     {searchTerm ? (
                       <button
                         type='button'
-                        className='absolute right-3 top-1/2 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-xl text-secondary transition-colors hover:bg-surface-muted'
+                        className='absolute right-1.5 top-1/2 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-xl text-secondary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30'
                         onClick={() => onSearchTermChange('')}
                         aria-label='Limpiar búsqueda'
                       >
@@ -578,7 +643,11 @@ export default function NuevoPacienteForm() {
                     ) : null}
 
                     {shouldShowResults ? (
-                      <div className='absolute left-0 right-0 top-full z-20 mt-2 rounded-3xl border border-border-default bg-white'>
+                      <div
+                        id='patient-search-results'
+                        role='listbox'
+                        className='absolute left-0 right-0 top-full z-20 mt-2 max-h-[min(24rem,calc(100dvh-10rem))] overflow-y-auto rounded-2xl border border-border-default bg-white'
+                      >
                         {isSearchDebouncing || isLoadingPatients ? (
                           <p className='px-4 py-3 text-base text-secondary'>
                             Buscando pacientes...
@@ -587,11 +656,14 @@ export default function NuevoPacienteForm() {
                           results.map((result, index) => (
                             <button
                               key={result._id}
+                              id={`patient-option-${index}`}
                               type='button'
+                              role='option'
+                              aria-selected={activePatientIndex === index}
                               onClick={() => onSelectPatient(result)}
-                              className={`flex w-full items-center hover:bg-gray-200 cursor-pointer z-0 justify-between px-4 py-3 text-left ${index > 0 ? 'border-t border-border-default' : ''}`}
+                              className={`flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary/30 ${activePatientIndex === index ? 'bg-brand-active' : 'hover:bg-surface-muted'} ${index > 0 ? 'border-t border-border-default' : ''}`}
                             >
-                              <span className='text-tertiary text-base'>
+                              <span className='break-words text-sm text-tertiary sm:text-base'>
                                 {result.first_name} {result.last_name} · {result.document_number} ·{' '}
                                 {result.phone} · {result.age} años
                               </span>
@@ -607,11 +679,11 @@ export default function NuevoPacienteForm() {
                   </div>
 
                   <div
-                    className={`origin-right overflow-hidden transition-all duration-300 ease-out ${isSearching ? 'pointer-events-none max-w-0 scale-95 opacity-0' : 'max-w-xs scale-100 opacity-100'}`}
+                    className={`w-full origin-right overflow-hidden transition-all duration-300 ease-out sm:w-auto ${isSearching ? 'pointer-events-none max-h-0 max-w-0 scale-95 opacity-0' : 'max-h-16 max-w-full scale-100 opacity-100 sm:max-w-xs'}`}
                     aria-hidden={isSearching}
                   >
                     <Button
-                      className='cursor-pointer whitespace-nowrap rounded-2xl'
+                      className='w-full cursor-pointer whitespace-nowrap rounded-2xl'
                       onClick={onCreatePatient}
                     >
                       <SvgIcon src='/svg/plus.svg' size={24} /> Crear paciente nuevo
@@ -636,7 +708,7 @@ export default function NuevoPacienteForm() {
               </button>
               <h2 className='mb-3 text-xl font-semibold leading-none'>Nuevo paciente</h2>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'>
                 <div>
                   <FieldLabel>Cédula</FieldLabel>
                   <TextInput
@@ -686,7 +758,7 @@ export default function NuevoPacienteForm() {
                   <input type='hidden' {...register('fechaNacimiento')} />
                   <div>
                     <div
-                      className='mb-1 flex min-h-5 items-center gap-4'
+                      className='mb-1 flex min-h-5 flex-wrap items-center gap-x-4 gap-y-2'
                       role='radiogroup'
                       aria-label='Forma de ingresar el nacimiento'
                     >
@@ -732,9 +804,13 @@ export default function NuevoPacienteForm() {
                       ) : (
                         <div ref={birthDatePickerRef} className='relative'>
                           <button
+                            ref={birthDateTriggerRef}
                             type='button'
                             onClick={() => setShowBirthDatePicker(prev => !prev)}
                             className={getFieldButtonClass(Boolean(errors.fechaNacimiento))}
+                            aria-haspopup='dialog'
+                            aria-expanded={showBirthDatePicker}
+                            aria-controls='birth-date-picker'
                           >
                             <span className={birthDateValue ? 'text-primary' : 'text-secondary'}>
                               {birthDateLabel}
@@ -743,7 +819,12 @@ export default function NuevoPacienteForm() {
                           </button>
 
                           {showBirthDatePicker ? (
-                            <div className='absolute right-0 z-20 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-3'>
+                            <div
+                              id='birth-date-picker'
+                              role='dialog'
+                              aria-label='Seleccionar fecha de nacimiento'
+                              className='absolute left-0 z-20 mt-2 w-[min(360px,calc(100vw-3rem))] rounded-xl border border-border-default bg-white p-3 sm:left-auto sm:right-0'
+                            >
                               <div className='mb-3'>
                                 <p className='text-sm font-bold text-tertiary'>
                                   Selecciona día, mes y año
@@ -814,7 +895,7 @@ export default function NuevoPacienteForm() {
                               <div className='mt-2 flex justify-between border-t border-gray-100 pt-2'>
                                 <button
                                   type='button'
-                                  className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
+                                  className='min-h-10 rounded-lg px-3 py-2 text-sm font-bold text-secondary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30 disabled:cursor-not-allowed disabled:opacity-50'
                                   onClick={onBirthDateClear}
                                   disabled={!birthDateValue}
                                 >
@@ -822,7 +903,7 @@ export default function NuevoPacienteForm() {
                                 </button>
                                 <button
                                   type='button'
-                                  className='text-sm rounded-md px-2 py-1 font-bold text-secondary transition-colors hover:bg-gray-200'
+                                  className='min-h-10 rounded-lg px-3 py-2 text-sm font-bold text-secondary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30'
                                   onClick={() => setShowBirthDatePicker(false)}
                                 >
                                   Cerrar
@@ -873,7 +954,7 @@ export default function NuevoPacienteForm() {
                   )}
                 </div>
 
-                <div className='md:col-span-2'>
+                <div className='sm:col-span-2'>
                   <FieldLabel>Dirección</FieldLabel>
                   <TextInput
                     type='text'
@@ -906,7 +987,7 @@ export default function NuevoPacienteForm() {
         ) : null}
       </section>
 
-      <section className='bg-surface border border-border-default rounded-3xl p-4 pb-10'>
+      <section className='rounded-3xl border border-border-default bg-surface p-4 pb-8 sm:p-5 sm:pb-10'>
         <div className='mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
           <div>
             <h2 className='text-xl font-semibold leading-none text-primary'>Exámenes a realizar</h2>
@@ -924,7 +1005,7 @@ export default function NuevoPacienteForm() {
             />
           </div>
         </div>
-        <div className='mb-4 flex flex-wrap gap-2'>
+        <div className='mb-4 flex gap-2 overflow-x-auto pb-2'>
           {EXAM_CATEGORIES.map(category => (
             <PillFilter
               key={category.key}
@@ -938,14 +1019,14 @@ export default function NuevoPacienteForm() {
           ))}
         </div>
         <input type='hidden' {...register('examenes')} />
-        <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-5'>
+        <div className='grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'>
           {visibleExams.map(exam => {
             const isChecked = selectedExams.includes(exam.templateId)
 
             return (
               <label
                 key={exam.templateId}
-                className={`text-tertiary flex min-h-16 text-base cursor-pointer items-center gap-2 rounded-xl border px-3 transition-colors duration-200 ${
+                className={`flex min-h-16 cursor-pointer items-center gap-2 rounded-xl border px-3 text-base text-tertiary transition-colors duration-200 focus-within:ring-2 focus-within:ring-brand-primary/20 ${
                   isChecked ? 'border-[#0058A8] bg-[#E4F4FC]' : 'border-border-input'
                 }`}
               >
@@ -996,7 +1077,7 @@ export default function NuevoPacienteForm() {
         </div> */}
       </section>
 
-      <div className='flex items-center justify-end gap-4 mt-6'>
+      <div className='mt-6 hidden items-center justify-end gap-4 lg:flex'>
         <Button
           type='button'
           onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
@@ -1012,6 +1093,23 @@ export default function NuevoPacienteForm() {
             'Guardar y crear solicitud'
           )}
         </Button>
+      </div>
+
+      <div className='fixed inset-x-0 bottom-0 z-30 border-t border-border-default bg-surface px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden'>
+        <div className='mx-auto flex max-w-7xl items-center gap-3'>
+          <p className='w-16 shrink-0 text-xs leading-tight text-secondary' aria-live='polite'>
+            <strong className='block text-lg leading-none text-primary'>{selectedExams.length}</strong>
+            {selectedExams.length === 1 ? 'seleccionado' : 'seleccionados'}
+          </p>
+          <Button
+            type='button'
+            onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
+            disabled={isSubmitDisabled || isSubmittingRequest}
+            className='min-w-0 flex-1 px-3 disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            {isSubmittingRequest ? 'Creando solicitud...' : 'Guardar y crear solicitud'}
+          </Button>
+        </div>
       </div>
     </div>
   )

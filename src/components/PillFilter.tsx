@@ -1,4 +1,5 @@
 import SvgIcon from "./ui/SvgIcon"
+import Image from 'next/image'
 
 type PillFilterProps = {
     label: string
@@ -23,9 +24,9 @@ export function PillFilter({
 }: PillFilterProps) {
     if (selected) {
         return (
-            <div className="border-border-secondary text-secondary inline-flex items-center gap-2  rounded-full border px-4 py-2 text-base font-medium transition-colors duration-200">
-                <span>{label}</span>
-                <button type="button" className="cursor-pointer text-secondary w-5 h-5 hover:text-primary text-sm leading-none" onClick={onRemove}>
+            <div className="inline-flex min-h-12 max-w-full items-center gap-1 rounded-full border border-border-default py-1 pl-4 pr-1 text-base font-medium text-secondary transition-colors duration-200">
+                <span className='min-w-0 truncate'>{label}</span>
+                <button type="button" className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-sm leading-none text-secondary hover:bg-surface-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30" onClick={onRemove} aria-label={`Quitar ${label}`}>
                     <SvgIcon src='/svg/xicon.svg' size={20} />
                 </button>
             </div>
@@ -34,15 +35,17 @@ export function PillFilter({
 
     return (
         <button
-            className={`rounded-full px-2.5 flex items-center gap-2 py-1.5 text-sm font-medium ${disabled ? 'cursor-not-allowed bg-surface-muted text-secondary opacity-50' : active ? 'cursor-pointer bg-primary text-white' : 'cursor-pointer bg-surface-muted text-secondary hover:bg-gray-200'}`}
+            className={`flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30 ${disabled ? 'cursor-not-allowed bg-surface-muted text-secondary opacity-50' : active ? 'cursor-pointer bg-primary text-white' : 'cursor-pointer bg-surface-muted text-secondary hover:bg-gray-200'}`}
             type="button"
             onClick={onClick}
             disabled={disabled}
         >
             {iconSrc ? (
-                <img
+                <Image
                     src={iconSrc}
                     alt={iconAlt ?? ''}
+                    width={16}
+                    height={16}
                     className={`h-4 w-4 shrink-0 transition duration-200 ${active && !disabled ? 'brightness-0 invert' : ''}`}
                 />
             ) : null}

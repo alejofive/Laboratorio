@@ -5,6 +5,7 @@ import { OrderItem } from '@/types/create'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Search } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DatePicker, { registerLocale } from 'react-datepicker'
@@ -299,18 +300,18 @@ export default function ExamTable({
   }
 
   return (
-    <div className='space-y-4 mt-6'>
-      <div className='flex flex-wrap items-center justify-between gap-3'>
-        <div className='flex flex-wrap items-center gap-3'>
+    <div className='mt-6 min-w-0 space-y-4'>
+      <div className='flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+        <div className='flex min-w-0 items-center gap-2 overflow-x-auto pb-1 sm:overflow-visible'>
           {anterior ? (
             <>
-              <div className='bg-white flex rounded-xl overflow-hidden'>
+              <div className='flex shrink-0 overflow-hidden rounded-xl border border-border-default bg-white'>
                 {calendarOptions.map(option => (
                   <button
                     type='button'
                     key={option.value}
                     onClick={() => handleCalendarOptionClick(option.value)}
-                    className={`py-2.5 px-6 text-base transition-colors ${activeCalendarOption === option.value
+                    className={`min-h-11 whitespace-nowrap px-3 py-2.5 text-sm transition-colors sm:px-6 sm:text-base ${activeCalendarOption === option.value
                       ? 'bg-brand-primary font-semibold text-white'
                       : 'cursor-pointer font-medium text-tertiary hover:bg-brand-active hover:text-brand-primary'
                       }`}
@@ -319,7 +320,7 @@ export default function ExamTable({
                   </button>
                 ))}
               </div>
-              <div ref={rangePickerRef} className='relative'>
+              <div ref={rangePickerRef} className='relative shrink-0'>
                 <button
                   type='button'
                   onClick={() => setShowRangePicker(prev => !prev)}
@@ -336,7 +337,7 @@ export default function ExamTable({
                 </button>
 
                 {showRangePicker && (
-                  <div className='absolute left-0 right-0 z-20 mt-2 w-[280px] rounded-xl border border-gray-200 bg-white p-2.5'>
+                  <div className='fixed left-1/2 top-1/2 z-40 w-[min(320px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border-default bg-white p-2.5 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-[280px] sm:translate-x-0 sm:translate-y-0'>
                     <DatePicker
                       selected={dateRange?.from ?? null}
                       onChange={handleRangeChange}
@@ -368,7 +369,7 @@ export default function ExamTable({
           ) : null}
         </div>
 
-        <div className='relative'>
+        <div className='relative w-full lg:w-auto'>
           <Search className='text-gray-400 absolute top-2.5 left-3 w-5 h-5' />
           <TextInput
             type='text'
@@ -377,13 +378,44 @@ export default function ExamTable({
               setBusqueda(e.target.value)
               setPaginaActual(1)
             }}
-            className='w-[470px] pl-11'
+            className='w-full pl-11 lg:w-[min(30vw,470px)]'
             placeholder='Buscar por cédula, nombre o teléfono...'
           />
         </div>
       </div>
 
-      <div className='overflow-hidden rounded-3xl border border-border-default bg-surface'>
+      <div className='space-y-3 md:hidden'>
+        {isFetching ? Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className='h-36 animate-pulse rounded-2xl border border-border-default bg-surface p-4'>
+            <div className='h-5 w-2/3 rounded bg-surface-muted' />
+            <div className='mt-4 h-4 w-1/2 rounded bg-surface-muted' />
+            <div className='mt-4 h-4 w-3/4 rounded bg-surface-muted' />
+          </div>
+        )) : ordersPaginados.map(order => {
+          const completed = order.exams.completed
+          const total = order.exams.total
+          const estado = getEstadoSolicitud(order.status)
+          return (
+            <Link key={order.id} href={`/dashboard/examen/${order.id}`}
+              className='block rounded-2xl border border-border-default bg-surface p-4 transition-colors active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'>
+              <div className='flex flex-wrap items-start justify-between gap-2'>
+                <div className='min-w-0'>
+                  <p className='break-words text-base font-semibold text-primary'>{order.patient.name}</p>
+                  <p className='mt-1 text-sm text-secondary'>{order.patient.document_number}</p>
+                </div>
+                <EstadoBadge estado={estado} />
+              </div>
+              <div className='mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border-default pt-3 text-sm text-secondary'>
+                <span className='font-medium text-primary'>Solicitud #{order.order_number}</span>
+                <span>{new Date(order.created_at).toLocaleDateString('es-VE')}</span>
+              </div>
+              <p className='mt-2 text-sm text-secondary'>Exámenes completados: <span className='font-semibold text-primary'>{completed} de {total}</span></p>
+            </Link>
+          )
+        })}
+      </div>
+
+      <div className='hidden overflow-hidden rounded-3xl border border-border-default bg-surface md:block'>
         <table className='w-full'>
           <thead className='border-b border-border-default bg-surface-muted'>
             <tr>
@@ -410,6 +442,13 @@ export default function ExamTable({
                 return (
                   <tr
                     onClick={() => router.push(`/dashboard/examen/${order.id}`)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        router.push(`/dashboard/examen/${order.id}`)
+                      }
+                    }}
+                    tabIndex={0}
                     key={order.id}
                     className='cursor-pointer hover:bg-surface-muted'
                   >

@@ -30,8 +30,9 @@ export default function TopResumen({ solicitudes }: TopResumenProps) {
           <h1 className='text-2xl font-bold text-primary'>Solicitudes</h1>
         </div>
       ) : (
-        <div className='flex flex-wrap items-baseline gap-x-4 gap-y-1'>
-          <h1 className='text-xl font-semibold text-secondary'>{fechaActual}</h1>
+        <div>
+          <p className='text-sm font-medium text-secondary'>{fechaActual}</p>
+          <h1 className='mt-1 text-2xl font-bold text-primary'>Nueva solicitud</h1>
         </div>
       )}
     </div>

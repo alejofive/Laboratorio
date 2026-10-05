@@ -1,4 +1,5 @@
 import type { PatientApi, PatientDetailResponse } from '@/types/create';
+import Image from 'next/image';
 
 type DetallePacienteProps = {
     paciente?: PatientDetailResponse | PatientApi;
@@ -56,21 +57,21 @@ export default function DetallePaciente({ paciente, isLoading = false, onClearPa
             <h2 className="mb-3 text-xl font-semibold leading-none">Buscar un paciente o crear solicitud</h2>
             <div className="bg-surface-muted rounded-2xl p-4">
 
-                <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xl font-semibold">{nombre}</p>
-                    <button type="button" className="cursor-pointer text-secondary text-xl" onClick={onClearPatient}>
-                        <img src="/svg/xicon.svg" alt="Cerrar" />
+                <div className="mb-3 flex items-start justify-between gap-3">
+                    <p className="min-w-0 break-words text-lg font-semibold sm:text-xl">{nombre}</p>
+                    <button type="button" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-xl text-secondary transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30" onClick={onClearPatient} aria-label="Quitar paciente seleccionado">
+                        <Image src="/svg/xicon.svg" alt="" width={20} height={20} />
                     </button>
                 </div>
-                <p className="text-secondary text-base flex flex-wrap items-center gap-3">
-                    <span className="flex items-center gap-2"><img src="/svg/paciente/cedula.svg" alt="Cedula" /> {paciente.document_number}</span>
-                    <span className="flex items-center gap-2"><img src="/svg/paciente/phone.svg" alt="Telefono" /> {paciente.phone}</span>
-                    <span className="flex items-center gap-2"><img src="/svg/paciente/calendar.svg" alt="Edad" /> {edad ?? '--'} años</span>
-                    <span className="flex items-center gap-2"><img src="/svg/paciente/location.svg" alt="Direccion" /> {paciente.address ?? ''}</span>
-                </p>
+                <div className="flex flex-col gap-3 text-sm text-secondary sm:flex-row sm:flex-wrap sm:items-center sm:text-base">
+                    <span className="flex items-center gap-2"><Image src="/svg/paciente/cedula.svg" alt="" width={20} height={20} /> {paciente.document_number}</span>
+                    <span className="flex items-center gap-2"><Image src="/svg/paciente/phone.svg" alt="" width={20} height={20} /> {paciente.phone}</span>
+                    <span className="flex items-center gap-2"><Image src="/svg/paciente/calendar.svg" alt="" width={20} height={20} /> {edad ?? '--'} años</span>
+                    <span className="flex min-w-0 items-start gap-2"><Image className="mt-0.5 shrink-0" src="/svg/paciente/location.svg" alt="" width={20} height={20} /> <span className="break-words">{paciente.address ?? ''}</span></span>
+                </div>
             </div>
 
-            <button className="text-tertiary mt-3 rounded-xl border border-border-default px-4 py-2 text-base">Ver historial</button>
+            <button className="mt-3 min-h-11 w-full rounded-xl border border-border-default px-4 py-2 text-base text-tertiary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30 sm:w-auto">Ver historial</button>
         </div>
     );
 }

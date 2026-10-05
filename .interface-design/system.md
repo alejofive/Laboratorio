@@ -39,6 +39,19 @@ Clínica/profesional - paleta de colores inspirada en ambientes médicos con ton
 - Hover state: bg-surface-muted
 - Icon size: w-5 h-5
 
+### Responsive Shell
+- Desktop navigation starts at `lg`; smaller viewports use a fixed 64px header and an overlay drawer.
+- Main content must use `min-w-0 flex-1` so grids and long controls cannot force horizontal overflow.
+- Page container: `mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8`.
+- Long mobile workflows use a fixed bottom action bar with safe-area padding; desktop keeps the action inline.
+- Reserve bottom content spacing whenever the mobile action bar is present.
+
+### Responsive Forms
+- Form grids start at one column, move to two at `sm`, and use three only when the content area is wide enough.
+- Catalog grids progress from one column to `sm:2`, `md:3`, `xl:4`, and `2xl:5`.
+- Dropdowns and popovers must be constrained to the available viewport and use internal scrolling for long results.
+- Compact icon actions retain at least a 40px touch target and visible keyboard focus.
+
 ### Component States
 - Default: text-gray-600
 - Hover: hover:bg-surface-muted hover:text-gray-900

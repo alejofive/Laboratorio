@@ -14,7 +14,7 @@ function SolicitudPageContent() {
     const estado = searchParams.get('estado');
     const filtroEstado = estado === 'pendiente' || estado === 'completo' ? estado : undefined;
 
-    return (<div className="p-9 w-full min-h-screen">
+    return (<div className="mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 sm:px-6 lg:p-9">
         <div className="">
             <TopResumen
                 solicitudes={true}
@@ -35,7 +35,7 @@ function SolicitudPageContent() {
 
 export default function SolicitudPage() {
     return (
-        <Suspense fallback={<div className="p-9 w-full min-h-screen" />}>
+        <Suspense fallback={<div className="min-h-dvh w-full px-4 py-6 sm:px-6 lg:p-9" />}>
             <SolicitudPageContent />
         </Suspense>
     );

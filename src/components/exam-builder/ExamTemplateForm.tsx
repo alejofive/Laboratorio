@@ -197,7 +197,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
       {viewMode === 'edit' ? (
       <div className="space-y-6">
-        <section className="rounded-3xl border border-border-default bg-surface p-6">
+        <section className="rounded-3xl border border-border-default bg-surface p-4 sm:p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-primary">Plantilla clinica</p>
@@ -237,7 +237,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
         <section className="space-y-4">
           {template.sections.map((section, sectionIndex) => (
-            <div key={section._id ?? sectionIndex} className="rounded-3xl border border-border-default bg-surface p-5">
+            <div key={section._id ?? sectionIndex} className="rounded-3xl border border-border-default bg-surface p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex-1">
                   <FieldLabel className="text-lg text-primary">Seccion {sectionIndex + 1}</FieldLabel>
@@ -251,7 +251,7 @@ export function ExamTemplateForm({ initialValue, mode, onSave, isSaving = false 
 
               <div className="mt-5 space-y-4">
                 {section.fields.map((field, fieldIndex) => (
-                  <div key={field._id ?? fieldIndex} className="rounded-2xl border border-border-default bg-canvas/60 p-4">
+                  <div key={field._id ?? fieldIndex} className="min-w-0 rounded-2xl border border-border-default bg-canvas/60 p-3 sm:p-4">
                     <div className="grid gap-4 lg:grid-cols-4">
                       <div>
                         <FieldLabel>Nombre</FieldLabel>

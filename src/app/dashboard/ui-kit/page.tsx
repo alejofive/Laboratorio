@@ -8,7 +8,7 @@ import {
   TextareaInput,
   TextInput,
 } from '@/components/ui/FormField'
-import { Check, FileText, Mail, Plus } from 'lucide-react'
+import { Check, FileText, Mail, Menu, Plus } from 'lucide-react'
 
 const colors = [
   { name: 'Canvas', className: 'bg-canvas', token: 'bg-canvas', hex: '#f9fafc' },
@@ -37,7 +37,7 @@ const typeSamples = [
 
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className='rounded-3xl border border-border-default bg-surface p-6'>
+    <section className='rounded-3xl border border-border-default bg-surface p-4 sm:p-6'>
       <div className='mb-5'>
         <h2 className='text-xl font-semibold text-primary'>{title}</h2>
         <p className='mt-1 text-sm text-secondary'>{description}</p>
@@ -58,7 +58,7 @@ function FieldDemo({ label, children }: { label: string; children: React.ReactNo
 
 export default function UiKitPage() {
   return (
-    <main className='min-h-screen w-full px-8 py-8'>
+    <div className='min-h-screen w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8'>
       <div className='mx-auto max-w-7xl space-y-6'>
         <header className='rounded-3xl border border-border-default bg-surface p-6'>
           <p className='text-xs font-bold uppercase tracking-[0.18em] text-brand-primary'>Design system</p>
@@ -116,6 +116,52 @@ export default function UiKitPage() {
               <Button disabled>Disabled</Button>
               <Button loading>Cargando</Button>
             </div>
+          </div>
+        </Section>
+
+        <Section title='Patrones responsive' description='Navegacion y acciones para flujos largos en telefono y tablet.'>
+          <div className='grid gap-5 lg:grid-cols-3'>
+            <article className='overflow-hidden rounded-2xl border border-border-default bg-canvas'>
+              <div className='flex h-16 items-center justify-between border-b border-border-default bg-surface px-4'>
+                <div>
+                  <p className='text-xs font-medium text-secondary'>Laboratorio Clinico DOS G</p>
+                  <p className='text-sm font-semibold text-primary'>Crear Solicitud</p>
+                </div>
+                <span className='flex size-11 items-center justify-center rounded-xl border border-border-default bg-surface text-primary'>
+                  <Menu className='size-6' />
+                </span>
+              </div>
+              <div className='p-4'>
+                <p className='text-sm font-semibold text-primary'>Cabecera movil</p>
+                <p className='mt-1 text-sm text-secondary'>Se usa debajo de `lg` y abre el menu principal como drawer.</p>
+              </div>
+            </article>
+
+            <article className='flex flex-col justify-between rounded-2xl border border-border-default bg-canvas p-4'>
+              <div>
+                <p className='text-sm font-semibold text-primary'>Grilla progresiva</p>
+                <p className='mt-1 text-sm text-secondary'>Una columna en telefono; aumenta solo cuando el contenido dispone de espacio real.</p>
+              </div>
+              <div className='mt-5 grid grid-cols-2 gap-2'>
+                <span className='h-12 rounded-xl border border-border-input bg-surface' />
+                <span className='h-12 rounded-xl border border-border-input bg-surface' />
+                <span className='h-12 rounded-xl border border-border-input bg-surface' />
+                <span className='h-12 rounded-xl border border-border-input bg-surface' />
+              </div>
+            </article>
+
+            <article className='overflow-hidden rounded-2xl border border-border-default bg-canvas'>
+              <div className='flex min-h-36 items-center justify-center p-4 text-sm text-secondary'>
+                Contenido del flujo
+              </div>
+              <div className='flex items-center gap-3 border-t border-border-default bg-surface p-3'>
+                <p className='w-16 shrink-0 text-xs leading-tight text-secondary'>
+                  <strong className='block text-lg leading-none text-primary'>3</strong>
+                  seleccionados
+                </p>
+                <Button className='min-w-0 flex-1 px-3'>Guardar solicitud</Button>
+              </div>
+            </article>
           </div>
         </Section>
 
@@ -212,6 +258,6 @@ export default function UiKitPage() {
           </div>
         </Section>
       </div>
-    </main>
+    </div>
   )
 }

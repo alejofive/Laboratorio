@@ -85,7 +85,7 @@ export default function PacienteHistorialPage() {
 
   if (!isLoadingPatients && !pacienteData) {
     return (
-      <div className='p-9 w-full min-h-screen'>
+      <div className='mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 sm:px-6 lg:p-9'>
         <Link href='/dashboard/pacientes' className='inline-flex items-center gap-1 hover:underline mb-4'>
           <ArrowLeft className='w-4 h-4' />
           Volver
@@ -98,9 +98,9 @@ export default function PacienteHistorialPage() {
   }
 
   return (
-    <div className='p-9 w-full min-h-screen'>
+    <div className='mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 sm:px-6 lg:p-9'>
       <div className='flex items-center mb-4 gap-4'>
-        <button type='button' onClick={handleVolver} className='cursor-pointer'>
+         <button type='button' onClick={handleVolver} aria-label='Volver a pacientes' className='flex size-11 cursor-pointer items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'>
           <ArrowLeft className='text-gray-700' />
         </button>
         <p className='text-primary text-2xl font-semibold'>Paciente</p>
@@ -109,7 +109,7 @@ export default function PacienteHistorialPage() {
       {isLoadingPatients ? (
         <PacienteCardSkeleton />
       ) : pacienteData ? (
-        <div className='bg-white rounded-3xl border border-gray-200 p-6 mb-5'>
+         <div className='mb-5 rounded-3xl border border-border-default bg-surface p-4 sm:p-6'>
           <div className='md:items-center md:justify-between gap-4'>
             <div className='flex justify-between mb-4'>
               <span className='text-xl text-secondary'>Paciente</span>
@@ -120,7 +120,7 @@ export default function PacienteHistorialPage() {
                 <p className='text-xl font-semibold'>
                   {`${pacienteData.first_name} ${pacienteData.last_name}`.trim()}
                 </p>
-                <p className='text-secondary text-base flex items-center gap-3 mt-4'>
+                 <p className='mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 text-sm text-secondary sm:text-base'>
                   <span className='flex items-center gap-2'>
                     <img src='/svg/paciente/cedula.svg' alt='' /> {pacienteData.document_number}
                   </span>
@@ -140,7 +140,7 @@ export default function PacienteHistorialPage() {
         </div>
       ) : null}
 
-      <h1 className='text-2xl font-bold text-gray-900 mb-2 mt-5'>Historial de solicitudes</h1>
+       <h1 className='mb-2 mt-5 text-xl font-bold text-primary sm:text-2xl'>Historial de solicitudes</h1>
 
       {error ? (
         <div className='mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700'>
@@ -148,7 +148,27 @@ export default function PacienteHistorialPage() {
         </div>
       ) : null}
 
-      <div className='mt-4 overflow-hidden rounded-3xl border border-border-default bg-surface'>
+       <div className='mt-4 space-y-3 md:hidden'>
+         {isLoadingOrders ? Array.from({ length: 3 }).map((_, index) => (
+           <div key={index} className='h-28 animate-pulse rounded-2xl border border-border-default bg-surface p-4'>
+             <div className='h-5 w-1/2 rounded bg-surface-muted' />
+             <div className='mt-4 h-4 w-2/3 rounded bg-surface-muted' />
+           </div>
+         )) : historialSolicitudes.map(order => (
+           <Link key={order.id} href={`/dashboard/examen/${order.id}?cedula=${encodeURIComponent(cedula)}`}
+             className='block rounded-2xl border border-border-default bg-surface p-4 transition-colors active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'>
+             <div className='flex flex-wrap items-center justify-between gap-2'>
+               <span className='font-semibold text-primary'>Solicitud #{order.order_number}</span>
+               <EstadoBadge estado={getEstadoSolicitud(order.status)} />
+             </div>
+             <p className='mt-2 text-sm text-secondary'>{new Date(order.created_at).toLocaleDateString('es-VE')}</p>
+             <p className='mt-3 border-t border-border-default pt-3 text-sm text-secondary'>Exámenes completados: <span className='font-semibold text-primary'>{order.exams.completed} de {order.exams.total}</span></p>
+           </Link>
+         ))}
+         {!isLoadingOrders && historialSolicitudes.length === 0 && <p className='rounded-2xl border border-border-default bg-surface p-6 text-center text-secondary'>No hay solicitudes registradas.</p>}
+       </div>
+
+       <div className='mt-4 hidden overflow-hidden rounded-3xl border border-border-default bg-surface md:block'>
         <table className='w-full'>
           <thead className='border-b border-border-default bg-surface-muted'>
             <tr>

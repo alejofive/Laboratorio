@@ -18,15 +18,15 @@ export default function EditExamTemplatePage() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen w-full p-9 text-sm text-secondary">Cargando plantilla...</div>;
+    return <div className="mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 text-sm text-secondary sm:px-6 lg:p-9">Cargando plantilla...</div>;
   }
 
   if (error || !template) {
-    return <div className="min-h-screen w-full p-9 text-sm text-red-600">No se pudo cargar la plantilla.</div>;
+    return <div className="mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 text-sm text-red-600 sm:px-6 lg:p-9">No se pudo cargar la plantilla.</div>;
   }
 
   return (
-    <div className="min-h-screen w-full p-9">
+    <div className="mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 sm:px-6 lg:p-9">
       <ExamTemplateForm initialValue={template} mode="edit" onSave={handleSave} isSaving={updateTemplate.isPending} />
     </div>
   );

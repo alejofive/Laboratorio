@@ -76,7 +76,7 @@ export function ExamTemplateList() {
   }
 
   return (
-    <div className='min-h-screen w-full p-9'>
+    <div className='mx-auto min-h-dvh w-full max-w-7xl px-4 py-6 sm:px-6 lg:p-9'>
       <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <h1 className='text-2xl font-bold text-primary'>Plantillas de examenes</h1>
@@ -165,10 +165,10 @@ export function ExamTemplateList() {
                   </div>
                 </div>
 
-                <div className='flex flex-wrap gap-2'>
+                 <div className='grid grid-cols-2 gap-2 sm:flex sm:flex-wrap'>
                   <Link
                     href={`/dashboard/exam-templates/${templateId}/edit`}
-                    className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-border-default bg-white px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:border-brand-primary hover:bg-brand-active hover:text-brand-primary'
+                     className='inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-border-default bg-white px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:border-brand-primary hover:bg-brand-active hover:text-brand-primary'
                   >
                     <Pencil size={16} />
                     Editar
@@ -177,7 +177,8 @@ export function ExamTemplateList() {
                     type='button'
                     onClick={() => duplicateTemplate(templateId)}
                     variant='outline'
-                    size='sm'
+                     size='sm'
+                     className='min-h-11'
                   >
                     <Copy size={16} />
                     Duplicar
@@ -186,7 +187,8 @@ export function ExamTemplateList() {
                     type='button'
                     onClick={() => toggleActive(templateId)}
                     variant='outline'
-                    size='sm'
+                     size='sm'
+                     className='min-h-11'
                   >
                     <Power size={16} />
                     {template.is_active ? 'Desactivar' : 'Activar'}
@@ -196,7 +198,7 @@ export function ExamTemplateList() {
                     onClick={() => deleteTemplate.mutate(templateId)}
                     variant='link'
                     size='sm'
-                    className='text-red-600 hover:text-red-700'
+                     className='min-h-11 text-red-600 hover:text-red-700'
                   >
                     <Trash2 size={16} />
                     Eliminar

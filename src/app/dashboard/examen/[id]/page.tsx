@@ -797,6 +797,35 @@ export default function ExamenPage() {
         )
       : isFormValid
 
+  const renderResultAction = () => (
+    <Button
+      onClick={() => {
+        if (readOnly) {
+          setCurrentReadOnly(false)
+          return
+        }
+
+        void handleCompletar()
+      }}
+      disabled={isSavingResult || (!readOnly && !isCurrentTemplateValid)}
+      variant={readOnly ? 'outline' : 'primary'}
+      size='md'
+      icon={readOnly ? <Pencil className='h-4 w-4' /> : undefined}
+      className='w-full disabled:cursor-not-allowed disabled:opacity-60 md:w-auto'
+    >
+      {isSavingResult ? (
+        <>
+          <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+          Guardando resultado...
+        </>
+      ) : readOnly ? (
+        'Editar resultado'
+      ) : (
+        'Guardar resultado'
+      )}
+    </Button>
+  )
+
   return (
     <div className='flex min-h-screen flex-col px-4 md:px-8' aria-busy={isSavingResult}>
       <LoadingOverlay
@@ -805,73 +834,83 @@ export default function ExamenPage() {
         description='Espera mientras registramos los resultados del examen.'
       />
 
-      <div className='mx-auto flex w-full flex-1 flex-col'>
-        <div className='shrink-0 pt-8'>
+      <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col'>
+        <div className='shrink-0 pt-6 md:pt-8'>
           <header className='mb-6 border-b border-border-default pb-4 no-print'>
-            <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-              <div className='min-w-0'>
-                <div className='flex flex-wrap items-center gap-3'>
+            <div className='flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between'>
+              <div className='min-w-0 flex-1'>
+                <div className='flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3'>
                   <button
                     type='button'
                     onClick={handleVolver}
-                    aria-label='Volver'
-                    className='flex h-7 w-7 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-muted'
+                    aria-label={searchParams.get('cedula') ? 'Volver al paciente' : 'Volver a solicitudes'}
+                    className='flex size-11 shrink-0 items-center justify-center rounded-xl text-primary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
                   >
-                    <ArrowLeft className='h-5 w-5' />
+                    <ArrowLeft aria-hidden='true' className='size-5' />
                   </button>
-                  <p className='text-xl font-bold text-primary'>
-                    # Solicitud: {examen.orderNumber ?? examen.id}
+                  <p className='min-w-0 break-words text-lg font-semibold text-primary sm:text-xl'>
+                    Solicitud #{examen.orderNumber ?? examen.id}
                   </p>
-                  <span className='rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-secondary'>
+                  <span className='rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-secondary'>
                     {estadoLabel}
                   </span>
                 </div>
 
-                <div className='mt-3 ml-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-secondary'>
-                  <span className='text-primary text-xl'>{paciente.nombre}</span>
-                  <span className='flex items-center gap-1.5'>
-                    <IdCard className='h-4 w-4' /> {paciente.cedula}
-                  </span>
-                  <span className='flex items-center gap-1.5'>
-                    <Phone className='h-4 w-4' /> {paciente.telefono || '-'}
-                  </span>
-                  <span className='flex items-center gap-1.5'>
-                    <Calendar className='h-4 w-4' /> {paciente.edad} años
-                  </span>
-                  <span className='flex items-center gap-1.5'>
-                    <MapPin className='h-4 w-4' /> {paciente.direccion || '-'}
-                  </span>
+                <div className='mt-4 sm:ml-11'>
+                  <p className='break-words text-xl font-semibold leading-snug text-primary'>{paciente.nombre}</p>
+                  <div className='mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-secondary'>
+                    <span className='inline-flex items-center gap-1.5'>
+                      <IdCard aria-hidden='true' className='size-4 shrink-0' /> {paciente.cedula}
+                    </span>
+                    <span className='inline-flex items-center gap-1.5'>
+                      <Phone aria-hidden='true' className='size-4 shrink-0' /> {paciente.telefono || '-'}
+                    </span>
+                    <span className='inline-flex items-center gap-1.5'>
+                      <Calendar aria-hidden='true' className='size-4 shrink-0' /> {paciente.edad} años
+                    </span>
+                  </div>
+                  <p className='mt-2 flex items-start gap-1.5 break-words text-sm text-secondary'>
+                    <MapPin aria-hidden='true' className='mt-0.5 size-4 shrink-0' /> {paciente.direccion || '-'}
+                  </p>
                 </div>
               </div>
 
-              <div className='flex flex-wrap gap-3 lg:justify-end'>
+              <div className='flex items-center justify-end gap-2 sm:gap-3' role='group' aria-label='Acciones del resultado'>
                 <Button
                   type='button'
                   onClick={() => void handleSendEmail()}
                   disabled={!readOnly || isPreparingEmail || isPreparingWhatsapp}
                   variant='outline'
-                  icon={<Image src='/svg/gmail.svg' alt='' width={20} height={20} />}
-                >
-                  {isPreparingEmail ? 'Preparando...' : 'Enviar al correo'}
-                </Button>
+                  aria-label={isPreparingEmail ? 'Preparando correo' : 'Enviar resultado por correo'}
+                  title={isPreparingEmail ? 'Preparando correo' : 'Enviar por correo'}
+                  className='size-12 min-h-12 shrink-0 p-0!'
+                  icon={isPreparingEmail
+                    ? <span aria-hidden='true' className='block size-5 animate-spin rounded-full border-2 border-brand-primary/30 border-t-brand-primary' />
+                    : <Image src='/svg/gmail.svg' alt='' width={20} height={20} />}
+                />
                 <Button
                   type='button'
                   onClick={() => void handleSendWhatsapp()}
                   disabled={!readOnly || isPreparingEmail || isPreparingWhatsapp}
                   variant='outline'
-                  className='enabled:hover:border-[#25D366] enabled:hover:bg-[#25D366] enabled:hover:text-white'
-                  icon={<SvgIcon src='/svg/whatsapp.svg' size={20} />}
-                >
-                  {isPreparingWhatsapp ? 'Preparando...' : 'Enviar a WhatsApp'}
-                </Button>
+                  aria-label={isPreparingWhatsapp ? 'Preparando WhatsApp' : 'Enviar resultado por WhatsApp'}
+                  title={isPreparingWhatsapp ? 'Preparando WhatsApp' : 'Enviar por WhatsApp'}
+                  className='size-12 min-h-12 shrink-0 p-0! enabled:hover:border-[#25D366] enabled:hover:bg-[#25D366] enabled:hover:text-white'
+                  icon={isPreparingWhatsapp
+                    ? <span aria-hidden='true' className='block size-5 animate-spin rounded-full border-2 border-brand-primary/30 border-t-brand-primary' />
+                    : <SvgIcon src='/svg/whatsapp.svg' size={20} />}
+                />
                 <Button
                   type='button'
                   onClick={() => void handleDownloadPdf()}
                   disabled={!readOnly || isDownloadingPdf}
-                  icon={<Download className='h-5 w-5' />}
-                >
-                  {isDownloadingPdf ? 'Descargando...' : 'Descargar'}
-                </Button>
+                  aria-label={isDownloadingPdf ? 'Descargando resultado' : 'Descargar resultado'}
+                  title={isDownloadingPdf ? 'Descargando resultado' : 'Descargar resultado'}
+                  className='size-12 min-h-12 shrink-0 p-0!'
+                  icon={isDownloadingPdf
+                    ? <span aria-hidden='true' className='block size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+                    : <Download aria-hidden='true' className='size-5' />}
+                />
               </div>
             </div>
           </header>
@@ -919,40 +958,11 @@ export default function ExamenPage() {
         </div>
 
         <div className='print-area flex flex-1 flex-col gap-6'>
-          <div
-            className={`-mx-4 flex flex-col gap-4 px-4 py-4 md:-mx-8 md:flex-row md:items-center md:justify-between md:px-8 ${
-              readOnly ? '' : 'sticky top-0 z-20 bg-canvas'
-            }`}
-          >
+          <div className='flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between'>
             <h1 className='text-xl font-semibold uppercase text-primary'>
               {examen.templateName || examLabels[examen.tipo]}
             </h1>
-            <Button
-              onClick={() => {
-                if (readOnly) {
-                  setCurrentReadOnly(false)
-                  return
-                }
-
-                void handleCompletar()
-              }}
-              disabled={isSavingResult || (!readOnly && !isCurrentTemplateValid)}
-              variant={readOnly ? 'outline' : 'primary'}
-              size='md'
-              icon={readOnly ? <Pencil className='h-4 w-4' /> : undefined}
-              className='inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60'
-            >
-              {isSavingResult ? (
-                <>
-                  <span className='size-5 animate-spin rounded-full border-2 border-white/40 border-t-white' />
-                  Guardando resultado...
-                </>
-              ) : readOnly ? (
-                'Editar resultado'
-              ) : (
-                'Guardar resultado'
-              )}
-            </Button>
+            {renderResultAction()}
           </div>
 
           <div className='flex-1 pb-8'>
@@ -1008,6 +1018,9 @@ export default function ExamenPage() {
                   {renderForm()}
                 </fieldset>
               </div>
+            </div>
+            <div className='mt-6 flex justify-end'>
+              {renderResultAction()}
             </div>
           </div>
         </div>

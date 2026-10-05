@@ -261,14 +261,14 @@ function MultiSelectTextInputs({
         {entries.map((entry, index) => (
           <div
             key={`entry-${index}`}
-            className='grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto] items-center gap-2'
+            className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto]'
           >
             <TextInput
               id={`${id}-entry-${index}`}
               value={entry.option || entry.text}
               onChange={event => updateEntryName(index, event.target.value)}
               placeholder='Nombre de la opción'
-              className='h-12'
+              className='h-12 min-w-0'
             />
             {valueInput === 'text' ? (
               <TextInput
@@ -276,21 +276,23 @@ function MultiSelectTextInputs({
                 value={entry.value ?? ''}
                 onChange={event => updateEntryValue(index, event.target.value)}
                 placeholder='Ingresa un valor'
-                className='h-12'
+                className='col-start-1 row-start-2 h-12 min-w-0 sm:col-start-2 sm:row-start-1'
               />
             ) : (
-              <EditableSelectInput
-                id={`${id}-entry-${index}-value`}
-                value={entry.value ?? ''}
-                options={valueOptions ?? []}
-                onChange={inputValue => updateEntryValue(index, inputValue)}
-              />
+              <div className='col-start-1 row-start-2 min-w-0 sm:col-start-2 sm:row-start-1'>
+                <EditableSelectInput
+                  id={`${id}-entry-${index}-value`}
+                  value={entry.value ?? ''}
+                  options={valueOptions ?? []}
+                  onChange={inputValue => updateEntryValue(index, inputValue)}
+                />
+              </div>
             )}
             <button
               type='button'
               aria-label={`Quitar ${label.toLocaleLowerCase('es')}`}
               onClick={() => removeEntry(index)}
-              className='flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary'
+              className='col-start-2 row-span-2 flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary sm:col-start-3 sm:row-span-1'
             >
               <X className='size-4' />
             </button>
@@ -390,13 +392,13 @@ function MultiSelectTextInputs({
       </div>
 
       {entries.map((entry, index) => (
-        <div key={entry.option || `custom-${index}`} className='flex items-center gap-2'>
+        <div key={entry.option || `custom-${index}`} className='flex min-w-0 items-center gap-2'>
           {/* Same tone as the field placeholders (`placeholder:text-secondary/70`). */}
           <span className='shrink-0 text-sm font-medium text-secondary/70'>
             {`Reporte ${index + 1}:`}
           </span>
           {entry.option ? (
-            <p className='w-full wrap-break-word text-primary'>{entry.option}</p>
+            <p className='min-w-0 flex-1 wrap-break-word text-primary'>{entry.option}</p>
           ) : (
             <TextInput
               value={entry.text}
@@ -409,7 +411,7 @@ function MultiSelectTextInputs({
             type='button'
             aria-label={`Quitar reporte ${index + 1}`}
             onClick={() => removeEntry(index)}
-            className='flex size-9 shrink-0 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary'
+            className='flex size-11 shrink-0 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-brand-active hover:text-brand-primary'
           >
             <X className='size-4' />
           </button>

@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <LabProvider>
             <div className='min-h-screen lg:flex'>
                 <Navbar />
-                <main className="min-w-0 flex-1 pt-16 lg:pt-0">
+                <main id="main-content" className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
                     {children}
                 </main>
             </div>

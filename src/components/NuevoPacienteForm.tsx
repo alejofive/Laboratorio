@@ -584,7 +584,7 @@ export default function NuevoPacienteForm() {
   }
 
   return (
-    <div className='w-full pb-24 lg:pb-0' aria-busy={isSubmittingRequest}>
+    <div className='w-full pb-6 lg:pb-0' aria-busy={isSubmittingRequest}>
       <LoadingOverlay
         isOpen={isSubmittingRequest}
         title='Guardando solicitud...'
@@ -1095,21 +1095,15 @@ export default function NuevoPacienteForm() {
         </Button>
       </div>
 
-      <div className='fixed inset-x-0 bottom-0 z-30 border-t border-border-default bg-surface px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden'>
-        <div className='mx-auto flex max-w-7xl items-center gap-3'>
-          <p className='w-16 shrink-0 text-xs leading-tight text-secondary' aria-live='polite'>
-            <strong className='block text-lg leading-none text-primary'>{selectedExams.length}</strong>
-            {selectedExams.length === 1 ? 'seleccionado' : 'seleccionados'}
-          </p>
-          <Button
-            type='button'
-            onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
-            disabled={isSubmitDisabled || isSubmittingRequest}
-            className='min-w-0 flex-1 px-3 disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            {isSubmittingRequest ? 'Creando solicitud...' : 'Guardar y crear solicitud'}
-          </Button>
-        </div>
+      <div className='mt-6 lg:hidden'>
+        <Button
+          type='button'
+          onClick={showCreateForm ? handleSubmit(onSubmit) : onSubmitExistingPatient}
+          disabled={isSubmitDisabled || isSubmittingRequest}
+          className='w-full min-w-0 px-3 disabled:cursor-not-allowed disabled:opacity-60'
+        >
+          {isSubmittingRequest ? 'Creando solicitud...' : 'Guardar y crear solicitud'}
+        </Button>
       </div>
     </div>
   )
